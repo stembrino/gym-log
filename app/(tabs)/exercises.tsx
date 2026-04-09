@@ -1,5 +1,5 @@
+import { useColorScheme } from "@/components/contexts/useColorScheme";
 import { useI18n } from "@/components/i18n-provider";
-import { useColorScheme } from "@/components/useColorScheme";
 import { getRetroPalette, monoFont } from "@/constants/retroTheme";
 import { useMemo, useState } from "react";
 import {
@@ -154,9 +154,6 @@ export default function ExercisesScreen() {
       style={{ backgroundColor: palette.page }}
       contentContainerStyle={styles.container}
     >
-      <Text style={[styles.screenTitle, { color: palette.textPrimary }]}>
-        {t("exercises.title")}
-      </Text>
       <Text
         style={[styles.screenDescription, { color: palette.textSecondary }]}
       >
@@ -199,7 +196,6 @@ export default function ExercisesScreen() {
           style={[styles.cardAccentBar, { backgroundColor: palette.accent }]}
         />
         <Text style={[styles.cardTitle, { color: palette.textPrimary }]}>
-          {t("exercises.sectionPrefix")}
           {t("exercises.createExercise")}
         </Text>
         <View
@@ -227,7 +223,7 @@ export default function ExercisesScreen() {
               },
             ]}
           >
-            $
+            🏋️
           </Text>
           <TextInput
             value={exerciseName}
@@ -312,7 +308,6 @@ export default function ExercisesScreen() {
           style={[styles.cardAccentBar, { backgroundColor: palette.accent }]}
         />
         <Text style={[styles.cardTitle, { color: palette.textPrimary }]}>
-          {t("exercises.sectionPrefix")}
           {t("exercises.createRoutine")}
         </Text>
         <View
@@ -340,7 +335,7 @@ export default function ExercisesScreen() {
               },
             ]}
           >
-            $
+            💾
           </Text>
           <TextInput
             value={routineName}
@@ -445,7 +440,6 @@ export default function ExercisesScreen() {
           style={[styles.cardAccentBar, { backgroundColor: palette.accent }]}
         />
         <Text style={[styles.cardTitle, { color: palette.textPrimary }]}>
-          {t("exercises.sectionPrefix")}
           {t("exercises.myRoutines")}
         </Text>
         <View
