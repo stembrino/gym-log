@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { I18nProvider } from "@/components/i18n-provider";
+import { DatabaseProvider } from "@/components/providers/DatabaseProvider";
 import {
   ThemePreferenceProvider,
   useThemePreference,
@@ -50,11 +51,13 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   return (
-    <I18nProvider>
-      <ThemePreferenceProvider>
-        <ThemedNavigation />
-      </ThemePreferenceProvider>
-    </I18nProvider>
+    <DatabaseProvider>
+      <I18nProvider>
+        <ThemePreferenceProvider>
+          <ThemedNavigation />
+        </ThemePreferenceProvider>
+      </I18nProvider>
+    </DatabaseProvider>
   );
 }
 

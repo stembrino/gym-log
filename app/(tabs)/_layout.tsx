@@ -123,6 +123,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="routines"
+        options={{
+          title: t("tabs.routines"),
+          tabBarIcon: ({ color }) => <TabBarIcon name="tasks" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="exercises"
         options={{
           title: t("tabs.exercises"),
