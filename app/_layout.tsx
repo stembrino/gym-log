@@ -6,8 +6,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
-import { I18nProvider } from "@/components/i18n-provider";
 import { DatabaseProvider } from "@/components/providers/DatabaseProvider";
+import { I18nProvider } from "@/components/providers/i18n-provider";
 import { ThemePreferenceProvider, useThemePreference } from "@/components/theme-preference";
 
 export { ErrorBoundary } from "expo-router";

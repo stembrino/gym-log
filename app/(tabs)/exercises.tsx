@@ -1,8 +1,8 @@
 import { AppCard } from "@/components/AppCard";
 import { Badge } from "@/components/Badge";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
-import { useI18n } from "@/components/i18n-provider";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
 import { DEFAULT_EXERCISES } from "@/constants/seed/exercises";
 import { DEFAULT_MUSCLE_GROUPS } from "@/constants/seed/muscleGroups";

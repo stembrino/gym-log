@@ -3,5 +3,7 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
-  }
+  },
+  "jest.jestCommandLine": "npm run test --",
+  "jest.shell": "/bin/zsh"
 }

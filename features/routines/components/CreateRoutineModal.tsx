@@ -1,8 +1,11 @@
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
-import { useI18n } from "@/components/i18n-provider";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
-import { DEFAULT_EXERCISES } from "@/constants/seed/exercises";
 import { DEFAULT_ROUTINE_TAGS } from "@/constants/seed/routineTags";
+import {
+  usePaginatedExerciseLibrary,
+  type ExerciseLibraryItem,
+} from "@/features/routines/hooks/usePaginatedExerciseLibrary";
 import { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
@@ -43,7 +46,7 @@ type SelectedRoutineExercise = {
 };
 
 export function CreateRoutineModal({ visible, onClose, onSubmit }: CreateRoutineModalProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const palette = useRetroPalette();
 
   const [screen, setScreen] = useState<Screen>("basic");
@@ -53,8 +56,8 @@ export function CreateRoutineModal({ visible, onClose, onSubmit }: CreateRoutine
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<SelectedRoutineExercise[]>([]);
 
-  const selectedExerciseIds = useMemo(
-    () => new Set(selectedExercises.map((exercise) => exercise.exerciseId)),
+  const excludedExerciseIds = useMemo(
+    () => selectedExercises.map((exercise) => exercise.exerciseId),
     [selectedExercises],
   );
 
@@ -64,23 +67,17 @@ export function CreateRoutineModal({ visible, onClose, onSubmit }: CreateRoutine
     [t],
   );
 
-  const filteredExercises = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-
-    return DEFAULT_EXERCISES.filter((exercise) => {
-      if (selectedExerciseIds.has(exercise.id)) {
-        return false;
-      }
-
-      if (!normalizedQuery) {
-        return true;
-      }
-
-      const label = getExerciseLabel(exercise).toLowerCase();
-      const muscleGroup = exercise.muscleGroup.toLowerCase();
-      return label.includes(normalizedQuery) || muscleGroup.includes(normalizedQuery);
-    });
-  }, [searchQuery, selectedExerciseIds, getExerciseLabel]);
+  const {
+    items: pagedExercises,
+    hasMore: hasMoreExercises,
+    loadingInitial: loadingInitialExercises,
+    loadingMore: loadingMoreExercises,
+    loadMore: handleLoadMoreExercises,
+  } = usePaginatedExerciseLibrary({
+    query: searchQuery,
+    locale,
+    excludeIds: excludedExerciseIds,
+  });
 
   const handleToggleTag = (tagId: string) => {
     setSelectedTags((prev) => {
@@ -140,7 +137,7 @@ export function CreateRoutineModal({ visible, onClose, onSubmit }: CreateRoutine
     setScreen("basic");
   };
 
-  const handleAddExercise = (exercise: (typeof DEFAULT_EXERCISES)[number]) => {
+  const handleAddExercise = (exercise: ExerciseLibraryItem) => {
     setSelectedExercises((prev) => [
       ...prev,
       {
@@ -386,14 +383,27 @@ export function CreateRoutineModal({ visible, onClose, onSubmit }: CreateRoutine
             </Text>
 
             <FlatList
-              data={filteredExercises}
+              data={pagedExercises}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.catalogList}
               keyboardShouldPersistTaps="handled"
+              onEndReached={handleLoadMoreExercises}
+              onEndReachedThreshold={0.4}
               ListEmptyComponent={
                 <Text style={[styles.emptyText, { color: palette.textSecondary }]}>
-                  {t("routines.noExerciseResults")}
+                  {loadingInitialExercises
+                    ? t("routines.loading")
+                    : t("routines.noExerciseResults")}
                 </Text>
+              }
+              ListFooterComponent={
+                loadingMoreExercises ? (
+                  <Text style={[styles.paginationHint, { color: palette.textSecondary }]}>
+                    {t("routines.loading")}
+                  </Text>
+                ) : hasMoreExercises ? (
+                  <Text style={[styles.paginationHint, { color: palette.textSecondary }]}>...</Text>
+                ) : null
               }
               renderItem={({ item }) => (
                 <View
@@ -618,6 +628,13 @@ const styles = StyleSheet.create({
   catalogList: {
     gap: 8,
     paddingBottom: 8,
+  },
+  paginationHint: {
+    paddingVertical: 6,
+    textAlign: "center",
+    fontFamily: monoFont,
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
   catalogItem: {
     borderWidth: 1,

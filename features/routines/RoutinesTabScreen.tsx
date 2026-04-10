@@ -2,7 +2,7 @@ import { AppCard } from "@/components/AppCard";
 import { Badge } from "@/components/Badge";
 import { ExpandedPanel } from "@/components/ExpandedPanel";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
-import { useI18n } from "@/components/i18n-provider";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
 import { useSystemRoutines } from "@/features/routines/hooks/useSystemRoutines";
 import { useState } from "react";

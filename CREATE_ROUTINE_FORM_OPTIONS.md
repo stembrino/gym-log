@@ -78,8 +78,8 @@
 │  └─────────────────────────────┘    │
 │                                     │
 │  Tags (optional)                    │
-│  ☑ Strength  ☐ Cardio              │
-│  ☐ Stretching  ☐ Recovery          │
+│  ☑ Strength  ☐ Cardio               │
+│  ☐ Stretching  ☐ Recovery           │
 │                                     │
 │  [Cancel]                [Create] ✓ │
 └─────────────────────────────────────┘
@@ -167,11 +167,11 @@ SCREEN 2: Exercises (Optional)
 │                                     │
 │  + Add First Exercise               │
 │                                     │
-│  ┌─ Exercise ───────────────────┐   │
-│  │ Bench Press                   │   │
-│  │ Sets: 4 | Reps: 8-10         │   │
-│  │            [Remove]           │   │
-│  └───────────────────────────────┘   │
+│  ┌─ Exercise ───────────────-────┐  │
+│  │ Bench Press                   │  │
+│  │ Sets: 4 | Reps: 8-10          │  │
+│  │            [Remove]           │  │
+│  └───────────────────────────────┘  │
 │                                     │
 │  + Add Another Exercise             │
 │                                     │
@@ -257,6 +257,33 @@ SCREEN 2: Exercises (Optional)
 4. **After creating, should modal close auto or let user add more?**
    - Auto-close: Routine created, modal disappears, list refreshes
    - Stay open: Let user option to create another routine
+
+---
+
+## Technical Note: Query Pagination + Infinite Scroll
+
+To avoid performance issues when the exercise library grows, Screen 2 now follows this approach:
+
+1. Search input triggers DB query (not local array filter)
+   - The search term is sent to a custom hook.
+   - The hook executes a `SELECT` with `WHERE` using `like(...)`.
+
+2. Pagination is done in query level
+   - Uses `limit` + `offset` in Drizzle query.
+   - Keeps each fetch small (page size) and avoids loading everything at once.
+
+3. Infinite scroll in UI
+   - `FlatList` calls `onEndReached`.
+   - The hook loads the next page and appends results.
+
+4. Everything lives in custom hooks
+   - Data access and pagination state are isolated from UI.
+   - UI component only renders list and calls `loadMore`.
+
+5. Why this is good
+   - Better responsiveness with large datasets.
+   - Cleaner architecture for future migration to backend API.
+   - Easy evolution to cursor pagination later if needed.
 
 ---
 

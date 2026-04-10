@@ -5,7 +5,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { useClientOnlyValue } from "@/components/hooks/useClientOnlyValue";
 import { useColorScheme } from "@/components/hooks/useColorScheme";
-import { useI18n } from "@/components/i18n-provider";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { useThemePreference } from "@/components/theme-preference";
 import Colors from "@/constants/Colors";
 import { monoFont } from "@/constants/retroTheme";
