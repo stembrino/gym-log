@@ -33,6 +33,40 @@ export function runMigrations(database: SQLiteDatabase): void {
       created_at  TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS routines (
+      id                      TEXT PRIMARY KEY NOT NULL,
+      name                    TEXT NOT NULL,
+      estimated_duration_min  INTEGER,
+      is_system               INTEGER NOT NULL DEFAULT 0,
+      i18n_key                TEXT,
+      search_pt               TEXT,
+      search_en               TEXT,
+      created_at              TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS routine_tags (
+      id          TEXT PRIMARY KEY NOT NULL,
+      slug        TEXT NOT NULL UNIQUE,
+      i18n_key    TEXT NOT NULL UNIQUE,
+      search_pt   TEXT,
+      search_en   TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS routine_tag_links (
+      routine_id  TEXT NOT NULL REFERENCES routines(id) ON DELETE CASCADE,
+      tag_id      TEXT NOT NULL REFERENCES routine_tags(id) ON DELETE CASCADE,
+      PRIMARY KEY (routine_id, tag_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS routine_exercises (
+      id               TEXT PRIMARY KEY NOT NULL,
+      routine_id       TEXT NOT NULL REFERENCES routines(id) ON DELETE CASCADE,
+      exercise_id      TEXT NOT NULL REFERENCES exercises(id),
+      exercise_order   INTEGER NOT NULL,
+      sets_target      INTEGER,
+      reps_target      TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS workout_exercises (
       id               TEXT PRIMARY KEY NOT NULL,
       workout_id       TEXT NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,

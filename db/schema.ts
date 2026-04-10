@@ -1,4 +1,4 @@
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const muscleGroups = sqliteTable("muscle_groups", {
   id: text("id").primaryKey(),
@@ -26,6 +26,53 @@ export const workouts = sqliteTable("workouts", {
   duration: integer("duration"), // minutes, nullable until workout ends
   notes: text("notes"),
   createdAt: text("created_at").notNull(),
+});
+
+export const routines = sqliteTable("routines", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  estimatedDurationMin: integer("estimated_duration_min"),
+  isSystem: integer("is_system", { mode: "boolean" }).notNull().default(false),
+  i18nKey: text("i18n_key"),
+  searchPt: text("search_pt"),
+  searchEn: text("search_en"),
+  createdAt: text("created_at").notNull(),
+});
+
+export const routineTags = sqliteTable("routine_tags", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  i18nKey: text("i18n_key").notNull().unique(),
+  searchPt: text("search_pt"),
+  searchEn: text("search_en"),
+});
+
+export const routineTagLinks = sqliteTable(
+  "routine_tag_links",
+  {
+    routineId: text("routine_id")
+      .notNull()
+      .references(() => routines.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => routineTags.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.routineId, table.tagId] }),
+  }),
+);
+
+export const routineExercises = sqliteTable("routine_exercises", {
+  id: text("id").primaryKey(),
+  routineId: text("routine_id")
+    .notNull()
+    .references(() => routines.id, { onDelete: "cascade" }),
+  exerciseId: text("exercise_id")
+    .notNull()
+    .references(() => exercises.id),
+  exerciseOrder: integer("exercise_order").notNull(),
+  setsTarget: integer("sets_target"),
+  repsTarget: text("reps_target"),
 });
 
 export const workoutExercises = sqliteTable("workout_exercises", {
