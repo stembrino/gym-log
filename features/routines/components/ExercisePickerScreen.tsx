@@ -1,3 +1,4 @@
+import { ControlledSearchInput } from "@/components/ControlledSearchInput";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
@@ -144,19 +145,11 @@ export function ExercisePickerScreen({
             {t("routines.availableExercisesTitle")}
           </Text>
 
-          <TextInput
-            style={[
-              styles.input,
-              {
-                borderColor: palette.border,
-                color: palette.textPrimary,
-                backgroundColor: palette.card,
-              },
-            ]}
-            placeholder={t("routines.searchExercisePlaceholder")}
-            placeholderTextColor={palette.textSecondary}
+          <ControlledSearchInput
             value={searchQuery}
             onChangeText={onChangeSearchQuery}
+            placeholder={t("routines.searchExercisePlaceholder")}
+            variant="compact"
           />
         </View>
       }
@@ -216,14 +209,6 @@ const styles = StyleSheet.create({
     fontFamily: monoFont,
     fontSize: 12,
     letterSpacing: 0.2,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontFamily: monoFont,
-    fontSize: 14,
   },
   sectionTitle: {
     marginTop: 4,

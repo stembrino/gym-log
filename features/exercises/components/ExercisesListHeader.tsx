@@ -1,9 +1,9 @@
 import { Badge } from "@/components/Badge";
+import { ControlledSearchInput } from "@/components/ControlledSearchInput";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
   count: number;
@@ -15,7 +15,6 @@ type Props = {
 export function ExercisesListHeader({ count, query, onChangeQuery, onPressCreate }: Props) {
   const { t } = useI18n();
   const palette = useRetroPalette();
-  const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -39,24 +38,10 @@ export function ExercisesListHeader({ count, query, onChangeQuery, onPressCreate
           {t("exercises.libraryHint")}
         </Text>
       </View>
-      <TextInput
-        style={[
-          styles.search,
-          {
-            backgroundColor: palette.inputBg,
-            borderColor: focused ? palette.accent : palette.inputBorder,
-            color: palette.textPrimary,
-            borderWidth: focused ? 2 : 1,
-          },
-        ]}
-        placeholder={t("routines.searchExercisePlaceholder")}
-        placeholderTextColor={palette.textSecondary}
+      <ControlledSearchInput
         value={query}
         onChangeText={onChangeQuery}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        autoCapitalize="none"
-        autoCorrect={false}
+        placeholder={t("routines.searchExercisePlaceholder")}
       />
       <Pressable
         style={[styles.createButton, { backgroundColor: palette.accent }]}
@@ -104,14 +89,6 @@ const styles = StyleSheet.create({
     fontFamily: monoFont,
     fontSize: 13,
     lineHeight: 18,
-  },
-  search: {
-    borderRadius: 2,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontFamily: monoFont,
-    fontSize: 14,
-    minHeight: 44,
   },
   createButton: {
     borderRadius: 2,
