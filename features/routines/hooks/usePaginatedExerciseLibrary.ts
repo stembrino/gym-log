@@ -61,7 +61,6 @@ export function usePaginatedExerciseLibrary({
           conditions.push(
             or(
               like(searchColumn, `%${normalizedQuery}%`),
-              like(exercises.name, `%${normalizedQuery}%`),
               like(exercises.muscleGroup, `%${normalizedQuery}%`),
             )!,
           );

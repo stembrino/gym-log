@@ -3,6 +3,35 @@
 Date: 2026-04-11
 Scope: routines flow (screens, hooks, modals, list behavior, tests)
 
+## UI/UX Changes (2026-04-11)
+
+### Terminology: "Routine Group" → "Routine Collection"
+
+- All UI text and i18n keys updated to use "Collection" instead of "Group".
+- Affects: translations.ts, CreateRoutineGroupModal, BasicInfoScreen, RoutinesTabScreen.
+
+### Form Descriptions
+
+- Collection creation form: shows `groupFormHint` description at the top — "Organize suas rotinas em coleções (ex: Push Pull Legs, Upper Lower)."
+- Routine creation form: unchanged.
+
+### Validation — Required Name Field
+
+- Both routine and collection creation forms now validate the name field on submit.
+- Empty name: input border turns accent color + error label "Este campo é obrigatório" / "This field is required" appears below.
+- Error clears automatically when user starts typing.
+- Removed `disabled` prop from Next/Submit buttons; validation runs in handler instead.
+- Removed `RequiredFieldsNotice` component from collection form in favor of inline error label.
+
+### Character Counters
+
+- Routine form (BasicInfoScreen): name (50), detail (60), description (280).
+- Collection form (CreateRoutineGroupModal): name (50), detail (60), description (280).
+
+### Portuguese Accents
+
+- Corrected all pt-BR strings throughout translations.ts (coleção, exercícios, séries, divisão, etc.).
+
 ## Findings by severity
 
 ### 1) High - Null-group model consistency
@@ -141,3 +170,34 @@ Recommendation:
 - [x] Accept edit behavior that can replace existing multi-group links.
 - [ ] Re-enable skipped tests and confirm deterministic pass.
 - [ ] Run final format/lint/tests before next beta cut.
+
+## Bug: Exercise search always falls back to English `name` column, breaking locale isolation
+
+**File:** `features/routines/hooks/usePaginatedExerciseLibrary.ts` (lines 57–67)
+
+### Root cause
+
+The hook correctly selects the locale-aware column on line 57:
+
+```ts
+const searchColumn = locale === "pt-BR" ? exercises.searchPt : exercises.searchEn;
+```
+
+However, the OR condition that follows always includes `exercises.name` **regardless of locale**:
+
+```ts
+or(
+  like(searchColumn, `%${normalizedQuery}%`), // ✅ locale-specific
+  like(exercises.name, `%${normalizedQuery}%`), // ❌ always English base name
+  like(exercises.muscleGroup, `%${normalizedQuery}%`),
+);
+```
+
+`exercises.name` is the original (English) base name. For a pt-BR user, this means the search hits both `search_pt` **and** the English name column simultaneously, which:
+
+- Can surface English-named exercises when the user typed a Portuguese term.
+- Bypasses the normalization/accent-stripping purpose of `search_pt`/`search_en` (e.g. a query like "pressao" should match only via `search_pt` which has diacritics stripped, not via `exercises.name = "Pressão"`).
+
+### Expected fix (not implemented yet)
+
+Remove `exercises.name` from the OR. The search should rely **only on the locale-specific column** (`search_pt` for pt-BR, `search_en` for everything else), which already contains the normalized search terms for that language. `exercises.muscleGroup` can remain if muscle-group search is intentional.

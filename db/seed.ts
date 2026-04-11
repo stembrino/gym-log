@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DEFAULT_EXERCISES } from "@/constants/seed/exercises";
 import { DEFAULT_MUSCLE_GROUPS } from "@/constants/seed/muscleGroups";
 import {
@@ -24,6 +25,10 @@ import {
   routineTags,
 } from "./schema";
 import { DEFAULT_ENTITY_TRANSLATIONS } from "./seed-data/entityTranslations";
+
+// Bump this version whenever search index logic or labelPt/labelEn data changes.
+const EXERCISE_SEARCH_INDEX_VERSION = "v1";
+const EXERCISE_SEARCH_INDEX_KEY = "exercise_search_index_version";
 
 // NOTE: entity_translations seed rows must come from db/seed-data/entityTranslations.ts,
 // never from constants/translations.ts.
@@ -263,23 +268,47 @@ export async function seedDatabase(): Promise<void> {
       })),
     );
   } else {
-    // Backfill search index columns for existing local rows.
-    const rows = await db
-      .select({
-        id: exercises.id,
-        name: exercises.name,
-        muscleGroup: exercises.muscleGroup,
-      })
-      .from(exercises);
+    const currentVersion = await AsyncStorage.getItem(EXERCISE_SEARCH_INDEX_KEY);
 
-    for (const row of rows) {
-      const { searchPt, searchEn } = buildSearchIndex({
-        name: row.name,
-        labelPt: row.name,
-        labelEn: row.name,
-      });
+    if (currentVersion !== EXERCISE_SEARCH_INDEX_VERSION) {
+      const labelMap = new Map(
+        DEFAULT_EXERCISES.map((e) => [e.id, { labelPt: e.labelPt, labelEn: e.labelEn }]),
+      );
 
-      await db.update(exercises).set({ searchPt, searchEn }).where(eq(exercises.id, row.id));
+      // Re-index system exercises from DEFAULT_EXERCISES (source of truth).
+      // Only backfill custom exercises that have NULL search columns.
+      const rowsToIndex = await db
+        .select({
+          id: exercises.id,
+          name: exercises.name,
+          isCustom: exercises.isCustom,
+          searchPt: exercises.searchPt,
+          searchEn: exercises.searchEn,
+        })
+        .from(exercises);
+
+      for (const row of rowsToIndex) {
+        const isSystemExercise = !row.isCustom && labelMap.has(row.id);
+        const needsBackfill = row.searchPt === null || row.searchEn === null;
+
+        if (!isSystemExercise && !needsBackfill) continue;
+
+        const labels = labelMap.get(row.id);
+        const { searchPt, searchEn } = buildSearchIndex({
+          name: row.name,
+          labelPt: labels?.labelPt ?? row.name,
+          labelEn: labels?.labelEn ?? row.name,
+        });
+
+        await db.update(exercises).set({ searchPt, searchEn }).where(eq(exercises.id, row.id));
+      }
+
+      await AsyncStorage.setItem(EXERCISE_SEARCH_INDEX_KEY, EXERCISE_SEARCH_INDEX_VERSION);
+      console.log(`[seed] exercise search index updated to ${EXERCISE_SEARCH_INDEX_VERSION}`);
+    } else if (__DEV__) {
+      console.log(
+        `[seed] exercise search index already at ${EXERCISE_SEARCH_INDEX_VERSION}, skipping`,
+      );
     }
   }
 
