@@ -58,6 +58,7 @@ export function CreateRoutineModal({
 
   const [screen, setScreen] = useState<Screen>("basic");
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [detail, setDetail] = useState("");
   const [description, setDescription] = useState("");
@@ -112,7 +113,11 @@ export function CreateRoutineModal({
   };
 
   const handleNext = () => {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setNameError(true);
+      return;
+    }
+    setNameError(false);
     setScreen("exercises");
   };
 
@@ -186,6 +191,7 @@ export function CreateRoutineModal({
 
   const handleModalClose = () => {
     setName("");
+    setNameError(false);
     setSelectedGroupId(null);
     setDetail("");
     setDescription("");
@@ -225,7 +231,10 @@ export function CreateRoutineModal({
         {screen === "basic" ? (
           <BasicInfoScreen
             name={name}
-            onChangeName={setName}
+            onChangeName={(newName) => {
+              setName(newName);
+              if (newName.trim()) setNameError(false);
+            }}
             routineGroups={routineGroups}
             selectedGroupId={selectedGroupId}
             onSelectGroup={setSelectedGroupId}
@@ -238,6 +247,7 @@ export function CreateRoutineModal({
             locale={locale}
             palette={palette}
             t={t}
+            nameError={nameError}
           />
         ) : (
           <ExercisePickerScreen
@@ -272,7 +282,6 @@ export function CreateRoutineModal({
               <TouchableOpacity
                 style={[styles.button, styles.primaryButton, { backgroundColor: palette.accent }]}
                 onPress={handleNext}
-                disabled={!name.trim()}
               >
                 <Text style={[styles.buttonText, { color: palette.card }]}>
                   {t("routines.nextButton")} →

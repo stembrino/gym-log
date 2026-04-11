@@ -377,7 +377,9 @@ export function RoutinesTabScreen() {
             ]}
             onPress={openCreateGroup}
           >
-            <Text style={[styles.addButtonText, { color: palette.textPrimary }]}>+ GROUP</Text>
+            <Text style={[styles.addButtonText, { color: palette.textPrimary }]}>
+              + {t("routines.createGroup")}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -399,7 +401,7 @@ export function RoutinesTabScreen() {
             hitSlop={4}
             accessibilityRole="button"
             accessibilityLabel="All"
-            accessibilityHint="Show all routine groups"
+            accessibilityHint={t("routines.filterAllGroupsHint")}
           >
             <Text
               style={[

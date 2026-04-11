@@ -26,6 +26,7 @@ export type BasicInfoScreenProps = {
   locale: Locale;
   palette: Palette;
   t: TFn;
+  nameError?: boolean;
 };
 
 export function BasicInfoScreen({
@@ -43,6 +44,7 @@ export function BasicInfoScreen({
   locale,
   palette,
   t,
+  nameError = false,
 }: BasicInfoScreenProps) {
   return (
     <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
@@ -56,7 +58,7 @@ export function BasicInfoScreen({
             style={[
               styles.input,
               {
-                borderColor: palette.border,
+                borderColor: nameError ? palette.accent : palette.border,
                 color: palette.textPrimary,
                 backgroundColor: palette.card,
               },
@@ -67,6 +69,11 @@ export function BasicInfoScreen({
             onChangeText={onChangeName}
             maxLength={50}
           />
+          {nameError ? (
+            <Text style={[styles.errorText, { color: palette.accent }]}>
+              {t("routines.fieldRequired")}
+            </Text>
+          ) : null}
           <CharacterCounter
             currentLength={name.length}
             maxLength={50}
@@ -191,18 +198,17 @@ const styles = StyleSheet.create({
   field: {
     gap: 8,
   },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   label: {
     fontFamily: monoFont,
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.6,
-  },
-  helperText: {
-    fontFamily: monoFont,
-    fontSize: 11,
-    lineHeight: 16,
-    letterSpacing: 0.2,
   },
   input: {
     borderWidth: 1,
@@ -211,6 +217,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontFamily: monoFont,
     fontSize: 14,
+  },
+  errorText: {
+    fontFamily: monoFont,
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 4,
   },
   textarea: {
     minHeight: 96,

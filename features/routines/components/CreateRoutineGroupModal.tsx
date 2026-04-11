@@ -1,7 +1,8 @@
+import { CharacterCounter } from "@/components/CharacterCounter";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -12,7 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { RequiredFieldsNotice } from "./RequiredFieldsNotice";
 
 export type RoutineOption = {
   id: string;
@@ -56,11 +56,11 @@ export function CreateRoutineGroupModal({
   const { t } = useI18n();
   const palette = useRetroPalette();
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState(false);
   const [detail, setDetail] = useState("");
   const [description, setDescription] = useState("");
   const [selectedRoutineIds, setSelectedRoutineIds] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
-  const [showRequiredValidation, setShowRequiredValidation] = useState(false);
 
   useEffect(() => {
     if (!visible) {
@@ -68,24 +68,12 @@ export function CreateRoutineGroupModal({
     }
 
     setName(initialValues?.name ?? "");
+    setNameError(false);
     setDetail(initialValues?.detail ?? "");
     setDescription(initialValues?.description ?? "");
     setSelectedRoutineIds(new Set(initialValues?.routineIds ?? []));
     setSubmitting(false);
-    setShowRequiredValidation(false);
   }, [visible, initialValues]);
-
-  const canSubmit = useMemo(() => name.trim().length > 0 && !submitting, [name, submitting]);
-
-  const missingRequiredFields = useMemo(() => {
-    const missing: string[] = [];
-
-    if (!name.trim()) {
-      missing.push(t("routines.groupFormMissingName"));
-    }
-
-    return missing;
-  }, [name, t]);
 
   const handleToggleRoutine = (routineId: string) => {
     setSelectedRoutineIds((prev) => {
@@ -101,21 +89,21 @@ export function CreateRoutineGroupModal({
 
   const resetAndClose = () => {
     setName("");
+    setNameError(false);
     setDetail("");
     setDescription("");
     setSelectedRoutineIds(new Set());
     setSubmitting(false);
-    setShowRequiredValidation(false);
     onClose();
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit) {
-      setShowRequiredValidation(true);
+    if (!name.trim()) {
+      setNameError(true);
       return;
     }
 
-    setShowRequiredValidation(false);
+    setNameError(false);
     setSubmitting(true);
     try {
       await onSubmit({
@@ -151,15 +139,19 @@ export function CreateRoutineGroupModal({
         </View>
 
         <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
+          <Text style={[styles.description, { color: palette.textSecondary }]}>
+            {t("routines.groupFormHint")}
+          </Text>
           <View style={styles.field}>
             <Text style={[styles.label, { color: palette.textPrimary }]}>
               {t("routines.groupFormNameLabel")}
+              <Text style={{ color: palette.accent }}> *</Text>
             </Text>
             <TextInput
               style={[
                 styles.input,
                 {
-                  borderColor: palette.border,
+                  borderColor: nameError ? palette.accent : palette.border,
                   color: palette.textPrimary,
                   backgroundColor: palette.card,
                 },
@@ -169,8 +161,20 @@ export function CreateRoutineGroupModal({
               value={name}
               onChangeText={(value) => {
                 setName(value);
+                if (value.trim()) setNameError(false);
               }}
               maxLength={50}
+            />
+            {nameError ? (
+              <Text style={[styles.errorText, { color: palette.accent }]}>
+                {t("routines.fieldRequired")}
+              </Text>
+            ) : null}
+            <CharacterCounter
+              currentLength={name.length}
+              maxLength={50}
+              color={palette.textSecondary}
+              accentColor={palette.accent}
             />
           </View>
 
@@ -192,6 +196,12 @@ export function CreateRoutineGroupModal({
               value={detail}
               onChangeText={setDetail}
               maxLength={60}
+            />
+            <CharacterCounter
+              currentLength={detail.length}
+              maxLength={60}
+              color={palette.textSecondary}
+              accentColor={palette.accent}
             />
           </View>
 
@@ -216,6 +226,12 @@ export function CreateRoutineGroupModal({
               maxLength={280}
               multiline
               textAlignVertical="top"
+            />
+            <CharacterCounter
+              currentLength={description.length}
+              maxLength={280}
+              color={palette.textSecondary}
+              accentColor={palette.accent}
             />
           </View>
 
@@ -262,17 +278,6 @@ export function CreateRoutineGroupModal({
               })}
             </View>
           </View>
-
-          {showRequiredValidation ? (
-            <RequiredFieldsNotice
-              title={t("routines.groupFormValidationTitle")}
-              fields={missingRequiredFields}
-              borderColor={palette.accent}
-              backgroundColor={palette.card}
-              titleColor={palette.accent}
-              textColor={palette.textPrimary}
-            />
-          ) : null}
         </ScrollView>
 
         <View style={[styles.footer, { borderTopColor: palette.border }]}>
@@ -336,6 +341,12 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 16,
   },
+  description: {
+    fontFamily: monoFont,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.2,
+  },
   field: {
     gap: 8,
   },
@@ -345,6 +356,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.6,
+  },
+  helperText: {
+    fontFamily: monoFont,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.2,
+  },
+  errorText: {
+    fontFamily: monoFont,
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 4,
   },
   input: {
     borderWidth: 1,
