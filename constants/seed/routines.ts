@@ -1,102 +1,64 @@
 export const DEFAULT_ROUTINES = [
   {
-    id: "routine-01", // Pull Upper (Machine Focus)
-    name: "Pull Upper",
-    detail: "Machine Focus",
-    description: "Upper-body pull routine focused on controlled machine work.",
+    id: "routine-debug-01",
+    name: "Debug Routine",
+    detail: "Debug",
+    description: "Default debug routine for development.",
     isSystem: true,
-    labelPt: "Pull Superior Foco em Maquinas",
-    labelEn: "Pull Upper Machine Focus",
+    labelPt: "Rotina Debug",
+    labelEn: "Debug Routine",
     createdAt: "2026-04-10T00:00:00.000Z",
   },
   {
-    id: "routine-02", // Push Upper (Machine Focus)
-    name: "Push Upper",
-    detail: "Machine Focus",
-    description: "Upper-body push routine with stable machine-based progressions.",
+    id: "routine-debug-02",
+    name: "Debug Routine 2",
+    detail: "Debug",
+    description: "Second default debug routine for development.",
     isSystem: true,
-    labelPt: "Push Superior Foco em Maquinas",
-    labelEn: "Push Upper Machine Focus",
+    labelPt: "Rotina Debug 2",
+    labelEn: "Debug Routine 2",
     createdAt: "2026-04-10T00:01:00.000Z",
   },
 ] as const;
 
 export const DEFAULT_ROUTINE_TAG_LINKS = [
-  { routineId: "routine-01", tagId: "rt-01" }, // routine: Pull Upper (Machine Focus), tag: machine
-  { routineId: "routine-01", tagId: "rt-02" }, // routine: Pull Upper (Machine Focus), tag: upper
-  { routineId: "routine-01", tagId: "rt-03" }, // routine: Pull Upper (Machine Focus), tag: pull
-  { routineId: "routine-01", tagId: "rt-08" }, // routine: Pull Upper (Machine Focus), tag: hypertrophy
-  { routineId: "routine-01", tagId: "rt-10" }, // routine: Pull Upper (Machine Focus), tag: intermediate
-  { routineId: "routine-02", tagId: "rt-01" }, // routine: Push Upper (Machine Focus), tag: machine
-  { routineId: "routine-02", tagId: "rt-02" }, // routine: Push Upper (Machine Focus), tag: upper
-  { routineId: "routine-02", tagId: "rt-04" }, // routine: Push Upper (Machine Focus), tag: push
-  { routineId: "routine-02", tagId: "rt-08" }, // routine: Push Upper (Machine Focus), tag: hypertrophy
-  { routineId: "routine-02", tagId: "rt-10" }, // routine: Push Upper (Machine Focus), tag: intermediate
+  { routineId: "routine-debug-01", tagId: "rt-01" },
+  { routineId: "routine-debug-01", tagId: "rt-10" },
+  { routineId: "routine-debug-02", tagId: "rt-02" },
+  { routineId: "routine-debug-02", tagId: "rt-08" },
 ] as const;
 
 export const DEFAULT_ROUTINE_EXERCISES = [
   {
-    id: "rte-01",
-    routineId: "routine-01", // Pull Upper (Machine Focus)
+    id: "rte-debug-01",
+    routineId: "routine-debug-01",
     exerciseId: "ex-08", // Lat Pulldown
     exerciseOrder: 1,
-    setsTarget: 4,
-    repsTarget: "8-12",
-  },
-  {
-    id: "rte-05",
-    routineId: "routine-02", // Push Upper (Machine Focus)
-    exerciseId: "ex-01", // Bench Press
-    exerciseOrder: 1,
-    setsTarget: 4,
-    repsTarget: "8-12",
-  },
-  {
-    id: "rte-06",
-    routineId: "routine-02", // Push Upper (Machine Focus)
-    exerciseId: "ex-16", // Overhead Press
-    exerciseOrder: 2,
-    setsTarget: 4,
-    repsTarget: "8-12",
-  },
-  {
-    id: "rte-07",
-    routineId: "routine-02", // Push Upper (Machine Focus)
-    exerciseId: "ex-17", // Lateral Raise
-    exerciseOrder: 3,
-    setsTarget: 3,
-    repsTarget: "12-15",
-  },
-  {
-    id: "rte-08",
-    routineId: "routine-02", // Push Upper (Machine Focus)
-    exerciseId: "ex-23", // Tricep Pushdown
-    exerciseOrder: 4,
     setsTarget: 3,
     repsTarget: "10-12",
   },
   {
-    id: "rte-02",
-    routineId: "routine-01", // Pull Upper (Machine Focus)
+    id: "rte-debug-02",
+    routineId: "routine-debug-01",
     exerciseId: "ex-09", // Seated Cable Row
     exerciseOrder: 2,
-    setsTarget: 4,
-    repsTarget: "8-12",
+    setsTarget: 3,
+    repsTarget: "10-12",
   },
   {
-    id: "rte-03",
-    routineId: "routine-01", // Pull Upper (Machine Focus)
-    exerciseId: "ex-19", // Face Pull
-    exerciseOrder: 3,
+    id: "rte-debug-03",
+    routineId: "routine-debug-02",
+    exerciseId: "ex-01", // Bench Press
+    exerciseOrder: 1,
     setsTarget: 3,
-    repsTarget: "12-15",
+    repsTarget: "8-10",
   },
   {
-    id: "rte-04",
-    routineId: "routine-01", // Pull Upper (Machine Focus)
-    exerciseId: "ex-21", // Hammer Curl
-    exerciseOrder: 4,
+    id: "rte-debug-04",
+    routineId: "routine-debug-02",
+    exerciseId: "ex-16", // Overhead Press
+    exerciseOrder: 2,
     setsTarget: 3,
-    repsTarget: "6-9",
+    repsTarget: "8-10",
   },
 ] as const;

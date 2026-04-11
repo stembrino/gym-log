@@ -1,7 +1,7 @@
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -14,23 +14,34 @@ import {
 } from "react-native";
 import { RequiredFieldsNotice } from "./RequiredFieldsNotice";
 
-type RoutineOption = {
+export type RoutineOption = {
   id: string;
   name: string;
   detail: string | null;
 };
 
-type CreateRoutineGroupPayload = {
+export type CreateRoutineGroupPayload = {
   name: string;
   detail?: string;
   description?: string;
   routineIds: string[];
 };
 
+export type RoutineGroupFormInitialValues = {
+  name: string;
+  detail: string;
+  description: string;
+  routineIds: string[];
+};
+
+type RoutineGroupModalMode = "create" | "edit";
+
 type CreateRoutineGroupModalProps = {
   visible: boolean;
   onClose: () => void;
   routines: RoutineOption[];
+  mode?: RoutineGroupModalMode;
+  initialValues?: RoutineGroupFormInitialValues | null;
   onSubmit: (payload: CreateRoutineGroupPayload) => Promise<void>;
 };
 
@@ -38,6 +49,8 @@ export function CreateRoutineGroupModal({
   visible,
   onClose,
   routines,
+  mode = "create",
+  initialValues,
   onSubmit,
 }: CreateRoutineGroupModalProps) {
   const { t } = useI18n();
@@ -49,10 +62,20 @@ export function CreateRoutineGroupModal({
   const [submitting, setSubmitting] = useState(false);
   const [showRequiredValidation, setShowRequiredValidation] = useState(false);
 
-  const canSubmit = useMemo(
-    () => name.trim().length > 0 && selectedRoutineIds.size > 0 && !submitting,
-    [name, selectedRoutineIds, submitting],
-  );
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+
+    setName(initialValues?.name ?? "");
+    setDetail(initialValues?.detail ?? "");
+    setDescription(initialValues?.description ?? "");
+    setSelectedRoutineIds(new Set(initialValues?.routineIds ?? []));
+    setSubmitting(false);
+    setShowRequiredValidation(false);
+  }, [visible, initialValues]);
+
+  const canSubmit = useMemo(() => name.trim().length > 0 && !submitting, [name, submitting]);
 
   const missingRequiredFields = useMemo(() => {
     const missing: string[] = [];
@@ -61,12 +84,8 @@ export function CreateRoutineGroupModal({
       missing.push(t("routines.groupFormMissingName"));
     }
 
-    if (selectedRoutineIds.size === 0) {
-      missing.push(t("routines.groupFormMissingRoutines"));
-    }
-
     return missing;
-  }, [name, selectedRoutineIds, t]);
+  }, [name, t]);
 
   const handleToggleRoutine = (routineId: string) => {
     setSelectedRoutineIds((prev) => {
@@ -125,7 +144,7 @@ export function CreateRoutineGroupModal({
           </TouchableOpacity>
 
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
-            {t("routines.createGroup")}
+            {mode === "edit" ? t("routines.editGroup") : t("routines.createGroup")}
           </Text>
 
           <View style={styles.headerSpacer} />
@@ -275,7 +294,7 @@ export function CreateRoutineGroupModal({
             disabled={submitting}
           >
             <Text style={[styles.buttonText, { color: palette.card }]}>
-              {t("routines.createGroup")}
+              {mode === "edit" ? t("routines.saveButton") : t("routines.createGroup")}
             </Text>
           </TouchableOpacity>
         </View>

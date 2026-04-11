@@ -1,27 +1,62 @@
 import { AppCard } from "@/components/AppCard";
+import { Chip } from "@/components/Chip";
 import { ExpandedPanel } from "@/components/ExpandedPanel";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
-import type { AppLocale } from "@/constants/translations";
 import { db } from "@/db/client";
+import { routineGroupRoutines } from "@/db/schema";
 import {
-  entityTranslations,
-  routineExercises,
-  routineGroupRoutines,
-  routineGroups,
-  routineTagLinks,
-  routines,
-} from "@/db/schema";
-import { useRoutineGroups } from "@/features/routines/hooks/useRoutineGroups";
+  UNGROUPED_ROUTINE_GROUP_ID,
+  useRoutineGroups,
+} from "@/features/routines/hooks/useRoutineGroups";
+import {
+  useRoutineMutations,
+  type GroupSubmitPayload,
+  type RoutineSubmitPayload,
+} from "@/features/routines/hooks/useRoutineMutations";
 import { eq } from "drizzle-orm";
-import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { CreateRoutineGroupModal } from "./components/CreateRoutineGroupModal";
-import { CreateRoutineModal } from "./components/CreateRoutineModal";
+import { useCallback, useMemo, useState } from "react";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  CreateRoutineGroupModal,
+  type RoutineGroupFormInitialValues,
+} from "./components/CreateRoutineGroupModal";
+import { CreateRoutineModal, type RoutineFormInitialValues } from "./components/CreateRoutineModal";
+import { HeaderActionButton } from "./components/HeaderActionButton";
+import { RoutineGroupDetailCard } from "./components/RoutineGroupDetailCard";
 import type { RoutineGroupOption } from "./components/types";
 
-type RoutineFilter = "all" | "favorites";
+type RoutineFilterMode = "all" | "ungrouped";
+
+type RoutineListItem = {
+  id: string;
+  name: string;
+  detail: string | null;
+  description: string | null;
+  createdAt: string;
+  exercises: {
+    id: string;
+    exerciseId: string;
+    name: string;
+    exerciseOrder: number;
+    setsTarget: number | null;
+    repsTarget: string | null;
+  }[];
+  groups: {
+    id: string;
+    name: string;
+  }[];
+  isUngrouped: boolean;
+};
 
 export function RoutinesTabScreen() {
   const { t, locale } = useI18n();
@@ -32,60 +67,118 @@ export function RoutinesTabScreen() {
     toggleGroupFavorite,
     reload,
   } = useRoutineGroups(locale);
-  const [expandedRoutineIds, setExpandedRoutineIds] = useState<Record<string, boolean>>({});
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
-  const [routineFilter, setRoutineFilter] = useState<RoutineFilter>("all");
+  const { createRoutine, updateRoutine, createGroup, updateGroup, deleteRoutine, deleteGroup } =
+    useRoutineMutations(locale, reload);
 
-  const favoriteCount = useMemo(
-    () => groupedRoutines.filter((group) => group.isFavorite).length,
+  const [expandedRoutineIds, setExpandedRoutineIds] = useState<Record<string, boolean>>({});
+  const [showRoutineModal, setShowRoutineModal] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [routineFilterMode, setRoutineFilterMode] = useState<RoutineFilterMode>("all");
+  const [selectedFilterGroupId, setSelectedFilterGroupId] = useState<string | null>(null);
+
+  const [editingRoutineId, setEditingRoutineId] = useState<string | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [routineInitialValues, setRoutineInitialValues] = useState<RoutineFormInitialValues | null>(
+    null,
+  );
+  const [groupInitialValues, setGroupInitialValues] =
+    useState<RoutineGroupFormInitialValues | null>(null);
+
+  const getGroupLabel = (group: { name: string }) => group.name;
+  const getGroupDetail = (group: { detail: string | null }) => group.detail ?? "";
+  const getRoutineLabel = (routine: { name: string }) => routine.name;
+  const getRoutineDetail = (routine: { detail: string | null }) => routine.detail ?? "";
+
+  const filterableGroups = useMemo(
+    () => groupedRoutines.filter((group) => group.id !== UNGROUPED_ROUTINE_GROUP_ID),
     [groupedRoutines],
   );
 
-  const visibleGroups = useMemo(() => {
-    if (routineFilter === "favorites") {
-      return groupedRoutines.filter((group) => group.isFavorite);
-    }
+  const selectedGroupView = useMemo(
+    () => filterableGroups.find((group) => group.id === selectedFilterGroupId) ?? null,
+    [filterableGroups, selectedFilterGroupId],
+  );
 
-    return groupedRoutines;
-  }, [routineFilter, groupedRoutines]);
-
-  const getGroupLabel = (group: { name: string }) => group.name;
-
-  const getGroupDetail = (group: { detail: string | null }) => group.detail ?? "";
-
-  const getGroupDescription = (group: { description: string | null }) => group.description ?? "";
-
-  const getRoutineLabel = (routine: { name: string }) => routine.name;
-
-  const getRoutineDetail = (routine: { detail: string | null }) => routine.detail ?? "";
-
-  const availableRoutines = useMemo(() => {
-    const unique = new Map<string, { id: string; name: string; detail: string | null }>();
+  const routines = useMemo<RoutineListItem[]>(() => {
+    const byRoutineId = new Map<string, RoutineListItem>();
 
     for (const group of groupedRoutines) {
+      const isUngroupedBucket = group.id === UNGROUPED_ROUTINE_GROUP_ID;
+
       for (const routine of group.routines) {
-        if (!unique.has(routine.id)) {
-          unique.set(routine.id, {
+        const existing = byRoutineId.get(routine.id);
+
+        if (!existing) {
+          byRoutineId.set(routine.id, {
             id: routine.id,
             name: getRoutineLabel(routine),
-            detail: getRoutineDetail(routine) || null,
+            detail: routine.detail,
+            description: routine.description,
+            createdAt: routine.createdAt,
+            exercises: routine.exercises,
+            groups: isUngroupedBucket
+              ? []
+              : [
+                  {
+                    id: group.id,
+                    name: getGroupLabel(group),
+                  },
+                ],
+            isUngrouped: isUngroupedBucket,
+          });
+          continue;
+        }
+
+        if (isUngroupedBucket) {
+          existing.isUngrouped = true;
+          continue;
+        }
+
+        if (!existing.groups.some((entry) => entry.id === group.id)) {
+          existing.groups.push({
+            id: group.id,
+            name: getGroupLabel(group),
           });
         }
       }
     }
 
-    return Array.from(unique.values());
+    return Array.from(byRoutineId.values()).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }, [groupedRoutines]);
+
+  const filteredRoutines = useMemo(() => {
+    return routines.filter((routine) => {
+      if (
+        selectedFilterGroupId &&
+        !routine.groups.some((group) => group.id === selectedFilterGroupId)
+      ) {
+        return false;
+      }
+
+      if (routineFilterMode === "ungrouped") {
+        return routine.isUngrouped;
+      }
+
+      return true;
+    });
+  }, [routineFilterMode, routines, selectedFilterGroupId]);
+
+  const availableRoutines = useMemo(() => {
+    return routines.map((routine) => ({
+      id: routine.id,
+      name: routine.name,
+      detail: routine.detail,
+    }));
+  }, [routines]);
 
   const availableGroups = useMemo<RoutineGroupOption[]>(
     () =>
-      groupedRoutines.map((group) => ({
+      filterableGroups.map((group) => ({
         id: group.id,
         name: getGroupLabel(group),
         detail: getGroupDetail(group) || null,
       })),
-    [groupedRoutines],
+    [filterableGroups],
   );
 
   const getRoutineDescription = (routine: { description: string | null }) =>
@@ -93,230 +186,161 @@ export function RoutinesTabScreen() {
 
   const getExerciseLabel = (exercise: { name: string }) => exercise.name;
 
-  const getRoutinePanelKey = (groupId: string, routineId: string) => `${groupId}:${routineId}`;
-
-  const toggleRoutine = (groupId: string, routineId: string) => {
-    const panelKey = getRoutinePanelKey(groupId, routineId);
-
+  const toggleRoutine = (routineId: string) => {
     setExpandedRoutineIds((prev) => ({
       ...prev,
-      [panelKey]: !prev[panelKey],
+      [routineId]: !prev[routineId],
     }));
   };
 
-  const normalizeSearchText = (value: string): string =>
-    value
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .trim();
+  const closeRoutineModal = () => {
+    setShowRoutineModal(false);
+    setEditingRoutineId(null);
+    setRoutineInitialValues(null);
+  };
 
-  const upsertEntityTranslation = async (args: {
-    entityType: "routine" | "routine_group";
-    entityId: string;
-    field: "name" | "detail" | "description";
-    locale: AppLocale;
-    value: string;
-    now: string;
-  }) => {
-    await db
-      .insert(entityTranslations)
-      .values({
-        entityType: args.entityType,
-        entityId: args.entityId,
-        field: args.field,
-        locale: args.locale,
-        value: args.value,
-        createdAt: args.now,
-        updatedAt: args.now,
-      })
-      .onConflictDoUpdate({
-        target: [
-          entityTranslations.entityType,
-          entityTranslations.entityId,
-          entityTranslations.field,
-          entityTranslations.locale,
-        ],
-        set: {
-          value: args.value,
-          updatedAt: args.now,
+  const closeGroupModal = () => {
+    setShowGroupModal(false);
+    setEditingGroupId(null);
+    setGroupInitialValues(null);
+  };
+
+  const openCreateRoutine = () => {
+    setEditingRoutineId(null);
+    setRoutineInitialValues(null);
+    setShowRoutineModal(true);
+  };
+
+  const openCreateGroup = () => {
+    setEditingGroupId(null);
+    setGroupInitialValues(null);
+    setShowGroupModal(true);
+  };
+
+  const openEditGroup = (groupId: string) => {
+    const group = filterableGroups.find((entry) => entry.id === groupId);
+
+    if (!group) {
+      return;
+    }
+
+    setEditingGroupId(group.id);
+    setGroupInitialValues({
+      name: group.name,
+      detail: group.detail ?? "",
+      description: group.description ?? "",
+      routineIds: group.routines.map((routine) => routine.id),
+    });
+    setShowGroupModal(true);
+  };
+
+  const openEditRoutine = useCallback(async (routineId: string) => {
+    const routine = await db.query.routines.findFirst({
+      where: (routineTable, { eq: eqQuery }) => eqQuery(routineTable.id, routineId),
+      with: {
+        routineTagLinks: true,
+        routineExercises: {
+          orderBy: (routineExercise, { asc }) => [asc(routineExercise.exerciseOrder)],
+          with: {
+            exercise: true,
+          },
         },
-      });
+      },
+    });
+
+    if (!routine) {
+      return;
+    }
+
+    const groupLink = await db.query.routineGroupRoutines.findFirst({
+      where: eq(routineGroupRoutines.routineId, routineId),
+      orderBy: (entry, { asc }) => [asc(entry.position)],
+    });
+
+    setEditingRoutineId(routine.id);
+    setRoutineInitialValues({
+      name: routine.name,
+      selectedGroupId: groupLink?.routineGroupId ?? null,
+      detail: routine.detail ?? "",
+      description: routine.description ?? "",
+      tagIds: routine.routineTagLinks.map((tagLink) => tagLink.tagId),
+      exercises: routine.routineExercises.map((entry, index) => ({
+        exerciseId: entry.exerciseId,
+        name: entry.exercise?.name ?? entry.exerciseId,
+        exerciseOrder: entry.exerciseOrder ?? index + 1,
+        setsTarget: entry.setsTarget?.toString() ?? "",
+        repsTarget: entry.repsTarget ?? "",
+      })),
+    });
+    setShowRoutineModal(true);
+  }, []);
+
+  const handleRoutineSubmit = async (routineData: RoutineSubmitPayload) => {
+    if (editingRoutineId) {
+      await updateRoutine(editingRoutineId, routineData);
+    } else {
+      await createRoutine(routineData);
+    }
+
+    closeRoutineModal();
   };
 
-  const handleCreateRoutine = async (routineData: {
-    groupId: string;
-    name: string;
-    detail?: string;
-    description?: string;
-    tagIds: string[];
-    exercises: {
-      exerciseId: string;
-      exerciseOrder: number;
-      setsTarget?: number;
-      repsTarget?: number;
-    }[];
-  }) => {
-    const routineId = `routine-${Date.now()}`;
-    const createdAt = new Date().toISOString();
-
-    const trimmedName = routineData.name.trim();
-    const trimmedDetail = routineData.detail?.trim() || null;
-    const trimmedDescription = routineData.description?.trim() || null;
-
-    await db.insert(routines).values({
-      id: routineId,
-      name: trimmedName,
-      detail: trimmedDetail,
-      description: trimmedDescription,
-      isSystem: false,
-      isFavorite: false,
-      searchPt: locale === "pt-BR" ? normalizeSearchText(trimmedName) : null,
-      searchEn: locale === "en-US" ? normalizeSearchText(trimmedName) : null,
-      createdAt,
-    });
-
-    const currentLinks = await db
-      .select({
-        routineGroupId: routineGroupRoutines.routineGroupId,
-      })
-      .from(routineGroupRoutines)
-      .where(eq(routineGroupRoutines.routineGroupId, routineData.groupId));
-
-    const nextPosition = currentLinks.length + 1;
-
-    await db.insert(routineGroupRoutines).values({
-      routineGroupId: routineData.groupId,
-      routineId,
-      position: nextPosition,
-      label: null,
-    });
-
-    if (routineData.tagIds.length > 0) {
-      await db.insert(routineTagLinks).values(
-        routineData.tagIds.map((tagId) => ({
-          routineId,
-          tagId,
-        })),
-      );
+  const handleGroupSubmit = async (groupData: GroupSubmitPayload) => {
+    if (editingGroupId) {
+      await updateGroup(editingGroupId, groupData);
+    } else {
+      await createGroup(groupData);
     }
 
-    if (routineData.exercises.length > 0) {
-      await db.insert(routineExercises).values(
-        routineData.exercises.map((exercise, index) => ({
-          id: `rte-${routineId}-${index + 1}`,
-          routineId,
-          exerciseId: exercise.exerciseId,
-          exerciseOrder: exercise.exerciseOrder,
-          setsTarget: exercise.setsTarget ?? null,
-          repsTarget: exercise.repsTarget?.toString() ?? null,
-        })),
-      );
-    }
-
-    await upsertEntityTranslation({
-      entityType: "routine",
-      entityId: routineId,
-      field: "name",
-      locale,
-      value: trimmedName,
-      now: createdAt,
-    });
-
-    if (trimmedDetail) {
-      await upsertEntityTranslation({
-        entityType: "routine",
-        entityId: routineId,
-        field: "detail",
-        locale,
-        value: trimmedDetail,
-        now: createdAt,
-      });
-    }
-
-    if (trimmedDescription) {
-      await upsertEntityTranslation({
-        entityType: "routine",
-        entityId: routineId,
-        field: "description",
-        locale,
-        value: trimmedDescription,
-        now: createdAt,
-      });
-    }
-
-    await reload();
-    setShowCreateModal(false);
+    closeGroupModal();
   };
 
-  const handleCreateGroup = async (groupData: {
-    name: string;
-    detail?: string;
-    description?: string;
-    routineIds: string[];
-  }) => {
-    const groupId = `rg-${Date.now()}`;
-    const createdAt = new Date().toISOString();
-    const trimmedName = groupData.name.trim();
-    const trimmedDetail = groupData.detail?.trim() || null;
-    const trimmedDescription = groupData.description?.trim() || null;
-
-    await db.insert(routineGroups).values({
-      id: groupId,
-      name: trimmedName,
-      detail: trimmedDetail,
-      description: trimmedDescription,
-      isSystem: false,
-      isFavorite: false,
-      searchPt: locale === "pt-BR" ? normalizeSearchText(trimmedName) : null,
-      searchEn: locale === "en-US" ? normalizeSearchText(trimmedName) : null,
-      createdAt,
-    });
-
-    await upsertEntityTranslation({
-      entityType: "routine_group",
-      entityId: groupId,
-      field: "name",
-      locale,
-      value: trimmedName,
-      now: createdAt,
-    });
-
-    if (trimmedDetail) {
-      await upsertEntityTranslation({
-        entityType: "routine_group",
-        entityId: groupId,
-        field: "detail",
-        locale,
-        value: trimmedDetail,
-        now: createdAt,
-      });
-    }
-
-    if (trimmedDescription) {
-      await upsertEntityTranslation({
-        entityType: "routine_group",
-        entityId: groupId,
-        field: "description",
-        locale,
-        value: trimmedDescription,
-        now: createdAt,
-      });
-    }
-
-    if (groupData.routineIds.length > 0) {
-      await db.insert(routineGroupRoutines).values(
-        groupData.routineIds.map((routineId, index) => ({
-          routineGroupId: groupId,
-          routineId,
-          position: index + 1,
-          label: null,
-        })),
+  const handleDeleteRoutine = useCallback(
+    (routineId: string, routineName: string) => {
+      Alert.alert(
+        t("routines.deleteRoutineModalTitle"),
+        t("routines.deleteRoutineModalMessage", { name: routineName }),
+        [
+          {
+            text: t("routines.cancelButton"),
+            style: "cancel",
+          },
+          {
+            text: t("routines.confirmDelete"),
+            style: "destructive",
+            onPress: async () => {
+              await deleteRoutine(routineId);
+            },
+          },
+        ],
       );
-    }
+    },
+    [deleteRoutine, t],
+  );
 
-    await reload();
-  };
+  const handleDeleteGroup = useCallback(
+    (groupId: string, groupName: string) => {
+      Alert.alert(
+        t("routines.deleteGroupModalTitle"),
+        t("routines.deleteGroupModalMessage", { name: groupName }),
+        [
+          {
+            text: t("routines.cancelButton"),
+            style: "cancel",
+          },
+          {
+            text: t("routines.confirmDelete"),
+            style: "destructive",
+            onPress: async () => {
+              await deleteGroup(groupId);
+              setSelectedFilterGroupId((current) => (current === groupId ? null : current));
+            },
+          },
+        ],
+      );
+    },
+    [deleteGroup, t],
+  );
 
   return (
     <>
@@ -333,7 +357,7 @@ export function RoutinesTabScreen() {
               styles.addButton,
               { backgroundColor: palette.accent, borderColor: palette.accent },
             ]}
-            onPress={() => setShowCreateModal(true)}
+            onPress={openCreateRoutine}
           >
             <Text style={[styles.addButtonText, { color: palette.card }]}>
               + {t("routines.addRoutineButton")}
@@ -345,20 +369,24 @@ export function RoutinesTabScreen() {
               styles.addButton,
               { borderColor: palette.border, backgroundColor: palette.card },
             ]}
-            onPress={() => setShowCreateGroupModal(true)}
+            onPress={openCreateGroup}
           >
             <Text style={[styles.addButtonText, { color: palette.textPrimary }]}>+ GROUP</Text>
           </TouchableOpacity>
         </View>
 
+        <Text style={[styles.filterLegend, { color: palette.textSecondary }]}>
+          {t("routines.filterLegend")}
+        </Text>
+
         <View style={styles.filterRow}>
           <Pressable
-            onPress={() => setRoutineFilter("all")}
+            onPress={() => setRoutineFilterMode("all")}
             style={[
               styles.filterButton,
               styles.filterButtonRounded,
               {
-                backgroundColor: routineFilter === "all" ? palette.accent : palette.card,
+                backgroundColor: routineFilterMode === "all" ? palette.accent : palette.card,
                 borderColor: palette.border,
               },
             ]}
@@ -370,7 +398,7 @@ export function RoutinesTabScreen() {
             <Text
               style={[
                 styles.filterButtonText,
-                { color: routineFilter === "all" ? palette.card : palette.textPrimary },
+                { color: routineFilterMode === "all" ? palette.card : palette.textPrimary },
               ]}
             >
               {t("routines.filterAll")}
@@ -378,140 +406,195 @@ export function RoutinesTabScreen() {
           </Pressable>
 
           <Pressable
-            onPress={() => setRoutineFilter("favorites")}
+            onPress={() => {
+              setRoutineFilterMode("ungrouped");
+              setSelectedFilterGroupId(null);
+            }}
             style={[
               styles.filterButton,
               styles.filterButtonRounded,
               {
-                backgroundColor: routineFilter === "favorites" ? palette.accent : palette.card,
+                backgroundColor: routineFilterMode === "ungrouped" ? palette.accent : palette.card,
                 borderColor: palette.border,
               },
             ]}
             hitSlop={4}
             accessibilityRole="button"
-            accessibilityLabel="Favorites"
-            accessibilityHint="Show only favorite groups"
+            accessibilityLabel={t("routines.filterUngrouped")}
+            accessibilityHint={t("routines.filterUngroupedHint")}
           >
             <Text
               style={[
                 styles.filterButtonText,
                 {
-                  color: routineFilter === "favorites" ? palette.card : palette.textPrimary,
+                  color: routineFilterMode === "ungrouped" ? palette.card : palette.textPrimary,
                 },
               ]}
             >
-              {t("routines.filterFavorites")} ({favoriteCount})
+              {t("routines.filterUngrouped")}
             </Text>
           </Pressable>
         </View>
+
+        {filterableGroups.length > 0 ? (
+          <>
+            <Text style={[styles.groupFilterLegend, { color: palette.textSecondary }]}>
+              {t("routines.groupFilterLegend")}
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.groupFilterRow}
+            >
+              <Pressable
+                onPress={() => {
+                  setSelectedFilterGroupId(null);
+                }}
+                style={[
+                  styles.clearGroupFilterButton,
+                  {
+                    borderColor: palette.border,
+                    backgroundColor: selectedFilterGroupId ? palette.card : palette.listSelected,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t("routines.clearGroupFilter")}
+                accessibilityHint={t("routines.clearGroupFilterHint")}
+              >
+                <Text
+                  style={[
+                    styles.clearGroupFilterIcon,
+                    { color: selectedFilterGroupId ? palette.textPrimary : palette.textSecondary },
+                  ]}
+                >
+                  ✕
+                </Text>
+              </Pressable>
+
+              {filterableGroups.map((group) => (
+                <View key={group.id} style={styles.groupFilterItem}>
+                  <Chip
+                    label={group.name}
+                    selected={selectedFilterGroupId === group.id}
+                    onPress={() => {
+                      setRoutineFilterMode("all");
+                      setSelectedFilterGroupId((current) =>
+                        current === group.id ? null : group.id,
+                      );
+                    }}
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          </>
+        ) : null}
 
         {loading ? (
           <Text style={[styles.emptyState, { color: palette.textSecondary }]}>
             {t("routines.loading")}
           </Text>
-        ) : visibleGroups.length === 0 ? (
+        ) : selectedGroupView ? (
+          <View style={styles.list}>
+            <RoutineGroupDetailCard
+              group={selectedGroupView}
+              expandedRoutineIds={expandedRoutineIds}
+              onToggleRoutine={toggleRoutine}
+              onToggleGroupFavorite={(groupId) => {
+                void toggleGroupFavorite(groupId);
+              }}
+              onEditGroup={openEditGroup}
+              onDeleteGroup={handleDeleteGroup}
+              onEditRoutine={(routineId) => {
+                void openEditRoutine(routineId);
+              }}
+              onDeleteRoutine={handleDeleteRoutine}
+              palette={palette}
+              t={t as (key: string) => string}
+            />
+          </View>
+        ) : filteredRoutines.length === 0 ? (
           <Text style={[styles.emptyState, { color: palette.textSecondary }]}>
-            {routineFilter === "favorites" ? "No favorite groups yet." : "No routine groups found."}
+            {routineFilterMode === "ungrouped"
+              ? t("routines.emptyUngroupedRoutines")
+              : selectedFilterGroupId
+                ? t("routines.emptyGroupFilterRoutines")
+                : t("routines.emptyRoutineGroups")}
           </Text>
         ) : (
           <View style={styles.list}>
-            {visibleGroups.map((group) => (
-              <AppCard key={group.id} style={styles.groupCard}>
-                <View style={styles.groupHeaderRow}>
-                  <View style={styles.groupHeaderCopy}>
-                    <View style={styles.groupTitleRow}>
-                      <Text style={[styles.groupTitle, { color: palette.textPrimary }]}>
-                        {getGroupLabel(group)}
-                      </Text>
+            {filteredRoutines.map((routine) => (
+              <AppCard key={routine.id} style={styles.routineCard}>
+                <ExpandedPanel
+                  title={routine.name}
+                  subtitle={getRoutineDetail(routine)}
+                  count={routine.exercises.length}
+                  expanded={Boolean(expandedRoutineIds[routine.id])}
+                  onToggle={() => toggleRoutine(routine.id)}
+                  headerAction={
+                    <View style={styles.headerActionRow}>
+                      <HeaderActionButton
+                        label={t("routines.editAction")}
+                        onPress={() => {
+                          void openEditRoutine(routine.id);
+                        }}
+                        palette={palette}
+                      />
+                      <HeaderActionButton
+                        label={t("routines.deleteAction")}
+                        onPress={() => handleDeleteRoutine(routine.id, routine.name)}
+                        palette={palette}
+                      />
                     </View>
-
-                    {getGroupDetail(group) ? (
-                      <Text style={[styles.groupSubtitle, { color: palette.textSecondary }]}>
-                        {getGroupDetail(group)}
-                      </Text>
-                    ) : null}
+                  }
+                  style={[styles.groupRoutinePanel, { borderColor: palette.border }]}
+                >
+                  <View style={styles.routineGroupBadges}>
+                    {routine.groups.length > 0 ? (
+                      routine.groups.map((group) => (
+                        <View
+                          key={`${routine.id}-${group.id}`}
+                          style={[styles.groupBadge, { borderColor: palette.border }]}
+                        >
+                          <Text style={[styles.groupBadgeText, { color: palette.textSecondary }]}>
+                            {group.name}
+                          </Text>
+                        </View>
+                      ))
+                    ) : (
+                      <View style={[styles.groupBadge, { borderColor: palette.border }]}>
+                        <Text style={[styles.groupBadgeText, { color: palette.textSecondary }]}>
+                          {t("routines.formNoGroupOption")}
+                        </Text>
+                      </View>
+                    )}
                   </View>
 
-                  <Pressable
-                    onPress={() => {
-                      void toggleGroupFavorite(group.id);
-                    }}
-                    style={[
-                      styles.favoriteButton,
-                      {
-                        borderColor: "transparent",
-                        backgroundColor: "transparent",
-                      },
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      group.isFavorite ? "Remove group from favorites" : "Mark group as favorite"
-                    }
-                    accessibilityHint="Toggle this routine group as favorite"
-                  >
-                    <Text
-                      style={[
-                        styles.favoriteButtonText,
-                        {
-                          color: group.isFavorite ? palette.accent : palette.textSecondary,
-                        },
-                      ]}
-                    >
-                      {group.isFavorite ? "★" : "☆"}
-                    </Text>
-                  </Pressable>
-                </View>
-
-                <View style={styles.groupRoutinesList}>
-                  {group.routines.map((routine) => (
-                    <ExpandedPanel
-                      key={`${group.id}-${routine.id}`}
-                      title={getRoutineLabel(routine)}
-                      subtitle={getRoutineDetail(routine)}
-                      count={routine.exercises.length}
-                      expanded={Boolean(
-                        expandedRoutineIds[getRoutinePanelKey(group.id, routine.id)],
-                      )}
-                      onToggle={() => toggleRoutine(group.id, routine.id)}
-                      style={[styles.groupRoutinePanel, { borderColor: palette.border }]}
-                    >
-                      <View style={styles.exerciseList}>
-                        {routine.exercises.map((exercise) => (
-                          <View key={exercise.id} style={styles.exerciseRow}>
-                            <Text style={[styles.exerciseIndex, { color: palette.accent }]}>
-                              {String(exercise.exerciseOrder).padStart(2, "0")}
-                            </Text>
-                            <View style={styles.exerciseCopy}>
-                              <Text style={[styles.exerciseName, { color: palette.textPrimary }]}>
-                                {getExerciseLabel(exercise)}
-                              </Text>
-                              <Text style={[styles.exerciseMeta, { color: palette.textSecondary }]}>
-                                {exercise.setsTarget ?? "-"} x {exercise.repsTarget ?? "-"}
-                              </Text>
-                            </View>
-                          </View>
-                        ))}
-                      </View>
-
-                      {getRoutineDescription(routine) ? (
-                        <Text
-                          style={[styles.groupRoutineDescription, { color: palette.textSecondary }]}
-                        >
-                          {getRoutineDescription(routine)}
+                  <View style={styles.exerciseList}>
+                    {routine.exercises.map((exercise) => (
+                      <View key={exercise.id} style={styles.exerciseRow}>
+                        <Text style={[styles.exerciseIndex, { color: palette.accent }]}>
+                          {String(exercise.exerciseOrder).padStart(2, "0")}
                         </Text>
-                      ) : null}
-                    </ExpandedPanel>
-                  ))}
-                </View>
+                        <View style={styles.exerciseCopy}>
+                          <Text style={[styles.exerciseName, { color: palette.textPrimary }]}>
+                            {getExerciseLabel(exercise)}
+                          </Text>
+                          <Text style={[styles.exerciseMeta, { color: palette.textSecondary }]}>
+                            {exercise.setsTarget ?? "-"} x {exercise.repsTarget ?? "-"}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
 
-                {getGroupDescription(group) ? (
-                  <>
-                    <View style={[styles.sectionDivider, { backgroundColor: palette.border }]} />
-                    <Text style={[styles.descriptionBlock, { color: palette.textSecondary }]}>
-                      {getGroupDescription(group)}
+                  {getRoutineDescription(routine) ? (
+                    <Text
+                      style={[styles.groupRoutineDescription, { color: palette.textSecondary }]}
+                    >
+                      {getRoutineDescription(routine)}
                     </Text>
-                  </>
-                ) : null}
+                  ) : null}
+                </ExpandedPanel>
               </AppCard>
             ))}
           </View>
@@ -519,17 +602,21 @@ export function RoutinesTabScreen() {
       </ScrollView>
 
       <CreateRoutineModal
-        visible={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        visible={showRoutineModal}
+        onClose={closeRoutineModal}
         routineGroups={availableGroups}
-        onSubmit={handleCreateRoutine}
+        mode={editingRoutineId ? "edit" : "create"}
+        initialValues={routineInitialValues}
+        onSubmit={handleRoutineSubmit}
       />
 
       <CreateRoutineGroupModal
-        visible={showCreateGroupModal}
-        onClose={() => setShowCreateGroupModal(false)}
+        visible={showGroupModal}
+        onClose={closeGroupModal}
         routines={availableRoutines}
-        onSubmit={handleCreateGroup}
+        mode={editingGroupId ? "edit" : "create"}
+        initialValues={groupInitialValues}
+        onSubmit={handleGroupSubmit}
       />
     </>
   );
@@ -575,11 +662,53 @@ const styles = StyleSheet.create({
     marginTop: 16,
     gap: 12,
   },
+  groupFilterRow: {
+    marginTop: 2,
+    gap: 8,
+    alignItems: "center",
+    paddingRight: 8,
+  },
+  clearGroupFilterButton: {
+    minHeight: 36,
+    minWidth: 36,
+    borderWidth: 1,
+    borderRadius: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  clearGroupFilterIcon: {
+    fontFamily: monoFont,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 14,
+    letterSpacing: 0.2,
+  },
+  groupFilterItem: {
+    flexDirection: "row",
+    gap: 0,
+    alignItems: "center",
+  },
   filterRow: {
-    marginTop: 16,
+    marginTop: 0,
     flexDirection: "row",
     gap: 8,
     alignItems: "center",
+  },
+  filterLegend: {
+    marginTop: 4,
+    fontFamily: monoFont,
+    fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 0.2,
+  },
+  groupFilterLegend: {
+    marginTop: 4,
+    fontFamily: monoFont,
+    fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 0.2,
   },
   filterButton: {
     minHeight: 34,
@@ -601,58 +730,32 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  favoriteButton: {
-    minHeight: 32,
-    minWidth: 32,
-    paddingHorizontal: 2,
-    paddingBlock: 0,
-    paddingBottom: 4,
-    borderWidth: 0,
-    borderRadius: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  favoriteButtonText: {
-    fontFamily: monoFont,
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 20,
-    letterSpacing: 0.2,
-  },
-  groupHeaderRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  groupHeaderCopy: {
-    flex: 1,
+  routineCard: {
     gap: 8,
   },
-  groupTitleRow: {
+  headerActionRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    minHeight: 32,
+    gap: 6,
   },
-  groupTitle: {
-    flexShrink: 1,
-    fontSize: 16,
+  routineGroupBadges: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 10,
+  },
+  groupBadge: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  groupBadgeText: {
     fontFamily: monoFont,
-    fontWeight: "700",
+    fontSize: 10,
     textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  groupSubtitle: {
-    fontFamily: monoFont,
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  groupCard: {
-    gap: 12,
-  },
-  sectionDivider: {
-    height: 1,
+    letterSpacing: 0.3,
+    fontWeight: "700",
   },
   exerciseList: {
     gap: 10,
@@ -683,15 +786,6 @@ const styles = StyleSheet.create({
     fontFamily: monoFont,
     fontSize: 12,
     letterSpacing: 0.2,
-  },
-  descriptionBlock: {
-    fontFamily: monoFont,
-    fontSize: 12,
-    lineHeight: 18,
-    letterSpacing: 0.2,
-  },
-  groupRoutinesList: {
-    gap: 8,
   },
   groupRoutinePanel: {
     gap: 0,

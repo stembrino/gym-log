@@ -5,7 +5,7 @@ import {
   usePaginatedExerciseLibrary,
   type ExerciseLibraryItem,
 } from "@/features/routines/hooks/usePaginatedExerciseLibrary";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { BasicInfoScreen } from "./BasicInfoScreen";
 import { ExercisePickerScreen } from "./ExercisePickerScreen";
@@ -15,27 +15,42 @@ interface CreateRoutineModalProps {
   visible: boolean;
   onClose: () => void;
   routineGroups: RoutineGroupOption[];
-  onSubmit: (routineData: {
-    groupId: string;
-    name: string;
-    detail?: string;
-    description?: string;
-    tagIds: string[];
-    exercises: {
-      exerciseId: string;
-      exerciseOrder: number;
-      setsTarget?: number;
-      repsTarget?: number;
-    }[];
-  }) => Promise<void>;
+  mode?: "create" | "edit";
+  initialValues?: RoutineFormInitialValues | null;
+  onSubmit: (routineData: RoutineSubmitPayload) => Promise<void>;
 }
 
 type Screen = "basic" | "exercises";
+
+export type RoutineSubmitPayload = {
+  groupId?: string;
+  name: string;
+  detail?: string;
+  description?: string;
+  tagIds: string[];
+  exercises: {
+    exerciseId: string;
+    exerciseOrder: number;
+    setsTarget?: number;
+    repsTarget?: number;
+  }[];
+};
+
+export type RoutineFormInitialValues = {
+  name: string;
+  selectedGroupId: string | null;
+  detail: string;
+  description: string;
+  tagIds: string[];
+  exercises: SelectedRoutineExercise[];
+};
 
 export function CreateRoutineModal({
   visible,
   onClose,
   routineGroups,
+  mode = "create",
+  initialValues,
   onSubmit,
 }: CreateRoutineModalProps) {
   const { t, locale } = useI18n();
@@ -49,6 +64,21 @@ export function CreateRoutineModal({
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<SelectedRoutineExercise[]>([]);
+
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+
+    setName(initialValues?.name ?? "");
+    setSelectedGroupId(initialValues?.selectedGroupId ?? null);
+    setDetail(initialValues?.detail ?? "");
+    setDescription(initialValues?.description ?? "");
+    setSelectedTags(new Set(initialValues?.tagIds ?? []));
+    setSelectedExercises(initialValues?.exercises ?? []);
+    setSearchQuery("");
+    setScreen("basic");
+  }, [visible, initialValues]);
 
   const excludedExerciseIds = useMemo(
     () => selectedExercises.map((exercise) => exercise.exerciseId),
@@ -82,7 +112,7 @@ export function CreateRoutineModal({
   };
 
   const handleNext = () => {
-    if (!name.trim() || !selectedGroupId) return;
+    if (!name.trim()) return;
     setScreen("exercises");
   };
 
@@ -91,10 +121,10 @@ export function CreateRoutineModal({
   };
 
   const handleCreate = async () => {
-    if (!name.trim() || !selectedGroupId) return;
+    if (!name.trim()) return;
 
     await onSubmit({
-      groupId: selectedGroupId,
+      groupId: selectedGroupId ?? undefined,
       name: name.trim(),
       detail: detail.trim() || undefined,
       description: description.trim() || undefined,
@@ -180,7 +210,11 @@ export function CreateRoutineModal({
           </TouchableOpacity>
 
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
-            {screen === "basic" ? t("routines.createRoutine") : t("routines.addExercises")}
+            {screen === "basic"
+              ? mode === "edit"
+                ? t("routines.editRoutine")
+                : t("routines.createRoutine")
+              : t("routines.addExercises")}
           </Text>
 
           <Text style={[styles.stepIndicator, { color: palette.textSecondary }]}>
@@ -238,7 +272,7 @@ export function CreateRoutineModal({
               <TouchableOpacity
                 style={[styles.button, styles.primaryButton, { backgroundColor: palette.accent }]}
                 onPress={handleNext}
-                disabled={!name.trim() || !selectedGroupId}
+                disabled={!name.trim()}
               >
                 <Text style={[styles.buttonText, { color: palette.card }]}>
                   {t("routines.nextButton")} →
@@ -264,7 +298,7 @@ export function CreateRoutineModal({
                 }}
               >
                 <Text style={[styles.buttonText, { color: palette.card }]}>
-                  {t("routines.createButton")} ✓
+                  {mode === "edit" ? t("routines.saveButton") : t("routines.createButton")} ✓
                 </Text>
               </TouchableOpacity>
             </>

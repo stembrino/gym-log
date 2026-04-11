@@ -16,7 +16,7 @@ export type BasicInfoScreenProps = {
   onChangeName: (v: string) => void;
   routineGroups: RoutineGroupOption[];
   selectedGroupId: string | null;
-  onSelectGroup: (groupId: string) => void;
+  onSelectGroup: (groupId: string | null) => void;
   detail: string;
   onChangeDetail: (v: string) => void;
   description: string;
@@ -77,19 +77,24 @@ export function BasicInfoScreen({
 
         <View style={styles.field}>
           <Text style={[styles.label, { color: palette.textPrimary }]}>
-            GROUP
-            <Text style={{ color: palette.accent }}> *</Text>
+            {t("routines.formGroupLabel")}
           </Text>
           <Text style={[styles.helperText, { color: palette.textSecondary }]}>
-            Select the group this routine belongs to.
+            {t("routines.formGroupHint")}
           </Text>
           <View style={styles.tagList}>
+            <Chip
+              key="no-group"
+              label={t("routines.formNoGroupOption")}
+              selected={selectedGroupId === null}
+              onPress={() => onSelectGroup(null)}
+            />
             {routineGroups.map((group) => (
               <Chip
                 key={group.id}
                 label={group.name}
                 selected={selectedGroupId === group.id}
-                onPress={() => onSelectGroup(group.id)}
+                onPress={() => onSelectGroup(selectedGroupId === group.id ? null : group.id)}
               />
             ))}
           </View>

@@ -3,30 +3,38 @@
  */
 export const DEFAULT_ROUTINE_GROUPS = [
   {
-    id: "rg-01",
-    name: "Push Pull Upper",
-    detail: "2-day upper split",
-    description: "Simple split alternating push and pull upper sessions.",
+    id: "rg-debug-01",
+    name: "Debug Group",
+    detail: "Debug",
+    description: "Default debug routine group for development.",
     isSystem: true,
-    labelPt: "push pull superior",
-    labelEn: "push pull upper",
+    labelPt: "Grupo Debug",
+    labelEn: "Debug Group",
     createdAt: "2026-04-10T00:10:00.000Z",
   },
   {
-    id: "rg-02",
-    name: "Upper Machine Focus",
-    detail: "Machine-based",
-    description: "Upper-body machine routines for controlled progression.",
+    id: "rg-debug-02",
+    name: "Debug Group 2",
+    detail: "Debug",
+    description: "Second default debug routine group for development.",
     isSystem: true,
-    labelPt: "superior foco em maquinas",
-    labelEn: "upper machine focus",
+    labelPt: "Grupo Debug 2",
+    labelEn: "Debug Group 2",
     createdAt: "2026-04-10T00:11:00.000Z",
   },
 ] as const;
 
 export const DEFAULT_ROUTINE_GROUP_ROUTINES = [
-  { routineGroupId: "rg-01", routineId: "routine-02", position: 1, label: "Push" },
-  { routineGroupId: "rg-01", routineId: "routine-01", position: 2, label: "Pull" },
-  { routineGroupId: "rg-02", routineId: "routine-01", position: 1, label: "Pull Upper" },
-  { routineGroupId: "rg-02", routineId: "routine-02", position: 2, label: "Push Upper" },
+  {
+    routineGroupId: "rg-debug-01",
+    routineId: "routine-debug-01",
+    position: 1,
+    label: "Debug",
+  },
+  {
+    routineGroupId: "rg-debug-02",
+    routineId: "routine-debug-02",
+    position: 1,
+    label: "Debug 2",
+  },
 ] as const;

@@ -1,11 +1,14 @@
+import type { AppLocale } from "@/constants/translations";
 import { db } from "@/db/client";
 import { entityTranslations, routineGroups as routineGroupsTable } from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { useCallback, useEffect, useState } from "react";
-import type { AppLocale } from "@/constants/translations";
+
+export const UNGROUPED_ROUTINE_GROUP_ID = "__ungrouped__";
 
 type RoutineGroupRoutineExercise = {
   id: string;
+  exerciseId: string;
   name: string;
   exerciseOrder: number;
   setsTarget: number | null;
@@ -92,15 +95,39 @@ export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
         },
       });
 
+      const allRoutineRows = await db.query.routines.findMany({
+        orderBy: (routine, { asc }) => [asc(routine.createdAt)],
+        with: {
+          routineExercises: {
+            orderBy: (routineExercise, { asc }) => [asc(routineExercise.exerciseOrder)],
+            with: {
+              exercise: true,
+            },
+          },
+        },
+      });
+
       const groupIds = groupRows.map((group) => group.id);
+      const linkedRoutineIdsSet = new Set(
+        groupRows.flatMap((group) =>
+          group.routineGroupRoutines
+            .map((entry) => entry.routine?.id)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      );
+      const ungroupedRoutineRows = allRoutineRows.filter(
+        (routine) => !linkedRoutineIdsSet.has(routine.id),
+      );
+
       const routineIds = groupRows.flatMap((group) =>
         group.routineGroupRoutines
           .map((entry) => entry.routine?.id)
           .filter((id): id is string => Boolean(id)),
       );
+      const allRoutineIds = [...routineIds, ...ungroupedRoutineRows.map((routine) => routine.id)];
 
       const uniqueGroupIds = Array.from(new Set(groupIds));
-      const uniqueRoutineIds = Array.from(new Set(routineIds));
+      const uniqueRoutineIds = Array.from(new Set(allRoutineIds));
       const exerciseIds = groupRows.flatMap((group) =>
         group.routineGroupRoutines.flatMap(
           (entry) =>
@@ -109,7 +136,12 @@ export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
               .filter((id): id is string => Boolean(id)) ?? [],
         ),
       );
-      const uniqueExerciseIds = Array.from(new Set(exerciseIds));
+      const ungroupedExerciseIds = ungroupedRoutineRows.flatMap((routine) =>
+        routine.routineExercises
+          .map((routineExercise) => routineExercise.exerciseId)
+          .filter((id): id is string => Boolean(id)),
+      );
+      const uniqueExerciseIds = Array.from(new Set([...exerciseIds, ...ungroupedExerciseIds]));
 
       const translationRows =
         uniqueGroupIds.length === 0 &&
@@ -148,6 +180,68 @@ export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
         ]),
       );
 
+      const mapRoutine = (routineRow: {
+        id: string;
+        name: string;
+        detail: string | null;
+        description: string | null;
+        isFavorite: boolean;
+        createdAt: string;
+        routineExercises: {
+          id: string;
+          exerciseId: string;
+          exerciseOrder: number;
+          setsTarget: number | null;
+          repsTarget: string | null;
+          exercise: {
+            name: string;
+          } | null;
+        }[];
+      }): RoutineGroupRoutine => {
+        const exercises = routineRow.routineExercises.map((routineExercise) => {
+          const exercise = routineExercise.exercise;
+
+          return {
+            id: routineExercise.id,
+            exerciseId: routineExercise.exerciseId,
+            name:
+              pickTranslated(
+                translationMap,
+                "exercise",
+                routineExercise.exerciseId,
+                "name",
+                exercise?.name ?? routineExercise.exerciseId,
+              ) ?? routineExercise.exerciseId,
+            exerciseOrder: routineExercise.exerciseOrder,
+            setsTarget: routineExercise.setsTarget,
+            repsTarget: routineExercise.repsTarget,
+          };
+        });
+
+        return {
+          id: routineRow.id,
+          name:
+            pickTranslated(translationMap, "routine", routineRow.id, "name", routineRow.name) ?? "",
+          detail: pickTranslated(
+            translationMap,
+            "routine",
+            routineRow.id,
+            "detail",
+            routineRow.detail ?? null,
+          ),
+          description: pickTranslated(
+            translationMap,
+            "routine",
+            routineRow.id,
+            "description",
+            routineRow.description ?? null,
+          ),
+          isFavorite: routineRow.isFavorite,
+          createdAt: routineRow.createdAt,
+          exercises,
+        };
+      };
+
       const hydrated = groupRows.map<RoutineGroup>((group) => ({
         id: group.id,
         name: pickTranslated(translationMap, "routine_group", group.id, "name", group.name) ?? "",
@@ -172,57 +266,23 @@ export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
             return acc;
           }
 
-          const exercises = entry.routine.routineExercises.map((routineExercise) => {
-            const exercise = routineExercise.exercise;
-
-            return {
-              id: routineExercise.id,
-              name:
-                pickTranslated(
-                  translationMap,
-                  "exercise",
-                  routineExercise.exerciseId,
-                  "name",
-                  exercise?.name ?? routineExercise.exerciseId,
-                ) ?? routineExercise.exerciseId,
-              exerciseOrder: routineExercise.exerciseOrder,
-              setsTarget: routineExercise.setsTarget,
-              repsTarget: routineExercise.repsTarget,
-            };
-          });
-
-          acc.push({
-            id: entry.routine.id,
-            name:
-              pickTranslated(
-                translationMap,
-                "routine",
-                entry.routine.id,
-                "name",
-                entry.routine.name,
-              ) ?? "",
-            detail: pickTranslated(
-              translationMap,
-              "routine",
-              entry.routine.id,
-              "detail",
-              entry.routine.detail ?? null,
-            ),
-            description: pickTranslated(
-              translationMap,
-              "routine",
-              entry.routine.id,
-              "description",
-              entry.routine.description ?? null,
-            ),
-            isFavorite: entry.routine.isFavorite,
-            createdAt: entry.routine.createdAt,
-            exercises,
-          });
+          acc.push(mapRoutine(entry.routine));
 
           return acc;
         }, []),
       }));
+
+      if (ungroupedRoutineRows.length > 0) {
+        hydrated.push({
+          id: UNGROUPED_ROUTINE_GROUP_ID,
+          name: locale === "pt-BR" ? "Sem grupo" : "Ungrouped",
+          detail: null,
+          description: null,
+          isFavorite: false,
+          createdAt: new Date(0).toISOString(),
+          routines: ungroupedRoutineRows.map(mapRoutine),
+        });
+      }
 
       setRoutineGroups(hydrated);
     } catch {
