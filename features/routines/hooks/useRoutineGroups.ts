@@ -4,8 +4,6 @@ import { entityTranslations, routineGroups as routineGroupsTable } from "@/db/sc
 import { and, eq, inArray } from "drizzle-orm";
 import { useCallback, useEffect, useState } from "react";
 
-export const UNGROUPED_ROUTINE_GROUP_ID = "__ungrouped__";
-
 type RoutineGroupRoutineExercise = {
   id: string;
   exerciseId: string;
@@ -37,6 +35,7 @@ export type RoutineGroup = {
 
 type UseRoutineGroupsResult = {
   routineGroups: RoutineGroup[];
+  ungroupedRoutines: RoutineGroupRoutine[];
   loading: boolean;
   toggleGroupFavorite: (groupId: string) => Promise<void>;
   reload: () => Promise<void>;
@@ -70,6 +69,7 @@ function pickTranslated(
 
 export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
   const [routineGroups, setRoutineGroups] = useState<RoutineGroup[]>([]);
+  const [ungroupedRoutines, setUngroupedRoutines] = useState<RoutineGroupRoutine[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadRoutineGroups = useCallback(async () => {
@@ -272,21 +272,11 @@ export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
         }, []),
       }));
 
-      if (ungroupedRoutineRows.length > 0) {
-        hydrated.push({
-          id: UNGROUPED_ROUTINE_GROUP_ID,
-          name: locale === "pt-BR" ? "Sem grupo" : "Ungrouped",
-          detail: null,
-          description: null,
-          isFavorite: false,
-          createdAt: new Date(0).toISOString(),
-          routines: ungroupedRoutineRows.map(mapRoutine),
-        });
-      }
-
       setRoutineGroups(hydrated);
+      setUngroupedRoutines(ungroupedRoutineRows.map(mapRoutine));
     } catch {
       setRoutineGroups([]);
+      setUngroupedRoutines([]);
     }
   }, [locale]);
 
@@ -299,6 +289,7 @@ export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
       } catch {
         if (mounted) {
           setRoutineGroups([]);
+          setUngroupedRoutines([]);
         }
       } finally {
         if (mounted) {
@@ -341,5 +332,11 @@ export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
     }
   };
 
-  return { routineGroups, loading, toggleGroupFavorite, reload: loadRoutineGroups };
+  return {
+    routineGroups,
+    ungroupedRoutines,
+    loading,
+    toggleGroupFavorite,
+    reload: loadRoutineGroups,
+  };
 }

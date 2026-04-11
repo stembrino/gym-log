@@ -6,10 +6,7 @@ import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
 import { db } from "@/db/client";
 import { routineGroupRoutines } from "@/db/schema";
-import {
-  UNGROUPED_ROUTINE_GROUP_ID,
-  useRoutineGroups,
-} from "@/features/routines/hooks/useRoutineGroups";
+import { useRoutineGroups } from "@/features/routines/hooks/useRoutineGroups";
 import {
   useRoutineMutations,
   type GroupSubmitPayload,
@@ -63,6 +60,7 @@ export function RoutinesTabScreen() {
   const palette = useRetroPalette();
   const {
     routineGroups: groupedRoutines,
+    ungroupedRoutines,
     loading,
     toggleGroupFavorite,
     reload,
@@ -89,10 +87,7 @@ export function RoutinesTabScreen() {
   const getRoutineLabel = (routine: { name: string }) => routine.name;
   const getRoutineDetail = (routine: { detail: string | null }) => routine.detail ?? "";
 
-  const filterableGroups = useMemo(
-    () => groupedRoutines.filter((group) => group.id !== UNGROUPED_ROUTINE_GROUP_ID),
-    [groupedRoutines],
-  );
+  const filterableGroups = useMemo(() => groupedRoutines, [groupedRoutines]);
 
   const selectedGroupView = useMemo(
     () => filterableGroups.find((group) => group.id === selectedFilterGroupId) ?? null,
@@ -103,8 +98,6 @@ export function RoutinesTabScreen() {
     const byRoutineId = new Map<string, RoutineListItem>();
 
     for (const group of groupedRoutines) {
-      const isUngroupedBucket = group.id === UNGROUPED_ROUTINE_GROUP_ID;
-
       for (const routine of group.routines) {
         const existing = byRoutineId.get(routine.id);
 
@@ -116,21 +109,14 @@ export function RoutinesTabScreen() {
             description: routine.description,
             createdAt: routine.createdAt,
             exercises: routine.exercises,
-            groups: isUngroupedBucket
-              ? []
-              : [
-                  {
-                    id: group.id,
-                    name: getGroupLabel(group),
-                  },
-                ],
-            isUngrouped: isUngroupedBucket,
+            groups: [
+              {
+                id: group.id,
+                name: getGroupLabel(group),
+              },
+            ],
+            isUngrouped: false,
           });
-          continue;
-        }
-
-        if (isUngroupedBucket) {
-          existing.isUngrouped = true;
           continue;
         }
 
@@ -143,8 +129,28 @@ export function RoutinesTabScreen() {
       }
     }
 
+    for (const routine of ungroupedRoutines) {
+      const existing = byRoutineId.get(routine.id);
+
+      if (!existing) {
+        byRoutineId.set(routine.id, {
+          id: routine.id,
+          name: getRoutineLabel(routine),
+          detail: routine.detail,
+          description: routine.description,
+          createdAt: routine.createdAt,
+          exercises: routine.exercises,
+          groups: [],
+          isUngrouped: true,
+        });
+        continue;
+      }
+
+      existing.isUngrouped = existing.groups.length === 0;
+    }
+
     return Array.from(byRoutineId.values()).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-  }, [groupedRoutines]);
+  }, [groupedRoutines, ungroupedRoutines]);
 
   const filteredRoutines = useMemo(() => {
     return routines.filter((routine) => {
@@ -549,24 +555,16 @@ export function RoutinesTabScreen() {
                   style={[styles.groupRoutinePanel, { borderColor: palette.border }]}
                 >
                   <View style={styles.routineGroupBadges}>
-                    {routine.groups.length > 0 ? (
-                      routine.groups.map((group) => (
-                        <View
-                          key={`${routine.id}-${group.id}`}
-                          style={[styles.groupBadge, { borderColor: palette.border }]}
-                        >
-                          <Text style={[styles.groupBadgeText, { color: palette.textSecondary }]}>
-                            {group.name}
-                          </Text>
-                        </View>
-                      ))
-                    ) : (
-                      <View style={[styles.groupBadge, { borderColor: palette.border }]}>
+                    {routine.groups.map((group) => (
+                      <View
+                        key={`${routine.id}-${group.id}`}
+                        style={[styles.groupBadge, { borderColor: palette.border }]}
+                      >
                         <Text style={[styles.groupBadgeText, { color: palette.textSecondary }]}>
-                          {t("routines.formNoGroupOption")}
+                          {group.name}
                         </Text>
                       </View>
-                    )}
+                    ))}
                   </View>
 
                   <View style={styles.exerciseList}>
