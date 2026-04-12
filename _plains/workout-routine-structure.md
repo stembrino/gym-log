@@ -26,6 +26,7 @@ graph TD
 ## Data Structure
 
 ### Routines (reusable templates)
+
 ```
 routines
   ├─ id: "legs-01"
@@ -37,6 +38,7 @@ routines
 ```
 
 ### Workouts (single instances)
+
 ```
 workouts
   ├─ id: "w1"

@@ -25,11 +25,7 @@ type ExerciseLibraryFilterArgs = {
   excludeIds: string[];
 };
 
-function buildExerciseLibraryWhereClause({
-  query,
-  locale,
-  excludeIds,
-}: ExerciseLibraryFilterArgs) {
+function buildExerciseLibraryWhereClause({ query, locale, excludeIds }: ExerciseLibraryFilterArgs) {
   const searchColumn = locale === "pt-BR" ? exercises.searchPt : exercises.searchEn;
   const conditions = [] as (ReturnType<typeof like> | ReturnType<typeof notInArray>)[];
 
