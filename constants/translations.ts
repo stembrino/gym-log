@@ -9,7 +9,7 @@ export const translations = {
       exercises: "Exercícios",
       routines: "Rotinas",
       workouts: "Treinos",
-      performance: "Desempenho",
+      performance: "LOGBOOK",
     },
     header: {
       language: "Idioma",
@@ -53,8 +53,8 @@ export const translations = {
       },
     },
     workouts: {
-      title: "Treinos",
-      subtitle: "Próximo passo: mostrar sessões salvas e detalhes do treino.",
+      startWorkoutCta: "INICIAR TREINO",
+      startRoutineGroupCta: "INICIAR ROTINA DE TREINOS",
     },
     routines: {
       title: "",
@@ -153,7 +153,7 @@ export const translations = {
       exercises: "Exercises",
       routines: "Routines",
       workouts: "Workouts",
-      performance: "Performance",
+      performance: "LOGBOOK",
     },
     header: {
       language: "Language",
@@ -197,8 +197,8 @@ export const translations = {
       },
     },
     workouts: {
-      title: "Workouts",
-      subtitle: "Next step: show saved workout sessions and workout details.",
+      startWorkoutCta: "START WORKOUT",
+      startRoutineGroupCta: "START ROUTINE GROUP",
     },
     routines: {
       title: "",
