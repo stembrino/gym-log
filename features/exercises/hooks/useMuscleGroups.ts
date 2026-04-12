@@ -1,7 +1,5 @@
-import { db } from "@/db/client";
-import { muscleGroups } from "@/db/schema";
-import { asc } from "drizzle-orm";
 import { useEffect, useState } from "react";
+import { getMuscleGroupNames } from "../dao/queries/exerciseQueries";
 
 export function useMuscleGroups() {
   const [items, setItems] = useState<string[]>([]);
@@ -10,16 +8,17 @@ export function useMuscleGroups() {
     let mounted = true;
 
     const load = async () => {
-      const rows = await db
-        .select({ name: muscleGroups.name })
-        .from(muscleGroups)
-        .orderBy(asc(muscleGroups.name));
+      if (!mounted) {
+        return;
+      }
+
+      const names = await getMuscleGroupNames();
 
       if (!mounted) {
         return;
       }
 
-      setItems(rows.map((row) => row.name));
+      setItems(names);
     };
 
     void load();

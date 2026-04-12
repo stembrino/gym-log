@@ -15,7 +15,7 @@ type Props = {
 export function ExercisesListHeader({ count, query, onChangeQuery, onPressCreate }: Props) {
   const { t } = useI18n();
   const palette = useRetroPalette();
-
+console.log("count:", count);
   return (
     <View style={styles.container}>
       <View

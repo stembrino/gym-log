@@ -1,7 +1,7 @@
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { CreateExerciseModal } from "./components/CreateExerciseModal";
 import { ExerciseCard } from "./components/ExerciseCard";
@@ -19,7 +19,7 @@ export default function ExercisesTabScreen() {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
 
-  const { items, hasMore, loadMore, loadingInitial, loadingMore, reload } =
+  const { items, totalCount, hasMore, loadMore, loadingInitial, loadingMore, reload } =
     usePaginatedExerciseLibrary({
       query,
       locale,
@@ -70,6 +70,18 @@ export default function ExercisesTabScreen() {
     setExpandedExerciseId((current) => (current === itemId ? null : itemId));
   }, []);
 
+  const ListHeader = useMemo(
+    () => (
+      <ExercisesListHeader
+        count={totalCount}
+        query={query}
+        onChangeQuery={setQuery}
+        onPressCreate={() => setCreateModalVisible(true)}
+      />
+    ),
+    [totalCount, query],
+  );
+
   return (
     <View style={[styles.root, { backgroundColor: palette.page }]}>
       <FlatList
@@ -87,14 +99,7 @@ export default function ExercisesTabScreen() {
           </View>
         )}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <ExercisesListHeader
-            count={items.length}
-            query={query}
-            onChangeQuery={setQuery}
-            onPressCreate={() => setCreateModalVisible(true)}
-          />
-        }
+        ListHeaderComponent={ListHeader}
         ListEmptyComponent={!loadingInitial ? <ExercisesEmptyState /> : null}
         ListFooterComponent={
           loadingMore ? (

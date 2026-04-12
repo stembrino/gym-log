@@ -2,212 +2,306 @@
 
 ## Goal
 
-Ship the first real workouts flow with minimal risk:
+Ship the first workouts entry flow in a way that makes LyteLog's product difference explicit:
 
-- Start a workout from an existing routine.
-- Keep the first interaction simple and fast.
-- Respect the Retro-Tech design system (flat UI, monospace, high legibility, large touch targets, no visual noise).
+- a user can start a workout right now without planning friction
+- a user can also start from a training routine structure
+- these are related concepts, but they are not the same action and should not be merged into one CTA
 
-## Scope For Beta Step 1
+## Core Product Distinction
 
-Step 1 only covers routine selection and workout start.
+LyteLog should treat these as separate layers:
 
-Out of scope for this step:
+### Workout
 
-- Full set logging UX.
-- Timer, PR alerts, analytics.
-- Complex editing during active workout.
+The actual training session being executed now.
 
-## Main User Story
+- execution layer
+- immediate action
+- can exist without a prior routine
+- should feel fast and low friction
 
-As a user, I open Workouts and quickly choose one routine to start a new session.
+### Routine
 
-## Two Selection Paths (Both Required)
+A reusable workout template for one training day or one training shape.
 
-1. Filter path (no collection selected)
+- composition layer
+- defines exercises and default order
+- can be reused many times across sessions
 
-- User sees routine filter chips (All, Favorites, Ungrouped).
-- User browses routines list directly.
-- User taps routine -> confirm -> start workout.
+### Training Routine
 
-2. Collection path (collection selected)
+The broader structure that organizes multiple routines into a coherent block.
 
-- User selects one collection first.
-- Routines list is constrained to that collection.
-- User taps routine -> confirm -> start workout.
+For the current technical model, this maps best to the routine group concept.
+
+- organization layer
+- groups related routines together
+- gives continuity and context
+- helps the user follow a plan instead of improvising each session
+
+## Why This Matters
+
+This distinction is part of the product value, not just a naming detail.
+
+Many apps force one mental model:
+
+- either everything starts from a template
+- or everything is a manual log
+
+LyteLog should support both:
+
+- `INICIAR TREINO` for users who want to log a session now
+- `INICIAR ROTINA DE TREINOS` for users who want to enter through a structured training flow
+
+Recommended English labels:
+
+- `START WORKOUT`
+- `START TRAINING ROUTINE`
+
+Suggested i18n keys:
+
+- `workouts.actions.startWorkout`
+- `workouts.actions.startTrainingRoutine`
+
+## Product Relationship
+
+Recommended relationship for the domain:
+
+- training routine organizes routines
+- routine defines one reusable training unit
+- workout is the real executed session
+
+In practical terms:
+
+- `Training Routine -> Routine -> Workout`
+- `Workout` can also be started directly without a routine
+
+This keeps the model flexible without losing clarity.
+
+## Beta Scope
+
+Beta step 1 should focus on entry clarity, not on full workout logging depth.
+
+### In Scope
+
+- two separate primary actions in the Workouts tab
+- one modal per action
+- explicit product wording in i18n
+- a screen structure that preserves the distinction
+- documentation that guides future implementation
+
+### Out Of Scope
+
+- full set logging UX
+- timer, PR alerts, analytics
+- advanced editing during active workout
+- routine continuity logic such as next-day recommendation
+- trying to unify both flows under the same selection component
+
+## Main User Stories
+
+### Start Workout
+
+As a user, I want to begin a workout immediately, even if I am not following a planned routine structure.
+
+### Start Training Routine
+
+As a user, I want to begin from a training routine so I can follow an organized plan instead of starting from scratch.
+
+## UX Strategy For The Workouts Tab
+
+The Workouts tab should start with two clear entry points and no conceptual mixing.
+
+### Top-Level Actions
+
+1. `INICIAR TREINO`
+2. `INICIAR ROTINA DE TREINOS`
+
+This screen should not depend on a shared filter/list UI in the first beta version.
+
+The current recommendation is to keep the layout intentionally simple:
+
+- two buttons
+- two distinct modals
+- no overloaded selection state
+- no extra heading/subtitle if the actions already communicate the screen purpose clearly
+
+## Recommended Meaning Of Each Entry Point
+
+### 1. Start Workout
+
+This should represent the fastest path to action.
+
+Recommended semantics:
+
+- user wants to train now
+- user does not need to commit to a training routine first
+- app may create an empty workout shell or a lightweight setup step
+- exercises can be added after start
+
+This flow should feel:
+
+- direct
+- fast
+- manual-first
+
+### 2. Start Training Routine
+
+This should represent a guided entry through structure.
+
+Recommended semantics:
+
+- user chooses a training routine first
+- the training routine contains one or more routines
+- later, the app can ask which routine/day should be performed now
+- the final outcome is still a workout session, but the entry is plan-driven
+
+This flow should feel:
+
+- guided
+- structured
+- continuity-oriented
+
+## Important Product Rule
+
+Do not hide the training routine flow inside the generic workout button.
+
+Do not hide the direct workout flow inside the training routine flow.
+
+They can share lower-level persistence helpers later, but the user-facing entry point should stay distinct.
+
+## Information Architecture Guidance
+
+Recommended high-level flow:
+
+### Direct Workout Path
+
+`Workouts tab -> Start Workout -> lightweight setup or immediate session creation -> active workout`
+
+### Training Routine Path
+
+`Workouts tab -> Start Training Routine -> select training routine -> select routine/day -> create workout from routine -> active workout`
+
+This preserves a clear difference between planning and execution.
+
+## Implementation Phases
+
+### Phase 1 - Entry Shell
+
+Goal: establish the product distinction in UI before deeper behavior.
+
+- render the two main buttons in the Workouts tab
+- add two separate placeholder modals
+- use final i18n labels for both actions
+- remove old content that implies there is only one unified start flow
+
+### Phase 2 - Direct Workout MVP
+
+Goal: make `Start Workout` useful with minimal friction.
+
+- create a workout row
+- prefill default gym if available
+- navigate to active workout placeholder
+- allow exercise selection after the workout exists
+
+### Phase 3 - Training Routine MVP
+
+Goal: make `Start Training Routine` useful without collapsing it into the direct workout flow.
+
+- show available training routines
+- open one training routine and list its routines
+- let the user choose the routine/day for the current session
+- create workout and workout exercise rows from that routine
+
+### Phase 4 - Guided Continuity
+
+Goal: strengthen the product differentiation.
+
+- remember the last started routine inside a training routine
+- suggest the next routine/day when relevant
+- show light adherence or progression context later
+
+## State Model Recommendation
+
+Keep the state separate at the screen level.
+
+Recommended beta state:
+
+- `isStartWorkoutOpen: boolean`
+- `isStartTrainingRoutineOpen: boolean`
+- `selectedTrainingRoutineId: string | null`
+- `selectedRoutineIdForStart: string | null`
+
+Avoid a shared selection hook for both entry points in the first beta step.
+
+If code is shared later, it should happen below the UX layer, not by forcing both flows into one UI state model.
+
+## Architecture Guidance
+
+### UI Layer
+
+Keep separate components and intent boundaries.
+
+Recommended direction:
+
+- `StartWorkoutModal`
+- `StartTrainingRoutineModal`
+
+### Data Layer
+
+Shared DB helpers are still fine where the outcome is the same.
+
+Examples:
+
+- create workout row
+- create workout exercise rows from a routine
+- load default gym
+
+### Important Constraint
+
+Do not reuse routine selection logic inside the direct workout entry just because both flows eventually create a workout.
+
+That would blur the product distinction too early.
 
 ## UX Principles
 
-- Do not overwhelm with too many controls at once.
-- Show progressive disclosure:
-  - First row: top-level filters.
-  - Optional second row: collection chips (collapsible/clearable).
-  - Then routine cards list.
-- Keep strong focus on one final action: Start workout.
+- one mental model per button
+- one modal per action
+- low friction for direct workout start
+- stronger structure for training routine start
+- no overloaded CTA labels
+- no assumption that every workout must come from a routine
+- no assumption that training routine start should behave like a manual log flow
 
-## Screen Structure (Workouts Tab)
+## Open Product Questions
 
-1. Header block
+These do not block phase 1, but should guide later decisions.
 
-- Title from i18n (`workouts.title`).
-- Small helper text from i18n (new key for start flow guidance).
+1. Should `Start Workout` create an empty workout immediately, or show a lightweight setup first?
+2. Should `Start Training Routine` first show recent training routines, or always list all of them?
+3. Should a training routine have an optional recommended order for routines/days?
+4. Should the app later allow attaching a manually started workout to a training routine after the fact?
 
-2. Filter row
+## Definition Of Done For This Direction
 
-- Reuse routine filter behavior where possible.
-- Chips: All, Favorites, Ungrouped.
+The direction is working when:
 
-3. Collection selector
+- the team can explain the difference between workout and training routine in one sentence
+- the Workouts tab has two distinct entry points
+- each entry point has its own modal and intent
+- the direct workout path does not depend on routine selection
+- the training routine path remains plan-driven
+- new code can evolve without re-merging these concepts
 
-- Horizontal chips for routine collections.
-- Include a clear action (`Clear collections`) to return to global list.
+## Summary Decision
 
-4. Routine result list
+LyteLog should not treat workout and training routine as two labels for the same start flow.
 
-- Flat cards with:
-  - Routine name
-  - Optional detail/description (single line preview)
-  - Small metadata (exercise count)
-  - Primary CTA button: Start
+The product should make this explicit:
 
-5. Start confirmation (lightweight)
+- workout = execute now
+- routine = reusable training day
+- training routine = organized structure of routines
 
-- Modal/sheet:
-  - Routine name
-  - Optional gym prefill preview
-  - Confirm start action
-
-## Data + Query Contract
-
-Use existing routines hooks where possible to avoid parallel logic.
-
-Minimum requirements:
-
-- Read routines with current filter.
-- Read routine groups for collection chips.
-- Read routine exercises to prebuild workout exercise rows at start.
-
-On confirm start:
-
-1. Create `workouts` row with:
-
-- `id`
-- `date` (now)
-- `gymId` (default gym if available, else null)
-- `notes` null
-- `duration` null (until finish)
-
-2. Create `workout_exercises` rows from selected routine order.
-
-3. Navigate to active workout detail/logging screen placeholder (can still be simple in this step).
-
-## Design System Compliance Checklist
-
-- Typography:
-  - Monospace everywhere in this flow.
-  - Section labels uppercase where appropriate.
-- Colors:
-  - Use tokenized palette only (retro theme), no hardcoded ad-hoc colors.
-- Shape:
-  - Radius 0-2 only.
-  - No pills with excessive rounding.
-- Surface:
-  - No shadows, no blur, no gradients.
-  - Separation by border only.
-- Touch:
-  - All interactive targets >= 44x44.
-- Accessibility:
-  - Icon-only actions must have accessibility labels.
-  - Selected state should not rely on color alone.
-- i18n:
-  - All new strings must be translation keys in `pt-BR` and `en-US`.
-
-## Suggested Implementation Order
-
-1. Add Workout Start UI shell in Workouts tab
-
-- Replace placeholder subtitle-only layout.
-- Render filter row, collection chips, and routine list container.
-
-2. Hook routines data into Workouts tab
-
-- Reuse existing routines query strategy.
-- Support both selection paths in one state model.
-
-3. Add start action + confirmation modal
-
-- Button on each routine card.
-- Confirm creates workout + workout exercises.
-
-4. Add navigation target for newly started workout
-
-- Temporary detail/log screen is acceptable in beta step 1.
-
-5. Add i18n keys and accessibility labels
-
-- No hardcoded user-facing strings.
-
-6. Add tests
-
-- Unit/integration tests for:
-  - Filter path selection.
-  - Collection path selection.
-  - Start action creates expected DB rows.
-
-## State Model (Simple)
-
-- `selectedFilter`: all | favorites | ungrouped
-- `selectedCollectionId`: string | null
-- `selectedRoutineIdForStart`: string | null
-- `isStartConfirmOpen`: boolean
-
-Rules:
-
-- Selecting a collection applies collection constraint on routine list.
-- Clearing collection returns to selectedFilter-only behavior.
-- Start button always targets exactly one routine.
-
-## Edge Cases For Beta
-
-- No routines available for current filter -> empty state with clear guidance.
-- Selected collection has zero routines -> show empty collection state + clear action.
-- Routine has no exercises -> block start with friendly message.
-- DB write failure on start -> toast/alert with retry.
-
-## Definition Of Done (Step 1)
-
-- User can open Workouts and start from a routine in under 3 taps after list is visible.
-- Both paths work:
-  - without collection
-  - with collection
-- New workout row and workout_exercises rows are persisted correctly.
-- UI follows design-system constraints (flat, monospace, no visual clutter).
-- New labels fully localized (`pt-BR` + `en-US`).
-- Basic tests for selection and start flow are passing.
-
-## Post-Step-1 Next Moves
-
-- Active workout logging screen (sets/reps/weight editing).
-- Finish workout action and duration calculation.
-- Session history list and quick resume behavior.
-
-## Technical Debt / Refactoring Notes
-
-### DAO Layer Migration (Future)
-
-Currently, query logic is split:
-
-- `features/routines/queries/routineQueries.ts` — Read-only queries (newly extracted DAO layer)
-- `features/routines/hooks/useRoutineMutations.ts` — Write operations (mutations)
-
-**Refactoring TODO (not blocking beta):**
-
-- Extract mutation logic from `useRoutineMutations.ts` into `features/routines/queries/routineMutations.ts`
-- Move translation sync logic into DAO layer
-- Update `useRoutineMutations` hook to call DAO functions
-- Apply same pattern to exercises, gyms, and workouts features
-- Benefit: Centralized DB logic; reusable across features; easier testing
-
-**Current state:** Read queries are DAO-ready. Write ops can stay in hooks for now without impacting beta.
-
-**Migration priority:** Low — after beta step 1 shipping.
+That distinction is the guide for the next UI and architecture steps.

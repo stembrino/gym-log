@@ -1,17 +1,14 @@
 import type { AppLocale } from "@/components/providers/i18n-provider";
-import { db } from "@/db/client";
-import { entityTranslations, exercises } from "@/db/schema";
-import { and, asc, eq, like, notInArray, or } from "drizzle-orm";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  getExerciseLibraryCount,
+  getExerciseLibraryPage,
+  type ExerciseLibraryItem,
+} from "../dao/queries/exerciseQueries";
+
+export type { ExerciseLibraryItem } from "../dao/queries/exerciseQueries";
 
 const PAGE_SIZE = 20;
-
-export type ExerciseLibraryItem = {
-  id: string;
-  name: string;
-  muscleGroup: string;
-  isCustom: boolean;
-};
 
 type UsePaginatedExerciseLibraryParams = {
   query: string;
@@ -26,6 +23,7 @@ export function usePaginatedExerciseLibrary({
 }: UsePaginatedExerciseLibraryParams) {
   const [items, setItems] = useState<ExerciseLibraryItem[]>([]);
   const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingInitial, setLoadingInitial] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -56,62 +54,26 @@ export function usePaginatedExerciseLibrary({
       }
 
       try {
-        const searchColumn = locale === "pt-BR" ? exercises.searchPt : exercises.searchEn;
-        const conditions = [] as (ReturnType<typeof like> | ReturnType<typeof notInArray>)[];
+        const requestArgs = {
+          query: normalizedQuery,
+          locale,
+          excludeIds: stableExcludeIds,
+        };
 
-        if (normalizedQuery) {
-          conditions.push(
-            or(
-              like(searchColumn, `%${normalizedQuery}%`),
-              like(exercises.muscleGroup, `%${normalizedQuery}%`),
-            )!,
-          );
-        }
-
-        if (stableExcludeIds.length > 0) {
-          conditions.push(notInArray(exercises.id, stableExcludeIds));
-        }
-
-        const whereClause =
-          conditions.length === 0
-            ? undefined
-            : conditions.length === 1
-              ? conditions[0]
-              : and(...conditions);
-
-        const rows = await db
-          .select({
-            id: exercises.id,
-            name: exercises.name,
-            muscleGroup: exercises.muscleGroup,
-            isCustom: exercises.isCustom,
-            translatedName: entityTranslations.value,
-          })
-          .from(exercises)
-          .leftJoin(
-            entityTranslations,
-            and(
-              eq(entityTranslations.entityId, exercises.id),
-              eq(entityTranslations.entityType, "exercise"),
-              eq(entityTranslations.field, "name"),
-              eq(entityTranslations.locale, locale),
-            ),
-          )
-          .where(whereClause)
-          .orderBy(asc(exercises.name))
-          .limit(PAGE_SIZE)
-          .offset(nextPage * PAGE_SIZE)
-          .then((results) =>
-            results.map((row) => ({
-              id: row.id,
-              name: row.translatedName ?? row.name,
-              muscleGroup: row.muscleGroup,
-              isCustom: row.isCustom,
-            })),
-          );
+        const [rows, nextTotalCount] = await Promise.all([
+          getExerciseLibraryPage({
+            page: nextPage,
+            ...requestArgs,
+          }),
+          reset ? getExerciseLibraryCount(requestArgs) : Promise.resolve(null),
+        ]);
 
         if (requestVersion !== requestVersionRef.current) {
           return;
+        }
+
+        if (nextTotalCount !== null) {
+          setTotalCount(nextTotalCount);
         }
 
         setHasMore(rows.length === PAGE_SIZE);
@@ -124,6 +86,7 @@ export function usePaginatedExerciseLibrary({
 
         setHasMore(false);
         if (reset) {
+          setTotalCount(0);
           setItems([]);
         }
       } finally {
@@ -138,6 +101,7 @@ export function usePaginatedExerciseLibrary({
 
   const reload = useCallback(async () => {
     setPage(0);
+    setTotalCount(0);
     setHasMore(true);
     setItems([]);
     await fetchPage(0, true);
@@ -157,6 +121,7 @@ export function usePaginatedExerciseLibrary({
 
   return {
     items,
+    totalCount,
     hasMore,
     loadingInitial,
     loadingMore,
