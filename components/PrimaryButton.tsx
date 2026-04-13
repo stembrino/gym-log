@@ -6,10 +6,12 @@ import { useRetroPalette } from "./hooks/useRetroPalette";
 interface PrimaryButtonProps {
   label: string;
   onPress: () => void;
+  size?: "default" | "small";
 }
 
-export function PrimaryButton({ label, onPress }: PrimaryButtonProps) {
+export function PrimaryButton({ label, onPress, size = "default" }: PrimaryButtonProps) {
   const palette = useRetroPalette();
+  const isSmall = size === "small";
 
   const buttonStyles = useMemo(
     () => ({
@@ -26,6 +28,7 @@ export function PrimaryButton({ label, onPress }: PrimaryButtonProps) {
         <View
           style={[
             styles.primaryButton,
+            isSmall ? styles.primaryButtonSmall : null,
             {
               backgroundColor: pressed
                 ? buttonStyles.backgroundColorPressed
@@ -37,8 +40,9 @@ export function PrimaryButton({ label, onPress }: PrimaryButtonProps) {
           <Text
             style={[
               styles.primaryButtonText,
+              isSmall ? styles.primaryButtonTextSmall : null,
               {
-                color: "#ffffff",
+                color: palette.onAccent,
               },
             ]}
           >
@@ -65,5 +69,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
+  },
+  primaryButtonSmall: {
+    paddingVertical: 8,
+    minHeight: 34,
+  },
+  primaryButtonTextSmall: {
+    fontSize: 11,
+    letterSpacing: 0.4,
   },
 });

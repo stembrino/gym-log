@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { DatabaseProvider } from "@/components/providers/DatabaseProvider";
 import { I18nProvider } from "@/components/providers/i18n-provider";
@@ -58,11 +59,14 @@ function ThemedNavigation() {
   const { theme } = useThemePreference();
 
   return (
-    <ThemeProvider value={theme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-      </Stack>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={theme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="workout-in-progress" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+        </Stack>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

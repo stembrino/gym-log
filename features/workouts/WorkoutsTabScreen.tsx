@@ -1,45 +1,149 @@
 import { useColorScheme } from "@/components/hooks/useColorScheme";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { WorkoutStatusIndicator } from "@/components/WorkoutStatusIndicator";
 import { getRetroPalette } from "@/constants/retroTheme";
-import { SelectRoutineGroupModal } from "@/features/workouts/components/SelectRoutineGroupModal";
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import {
+  getActiveWorkout,
+  type ActiveWorkoutRow,
+} from "@/features/workouts/dao/queries/workoutQueries";
+import type { WorkoutRoutinePickerItem } from "@/features/workouts/hooks/useRoutinePicker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { SelectRoutineModal } from "./components/SelectRoutineModal";
 
 export function WorkoutsTabScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ skipActiveRedirect?: string | string[] }>();
   const colorScheme = useColorScheme();
   const { t } = useI18n();
   const palette = getRetroPalette(colorScheme);
   const [isSelectRoutineModalOpen, setIsSelectRoutineModalOpen] = useState(false);
-  const [isSelectRoutineGroupModalOpen, setIsSelectRoutineGroupModalOpen] = useState(false);
+  const [checkingActiveWorkout, setCheckingActiveWorkout] = useState(true);
+  const [activeWorkout, setActiveWorkout] = useState<ActiveWorkoutRow | null>(null);
+
+  const skipActiveRedirectParam = params.skipActiveRedirect;
+  const skipActiveRedirect = Array.isArray(skipActiveRedirectParam)
+    ? skipActiveRedirectParam[0]
+    : skipActiveRedirectParam;
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      if (skipActiveRedirect === "1") {
+        router.setParams({ skipActiveRedirect: undefined });
+      }
+
+      const syncActiveWorkout = async () => {
+        setCheckingActiveWorkout(true);
+
+        try {
+          const current = await getActiveWorkout();
+
+          if (!active) {
+            return;
+          }
+
+          setActiveWorkout(current);
+
+          if (current && skipActiveRedirect !== "1") {
+            router.replace({
+              pathname: "/workout-in-progress",
+              params: {
+                workoutId: current.id,
+              },
+            });
+            return;
+          }
+        } finally {
+          if (active) {
+            setCheckingActiveWorkout(false);
+          }
+        }
+      };
+
+      void syncActiveWorkout();
+
+      return () => {
+        active = false;
+      };
+    }, [router, skipActiveRedirect]),
+  );
 
   const handleStartWorkoutPress = () => {
     setIsSelectRoutineModalOpen(true);
   };
 
-  const handleStartRoutineGroupPress = () => {
-    setIsSelectRoutineGroupModalOpen(true);
+  const handleResumeWorkoutPress = () => {
+    if (!activeWorkout) {
+      return;
+    }
+
+    router.push({
+      pathname: "/workout-in-progress",
+      params: {
+        workoutId: activeWorkout.id,
+      },
+    });
   };
+
+  const handleSelectRoutine = (routine: WorkoutRoutinePickerItem) => {
+    router.push({
+      pathname: "/workout-prepare",
+      params: {
+        routineId: routine.id,
+      },
+    });
+  };
+
+  if (checkingActiveWorkout) {
+    return (
+      <View style={[styles.container, { backgroundColor: palette.page }]}>
+        <Text style={[styles.statusText, { color: palette.textSecondary }]}>
+          {t("routines.loading")}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: palette.page }]}>
-      <View style={styles.buttonWrapper}>
-        <PrimaryButton label={t("workouts.startWorkoutCta")} onPress={handleStartWorkoutPress} />
-      </View>
-      <View style={styles.buttonWrapper}>
-        <PrimaryButton
-          label={t("workouts.startRoutineGroupCta")}
-          onPress={handleStartRoutineGroupPress}
-        />
-      </View>
+      {activeWorkout ? (
+        <View
+          style={[
+            styles.activeCard,
+            { borderColor: palette.border, backgroundColor: palette.card },
+          ]}
+        >
+          <Text style={[styles.activeTitle, { color: palette.textPrimary }]}>
+            {t("workouts.activeSessionTitle")}
+          </Text>
+          <WorkoutStatusIndicator
+            status={activeWorkout.status}
+            labels={{
+              inProgress: t("workouts.statusInProgress"),
+              paused: t("workouts.statusPaused"),
+            }}
+          />
+          <View style={styles.buttonWrapper}>
+            <PrimaryButton
+              label={t("workouts.resumeWorkoutCta")}
+              onPress={handleResumeWorkoutPress}
+            />
+          </View>
+        </View>
+      ) : (
+        <View style={styles.buttonWrapper}>
+          <PrimaryButton label={t("workouts.startWorkoutCta")} onPress={handleStartWorkoutPress} />
+        </View>
+      )}
       <SelectRoutineModal
         isOpen={isSelectRoutineModalOpen}
         onClose={() => setIsSelectRoutineModalOpen(false)}
-      />
-      <SelectRoutineGroupModal
-        isOpen={isSelectRoutineGroupModalOpen}
-        onClose={() => setIsSelectRoutineGroupModalOpen(false)}
+        onSelectRoutine={handleSelectRoutine}
       />
     </View>
   );
@@ -56,5 +160,20 @@ const styles = StyleSheet.create({
     marginTop: 16,
     width: "100%",
     maxWidth: 320,
+  },
+  activeCard: {
+    width: "100%",
+    maxWidth: 340,
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 14,
+    gap: 10,
+  },
+  activeTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  statusText: {
+    fontSize: 12,
   },
 });

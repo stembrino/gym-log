@@ -1,7 +1,24 @@
 import type { AppLocale } from "@/constants/translations";
 import { db } from "@/db/client";
-import { entityTranslations } from "@/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { entityTranslations, routines as routinesTable } from "@/db/schema";
+import { and, count, eq, inArray, like, or } from "drizzle-orm";
+
+const ROUTINE_PAGE_SIZE = 20;
+
+type RoutinePickerFilterArgs = {
+  query: string;
+  locale: AppLocale;
+};
+
+function buildRoutinePickerWhereClause({ query, locale }: RoutinePickerFilterArgs) {
+  if (!query) {
+    return undefined;
+  }
+
+  const searchColumn = locale === "pt-BR" ? routinesTable.searchPt : routinesTable.searchEn;
+
+  return or(like(searchColumn, `%${query}%`), like(routinesTable.name, `%${query}%`));
+}
 
 export type RoutineExercise = {
   id: string;
@@ -314,6 +331,96 @@ export async function getRoutinesFlat(locale: AppLocale): Promise<RoutineItem[]>
   const translationMap = await loadTranslations(locale, [], routineIds, exerciseIds);
 
   return allRoutineRows.map((routine) => mapRoutine(routine, translationMap));
+}
+
+/**
+ * Load a page of routines for the picker (supports search).
+ */
+export async function getRoutinesPage({
+  page,
+  query,
+  locale,
+}: {
+  page: number;
+  query: string;
+  locale: AppLocale;
+}): Promise<RoutineItem[]> {
+  const whereClause = buildRoutinePickerWhereClause({ query, locale });
+
+  const routineRows = await db.query.routines.findMany({
+    where: whereClause ? () => whereClause : undefined,
+    orderBy: (routine, { asc: ascOrder }) => [ascOrder(routine.name)],
+    limit: ROUTINE_PAGE_SIZE,
+    offset: page * ROUTINE_PAGE_SIZE,
+    with: {
+      routineExercises: {
+        orderBy: (routineExercise, { asc: ascOrder }) => [ascOrder(routineExercise.exerciseOrder)],
+        with: {
+          exercise: true,
+        },
+      },
+    },
+  });
+
+  const routineIds = routineRows.map((routine) => routine.id);
+  const exerciseIds = routineRows.flatMap((routine) =>
+    routine.routineExercises
+      .map((routineExercise) => routineExercise.exerciseId)
+      .filter((id): id is string => Boolean(id)),
+  );
+
+  const translationMap = await loadTranslations(locale, [], routineIds, exerciseIds);
+
+  return routineRows.map((routine) => mapRoutine(routine, translationMap));
+}
+
+/**
+ * Count routines matching an optional search query.
+ */
+export async function getRoutinesCount({
+  query,
+  locale,
+}: {
+  query: string;
+  locale: AppLocale;
+}): Promise<number> {
+  const whereClause = buildRoutinePickerWhereClause({ query, locale });
+
+  const [row] = await db.select({ total: count() }).from(routinesTable).where(whereClause);
+
+  return row?.total ?? 0;
+}
+
+/**
+ * Load a single routine by id for workout preparation.
+ */
+export async function getRoutineById(
+  routineId: string,
+  locale: AppLocale,
+): Promise<RoutineItem | null> {
+  const routineRow = await db.query.routines.findFirst({
+    where: (routine, { eq: eqQuery }) => eqQuery(routine.id, routineId),
+    with: {
+      routineExercises: {
+        orderBy: (routineExercise, { asc: ascOrder }) => [ascOrder(routineExercise.exerciseOrder)],
+        with: {
+          exercise: true,
+        },
+      },
+    },
+  });
+
+  if (!routineRow) {
+    return null;
+  }
+
+  const exerciseIds = routineRow.routineExercises
+    .map((routineExercise) => routineExercise.exerciseId)
+    .filter((id): id is string => Boolean(id));
+
+  const translationMap = await loadTranslations(locale, [], [routineRow.id], exerciseIds);
+
+  return mapRoutine(routineRow, translationMap);
 }
 
 /**

@@ -1,0 +1,72 @@
+import { createGym, getGyms, type GymItem } from "@/features/workouts/dao/queries/gymQueries";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+type UseGymPickerResult = {
+  gyms: GymItem[];
+  selectedGymId: string | null;
+  selectedGym: GymItem | null;
+  loading: boolean;
+  setSelectedGymId: (gymId: string | null) => void;
+  addGym: (name: string) => Promise<void>;
+  reload: () => Promise<void>;
+};
+
+function pickDefaultGymId(items: GymItem[]): string | null {
+  if (items.length === 0) {
+    return null;
+  }
+
+  const defaultGym = items.find((gym) => gym.isDefault);
+  return defaultGym?.id ?? items[0]?.id ?? null;
+}
+
+export function useGymPicker(): UseGymPickerResult {
+  const [gyms, setGyms] = useState<GymItem[]>([]);
+  const [selectedGymId, setSelectedGymId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const hasAutoSelectedRef = useRef(false);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const rows = await getGyms();
+      setGyms(rows);
+
+      if (!hasAutoSelectedRef.current) {
+        const defaultGymId = pickDefaultGymId(rows);
+        setSelectedGymId(defaultGymId);
+        hasAutoSelectedRef.current = true;
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  const addGym = useCallback(async (name: string) => {
+    const created = await createGym(name);
+    const rows = await getGyms();
+    setGyms(rows);
+    setSelectedGymId(created.id);
+    hasAutoSelectedRef.current = true;
+  }, []);
+
+  const selectedGym = useMemo(
+    () => gyms.find((gym) => gym.id === selectedGymId) ?? null,
+    [gyms, selectedGymId],
+  );
+
+  return {
+    gyms,
+    selectedGymId,
+    selectedGym,
+    loading,
+    setSelectedGymId,
+    addGym,
+    reload,
+  };
+}

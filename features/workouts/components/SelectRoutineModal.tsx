@@ -1,14 +1,45 @@
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
+import { useI18n } from "@/components/providers/i18n-provider";
+import type { WorkoutRoutinePickerItem } from "@/features/workouts/hooks/useRoutinePicker";
+import { useRoutinePicker } from "@/features/workouts/hooks/useRoutinePicker";
 import { monoFont } from "@/constants/retroTheme";
+import { ControlledSearchInput } from "@/components/ControlledSearchInput";
+import { useEffect } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { RoutinePickerList } from "./routine-picker/RoutinePickerList";
 
 interface SelectRoutineModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelectRoutine?: (routine: WorkoutRoutinePickerItem) => void;
 }
 
-export function SelectRoutineModal({ isOpen, onClose }: SelectRoutineModalProps) {
+export function SelectRoutineModal({ isOpen, onClose, onSelectRoutine }: SelectRoutineModalProps) {
   const palette = useRetroPalette();
+  const { locale, t } = useI18n();
+  const {
+    items,
+    loadingInitial,
+    loadingMore,
+    hasMore,
+    loadMore,
+    reload,
+    searchQuery,
+    setSearchQuery,
+  } = useRoutinePicker(locale);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    void reload();
+  }, [isOpen, reload]);
+
+  const handleSelectRoutine = (routine: WorkoutRoutinePickerItem) => {
+    onSelectRoutine?.(routine);
+    onClose();
+  };
 
   return (
     <Modal visible={isOpen} transparent animationType="slide" onRequestClose={onClose}>
@@ -22,9 +53,26 @@ export function SelectRoutineModal({ isOpen, onClose }: SelectRoutineModalProps)
           </View>
 
           <View style={styles.content}>
-            <Text style={[styles.placeholder, { color: palette.textSecondary }]}>
-              Routine picker modal (coming soon)
-            </Text>
+            <ControlledSearchInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={t("routines.searchExercisePlaceholder")}
+              variant="compact"
+            />
+
+            <RoutinePickerList
+              items={items}
+              loadingInitial={loadingInitial}
+              loadingMore={loadingMore}
+              hasMore={hasMore}
+              loadingLabel={t("routines.loading")}
+              emptyLabel={t("routines.emptyGroupFilterRoutines")}
+              selectLabel={t("workouts.startWorkoutShortCta")}
+              exercisesLabel={t("routines.exercisesTitle")}
+              onSelect={handleSelectRoutine}
+              onLoadMore={loadMore}
+              palette={palette}
+            />
           </View>
         </View>
       </View>
@@ -63,12 +111,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  placeholder: {
-    fontFamily: monoFont,
-    fontSize: 14,
-    letterSpacing: 0.2,
+    gap: 10,
   },
 });

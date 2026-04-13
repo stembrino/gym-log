@@ -33,6 +33,7 @@ export function runMigrations(database: SQLiteDatabase): void {
     CREATE TABLE IF NOT EXISTS workouts (
       id          TEXT PRIMARY KEY NOT NULL,
       date        TEXT NOT NULL,
+      status      TEXT NOT NULL DEFAULT 'completed',
       duration    INTEGER,
       notes       TEXT,
       gym_id      TEXT REFERENCES gyms(id) ON DELETE SET NULL,
@@ -125,6 +126,7 @@ export function runMigrations(database: SQLiteDatabase): void {
   ensureRoutinesFavoriteColumn(database);
   ensureRoutinesDetailDescriptionColumns(database);
   ensureWorkoutsGymIdColumn(database);
+  ensureWorkoutsStatusColumn(database);
   removeLegacyI18nColumns(database);
 }
 
@@ -382,5 +384,26 @@ function ensureWorkoutsGymIdColumn(database: SQLiteDatabase): void {
     }
   } catch {
     // Ignore backfill failures; app can still run without gym support.
+  }
+}
+
+function ensureWorkoutsStatusColumn(database: SQLiteDatabase): void {
+  try {
+    const rows = (database as any).getAllSync("PRAGMA table_info(workouts);") as {
+      name: string;
+    }[];
+    const columnNames = new Set(rows.map((row) => row.name));
+
+    if (!columnNames.has("status")) {
+      database.execSync(
+        "ALTER TABLE workouts ADD COLUMN status TEXT NOT NULL DEFAULT 'completed';",
+      );
+    }
+
+    database.execSync(
+      "CREATE INDEX IF NOT EXISTS idx_workouts_status_created_at ON workouts(status, created_at DESC);",
+    );
+  } catch {
+    // Ignore backfill/index failures; app can still run without status support.
   }
 }

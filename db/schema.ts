@@ -27,6 +27,7 @@ export const exercises = sqliteTable("exercises", {
 export const workouts = sqliteTable("workouts", {
   id: text("id").primaryKey(),
   date: text("date").notNull(),
+  status: text("status").notNull().default("completed"),
   duration: integer("duration"), // minutes, nullable until workout ends
   notes: text("notes"),
   gymId: text("gym_id").references(() => gyms.id, { onDelete: "set null" }),
