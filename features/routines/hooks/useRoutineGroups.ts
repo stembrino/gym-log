@@ -31,13 +31,27 @@ type UseRoutineGroupsResult = {
   reload: () => Promise<void>;
 };
 
-export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
+type UseRoutineGroupsOptions = {
+  enableRoutineGroups?: boolean;
+};
+
+export function useRoutineGroups(
+  locale: AppLocale,
+  options?: UseRoutineGroupsOptions,
+): UseRoutineGroupsResult {
+  const enableRoutineGroups = options?.enableRoutineGroups ?? true;
   const [routineGroups, setRoutineGroups] = useState<RoutineGroup[]>([]);
   const [ungroupedRoutines, setUngroupedRoutines] = useState<RoutineGroupRoutine[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadRoutineGroups = useCallback(async () => {
     try {
+      if (!enableRoutineGroups) {
+        setRoutineGroups([]);
+        setUngroupedRoutines([]);
+        return;
+      }
+
       const groups = await daoGetRoutineGroups(locale);
       const ungrouped = await daoGetUngroupedRoutines(locale);
 
@@ -47,7 +61,7 @@ export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
       setRoutineGroups([]);
       setUngroupedRoutines([]);
     }
-  }, [locale]);
+  }, [enableRoutineGroups, locale]);
 
   useEffect(() => {
     let mounted = true;
@@ -75,6 +89,10 @@ export function useRoutineGroups(locale: AppLocale): UseRoutineGroupsResult {
   }, [loadRoutineGroups]);
 
   const toggleGroupFavorite = async (groupId: string) => {
+    if (!enableRoutineGroups) {
+      return;
+    }
+
     const group = routineGroups.find((item) => item.id === groupId);
 
     if (!group) {

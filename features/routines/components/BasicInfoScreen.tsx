@@ -15,6 +15,7 @@ type Locale = ReturnType<typeof useI18n>["locale"];
 export type BasicInfoScreenProps = {
   name: string;
   onChangeName: (v: string) => void;
+  showRoutineGroups?: boolean;
   routineGroups: RoutineGroupOption[];
   selectedGroupId: string | null;
   onSelectGroup: (groupId: string | null) => void;
@@ -33,6 +34,7 @@ export type BasicInfoScreenProps = {
 export function BasicInfoScreen({
   name,
   onChangeName,
+  showRoutineGroups = true,
   routineGroups,
   selectedGroupId,
   onSelectGroup,
@@ -83,30 +85,32 @@ export function BasicInfoScreen({
           />
         </View>
 
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: palette.textPrimary }]}>
-            {t("routines.formGroupLabel")}
-          </Text>
-          <Text style={[styles.helperText, { color: palette.textSecondary }]}>
-            {t("routines.formGroupHint")}
-          </Text>
-          <View style={styles.tagList}>
-            <Chip
-              key="no-group"
-              label={t("routines.formNoGroupOption")}
-              selected={selectedGroupId === null}
-              onPress={() => onSelectGroup(null)}
-            />
-            {routineGroups.map((group) => (
+        {showRoutineGroups ? (
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: palette.textPrimary }]}>
+              {t("routines.formGroupLabel")}
+            </Text>
+            <Text style={[styles.helperText, { color: palette.textSecondary }]}>
+              {t("routines.formGroupHint")}
+            </Text>
+            <View style={styles.tagList}>
               <Chip
-                key={group.id}
-                label={group.name}
-                selected={selectedGroupId === group.id}
-                onPress={() => onSelectGroup(selectedGroupId === group.id ? null : group.id)}
+                key="no-group"
+                label={t("routines.formNoGroupOption")}
+                selected={selectedGroupId === null}
+                onPress={() => onSelectGroup(null)}
               />
-            ))}
+              {routineGroups.map((group) => (
+                <Chip
+                  key={group.id}
+                  label={group.name}
+                  selected={selectedGroupId === group.id}
+                  onPress={() => onSelectGroup(selectedGroupId === group.id ? null : group.id)}
+                />
+              ))}
+            </View>
           </View>
-        </View>
+        ) : null}
 
         <View style={styles.field}>
           <Text style={[styles.label, { color: palette.textPrimary }]}>
@@ -208,6 +212,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.6,
+  },
+  helperText: {
+    fontFamily: monoFont,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.2,
   },
   input: {
     borderWidth: 1,

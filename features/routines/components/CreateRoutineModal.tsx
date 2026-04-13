@@ -15,6 +15,7 @@ interface CreateRoutineModalProps {
   visible: boolean;
   onClose: () => void;
   routineGroups: RoutineGroupOption[];
+  enableRoutineGroups?: boolean;
   mode?: "create" | "edit";
   initialValues?: RoutineFormInitialValues | null;
   onSubmit: (routineData: RoutineSubmitPayload) => Promise<void>;
@@ -49,6 +50,7 @@ export function CreateRoutineModal({
   visible,
   onClose,
   routineGroups,
+  enableRoutineGroups = true,
   mode = "create",
   initialValues,
   onSubmit,
@@ -72,14 +74,14 @@ export function CreateRoutineModal({
     }
 
     setName(initialValues?.name ?? "");
-    setSelectedGroupId(initialValues?.selectedGroupId ?? null);
+    setSelectedGroupId(enableRoutineGroups ? (initialValues?.selectedGroupId ?? null) : null);
     setDetail(initialValues?.detail ?? "");
     setDescription(initialValues?.description ?? "");
     setSelectedTags(new Set(initialValues?.tagIds ?? []));
     setSelectedExercises(initialValues?.exercises ?? []);
     setSearchQuery("");
     setScreen("basic");
-  }, [visible, initialValues]);
+  }, [enableRoutineGroups, visible, initialValues]);
 
   const excludedExerciseIds = useMemo(
     () => selectedExercises.map((exercise) => exercise.exerciseId),
@@ -129,7 +131,7 @@ export function CreateRoutineModal({
     if (!name.trim()) return;
 
     await onSubmit({
-      groupId: selectedGroupId,
+      groupId: enableRoutineGroups ? selectedGroupId : null,
       name: name.trim(),
       detail: detail.trim() || undefined,
       description: description.trim() || undefined,
@@ -236,6 +238,7 @@ export function CreateRoutineModal({
               if (newName.trim()) setNameError(false);
             }}
             routineGroups={routineGroups}
+            showRoutineGroups={enableRoutineGroups}
             selectedGroupId={selectedGroupId}
             onSelectGroup={setSelectedGroupId}
             detail={detail}
