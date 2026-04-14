@@ -1,4 +1,5 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { Tabs } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -108,8 +109,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="workouts"
         options={{
-          // title: t("tabs.workouts"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="calendar" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome6
+              name="fire-flame-curved"
+              size={28}
+              color={color}
+              style={{ marginBottom: -3 }}
+            />
+          ),
         }}
       />
       <Tabs.Screen
@@ -129,14 +136,16 @@ export default function TabLayout() {
         name="exercises"
         options={{
           title: t("tabs.exercises"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="list-alt" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome6 name="dumbbell" size={24} color={color} style={{ marginBottom: -3 }} />
+          ),
         }}
       />
       <Tabs.Screen
         name="performance"
         options={{
           title: t("tabs.performance"),
-          tabBarIcon: ({ color }) => <TabBarIcon name="line-chart" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
         }}
       />
     </Tabs>
