@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { runDevOnlyResetExercisesToBaseline } from "@/db/devOnly/resetExercisesToBaseline.devOnly";
+import { runDevOnlyInjectMockRoutines } from "@/db/devOnly/injectMockRoutines.devOnly";
 import { DEFAULT_EXERCISES } from "@/db/patches/data/exercises";
 import { DEFAULT_MUSCLE_GROUPS } from "@/db/patches/data/muscleGroups";
 import {
@@ -245,6 +246,7 @@ export async function seedDatabase(options: SeedDatabaseOptions = {}): Promise<v
   const includeRoutineGroups = options.includeRoutineGroups ?? false;
 
   runDevOnlyResetExercisesToBaseline(expoDb, "seed");
+  await runDevOnlyInjectMockRoutines(database);
 
   await database
     .insert(muscleGroups)
@@ -325,57 +327,6 @@ export async function seedDatabase(options: SeedDatabaseOptions = {}): Promise<v
         `[seed] exercise search index already at ${EXERCISE_SEARCH_INDEX_VERSION}, skipping`,
       );
     }
-  }
-
-  await database
-    .insert(routines)
-    .values(
-      DEFAULT_ROUTINES.map((routine) => ({
-        id: routine.id,
-        name: routine.name,
-        detail: routine.detail,
-        description: routine.description,
-        isSystem: routine.isSystem,
-        createdAt: routine.createdAt,
-        ...buildRoutineSearchIndex(routine),
-      })),
-    )
-    .onConflictDoNothing({ target: routines.id });
-
-  if (includeRoutineGroups) {
-    await database
-      .insert(routineGroups)
-      .values(
-        DEFAULT_ROUTINE_GROUPS.map((group) => ({
-          id: group.id,
-          name: group.name,
-          detail: group.detail,
-          description: group.description,
-          isSystem: group.isSystem,
-          createdAt: group.createdAt,
-          ...buildRoutineGroupSearchIndex(group),
-        })),
-      )
-      .onConflictDoNothing({ target: routineGroups.id });
-  }
-
-  await database
-    .insert(routineTagLinks)
-    .values(DEFAULT_ROUTINE_TAG_LINKS.map((link) => ({ ...link })))
-    .onConflictDoNothing({ target: [routineTagLinks.routineId, routineTagLinks.tagId] });
-
-  await database
-    .insert(routineExercises)
-    .values(DEFAULT_ROUTINE_EXERCISES.map((exercise) => ({ ...exercise })))
-    .onConflictDoNothing({ target: routineExercises.id });
-
-  if (includeRoutineGroups) {
-    await database
-      .insert(routineGroupRoutines)
-      .values(DEFAULT_ROUTINE_GROUP_ROUTINES.map((entry) => ({ ...entry })))
-      .onConflictDoNothing({
-        target: [routineGroupRoutines.routineGroupId, routineGroupRoutines.routineId],
-      });
   }
 
   const translationSeedRows = includeRoutineGroups

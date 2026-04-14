@@ -102,6 +102,15 @@ export const DEFAULT_EXERCISES = [
     imageUrl: TEST_AVATAR_IMAGE,
   },
   {
+    id: "ex-03-legs",
+    name: "Smith Machine Squat",
+    muscleGroup: "Legs",
+    isCustom: false,
+    labelPt: "Agachamento no Smith",
+    labelEn: "Smith Machine Squat",
+    imageUrl: TEST_AVATAR_IMAGE,
+  },
+  {
     id: "ex-04-legs",
     name: "Leg Curl",
     muscleGroup: "Legs",
@@ -126,6 +135,15 @@ export const DEFAULT_EXERCISES = [
     isCustom: false,
     labelPt: "Elevação de Panturrilha",
     labelEn: "Calf Raise",
+    imageUrl: TEST_AVATAR_IMAGE,
+  },
+  {
+    id: "ex-07-legs",
+    name: "Lying Leg Curl",
+    muscleGroup: "Legs",
+    isCustom: false,
+    labelPt: "Mesa Flexora",
+    labelEn: "Lying Leg Curl",
     imageUrl: TEST_AVATAR_IMAGE,
   },
 
