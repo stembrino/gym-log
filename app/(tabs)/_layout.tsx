@@ -109,14 +109,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="workouts"
         options={{
-          tabBarIcon: ({ color }) => (
-            <FontAwesome6
-              name="fire-flame-curved"
-              size={28}
-              color={color}
-              style={{ marginBottom: -3 }}
-            />
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name="bolt" color={color} />,
         }}
       />
       <Tabs.Screen
