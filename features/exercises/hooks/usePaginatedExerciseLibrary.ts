@@ -14,12 +14,14 @@ type UsePaginatedExerciseLibraryParams = {
   query: string;
   locale: AppLocale;
   excludeIds: string[];
+  muscleGroups: string[];
 };
 
 export function usePaginatedExerciseLibrary({
   query,
   locale,
   excludeIds,
+  muscleGroups,
 }: UsePaginatedExerciseLibraryParams) {
   const [items, setItems] = useState<ExerciseLibraryItem[]>([]);
   const [page, setPage] = useState(0);
@@ -41,7 +43,12 @@ export function usePaginatedExerciseLibrary({
 
   const normalizedQuery = useMemo(() => debouncedQuery.trim().toLowerCase(), [debouncedQuery]);
   const excludeKey = useMemo(() => [...excludeIds].sort().join("|"), [excludeIds]);
+  const muscleGroupKey = useMemo(() => [...muscleGroups].sort().join("|"), [muscleGroups]);
   const stableExcludeIds = useMemo(() => (excludeKey ? excludeKey.split("|") : []), [excludeKey]);
+  const stableMuscleGroups = useMemo(
+    () => (muscleGroupKey ? muscleGroupKey.split("|") : []),
+    [muscleGroupKey],
+  );
 
   const fetchPage = useCallback(
     async (nextPage: number, reset: boolean) => {
@@ -58,6 +65,7 @@ export function usePaginatedExerciseLibrary({
           query: normalizedQuery,
           locale,
           excludeIds: stableExcludeIds,
+          muscleGroups: stableMuscleGroups,
         };
 
         const [rows, nextTotalCount] = await Promise.all([
@@ -96,7 +104,7 @@ export function usePaginatedExerciseLibrary({
         }
       }
     },
-    [locale, normalizedQuery, stableExcludeIds],
+    [locale, normalizedQuery, stableExcludeIds, stableMuscleGroups],
   );
 
   const reload = useCallback(async () => {
@@ -109,7 +117,7 @@ export function usePaginatedExerciseLibrary({
 
   useEffect(() => {
     void reload();
-  }, [excludeKey, reload]);
+  }, [excludeKey, muscleGroupKey, reload]);
 
   const loadMore = useCallback(() => {
     if (loadingInitial || loadingMore || !hasMore) {

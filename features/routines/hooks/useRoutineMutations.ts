@@ -116,8 +116,9 @@ async function syncOptionalTranslation(
 export function useRoutineMutations(locale: AppLocale, reload: () => Promise<void>) {
   const createRoutine = useCallback(
     async (routineData: RoutineSubmitPayload) => {
+      const routineId = `routine-${Date.now()}`;
+
       await db.transaction(async (tx) => {
-        const routineId = `routine-${Date.now()}`;
         const createdAt = new Date().toISOString();
 
         const trimmedName = routineData.name.trim();
@@ -201,6 +202,8 @@ export function useRoutineMutations(locale: AppLocale, reload: () => Promise<voi
       });
 
       await reload();
+
+      return routineId;
     },
     [locale, reload],
   );

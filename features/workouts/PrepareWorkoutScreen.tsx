@@ -80,7 +80,7 @@ export function PrepareWorkoutScreen() {
   };
 
   const handleStartWorkout = async () => {
-    if (!routine || isStarting) {
+    if (isStarting) {
       return;
     }
 
@@ -88,7 +88,7 @@ export function PrepareWorkoutScreen() {
 
     try {
       const exerciseIdByRoutineExerciseId = new Map(
-        routine.exercises.map((exercise) => [exercise.id, exercise.exerciseId]),
+        (routine?.exercises ?? []).map((exercise) => [exercise.id, exercise.exerciseId]),
       );
 
       const payloadExercises = editableExercises
@@ -150,10 +150,6 @@ export function PrepareWorkoutScreen() {
       <Text style={[styles.title, { color: palette.textPrimary }]}>
         {t("workouts.prepareWorkoutTitle")}
       </Text>
-      <Text style={[styles.subtitle, { color: palette.textSecondary }]}>
-        {t("workouts.prepareWorkoutSubtitle")}
-      </Text>
-
       <View
         style={[styles.gymSection, { borderColor: palette.border, backgroundColor: palette.card }]}
       >
@@ -185,19 +181,22 @@ export function PrepareWorkoutScreen() {
         <Text style={[styles.statusText, { color: palette.textSecondary }]}>
           {t("routines.loading")}
         </Text>
-      ) : !routine ? (
-        <Text style={[styles.statusText, { color: palette.textSecondary }]}>
-          {t("workouts.prepareWorkoutMissingRoutine")}
-        </Text>
       ) : (
         <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.border }]}>
-          <Text style={[styles.routineName, { color: palette.textPrimary }]}>{routine.name}</Text>
-          {routine.detail ? (
+          <Text style={[styles.routineName, { color: palette.textPrimary }]}>
+            {routine?.name ?? t("workouts.prepareWorkoutNoRoutineSelectedTitle")}
+          </Text>
+          {!routine ? (
+            <Text style={[styles.routineDetail, { color: palette.textSecondary }]}>
+              {t("workouts.prepareWorkoutNoRoutineSelectedBody")}
+            </Text>
+          ) : null}
+          {routine?.detail ? (
             <Text style={[styles.routineDetail, { color: palette.textSecondary }]}>
               {routine.detail}
             </Text>
           ) : null}
-          {routine.description ? (
+          {routine?.description ? (
             <Text style={[styles.routineDescription, { color: palette.textSecondary }]}>
               {routine.description}
             </Text>

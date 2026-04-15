@@ -41,6 +41,7 @@ describe("usePaginatedExerciseLibrary", () => {
         query: "",
         locale: "pt-BR",
         excludeIds: [],
+        muscleGroups: [],
       }),
     );
 

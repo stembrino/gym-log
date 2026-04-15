@@ -99,6 +99,13 @@ export function WorkoutsTabScreen() {
     });
   };
 
+  const handleStartWithoutRoutine = () => {
+    router.push({
+      pathname: "/workout-prepare",
+      params: {},
+    });
+  };
+
   if (checkingActiveWorkout) {
     return (
       <View style={[styles.container, { backgroundColor: palette.page }]}>
@@ -144,6 +151,7 @@ export function WorkoutsTabScreen() {
         isOpen={isSelectRoutineModalOpen}
         onClose={() => setIsSelectRoutineModalOpen(false)}
         onSelectRoutine={handleSelectRoutine}
+        onStartWithoutRoutine={handleStartWithoutRoutine}
       />
     </View>
   );

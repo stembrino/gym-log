@@ -9,6 +9,7 @@ import { useColorScheme } from "@/components/hooks/useColorScheme";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useThemePreference } from "@/components/theme-preference";
 import Colors from "@/constants/Colors";
+import { FEATURE_FLAGS } from "@/constants/featureFlags";
 import { monoFont } from "@/constants/retroTheme";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
@@ -128,6 +129,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="exercises"
         options={{
+          href: FEATURE_FLAGS.exercisesTab ? undefined : null,
           title: t("tabs.exercises"),
           tabBarIcon: ({ color }) => (
             <FontAwesome6 name="dumbbell" size={24} color={color} style={{ marginBottom: -3 }} />

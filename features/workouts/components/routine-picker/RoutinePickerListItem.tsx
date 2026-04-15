@@ -29,11 +29,7 @@ export function RoutinePickerListItem({
       count={item.exercises.length}
       expanded={expanded}
       onToggle={() => setExpanded((prev) => !prev)}
-      headerAction={
-        <View style={styles.buttonWrapper}>
-          <PrimaryButton label={selectLabel} onPress={() => onPress(item)} size="small" />
-        </View>
-      }
+      headerAction={<PrimaryButton label={selectLabel} onPress={() => onPress(item)} size="tiny" />}
     >
       {item.exercises.length === 0 ? (
         <Text style={[styles.emptyExercises, { color: palette.textSecondary }]}>
@@ -67,9 +63,6 @@ export function RoutinePickerListItem({
 }
 
 const styles = StyleSheet.create({
-  buttonWrapper: {
-    width: 92,
-  },
   emptyExercises: {
     fontFamily: monoFont,
     fontSize: 11,

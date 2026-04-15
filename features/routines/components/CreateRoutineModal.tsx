@@ -100,6 +100,7 @@ export function CreateRoutineModal({
     query: searchQuery,
     locale,
     excludeIds: excludedExerciseIds,
+    muscleGroups: [],
   });
 
   const handleToggleTag = (tagId: string) => {

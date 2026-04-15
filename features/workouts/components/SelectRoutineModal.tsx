@@ -12,9 +12,16 @@ interface SelectRoutineModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectRoutine?: (routine: WorkoutRoutinePickerItem) => void;
+  onSelectRoutineId?: (routineId: string) => void;
+  onStartWithoutRoutine?: () => void;
 }
 
-export function SelectRoutineModal({ isOpen, onClose, onSelectRoutine }: SelectRoutineModalProps) {
+export function SelectRoutineModal({
+  isOpen,
+  onClose,
+  onSelectRoutine,
+  onStartWithoutRoutine,
+}: SelectRoutineModalProps) {
   const palette = useRetroPalette();
   const { locale, t } = useI18n();
   const {
@@ -41,6 +48,11 @@ export function SelectRoutineModal({ isOpen, onClose, onSelectRoutine }: SelectR
     onClose();
   };
 
+  const handleStartWithoutRoutine = () => {
+    onStartWithoutRoutine?.();
+    onClose();
+  };
+
   return (
     <Modal visible={isOpen} transparent animationType="slide" onRequestClose={onClose}>
       <View style={[styles.overlay, { backgroundColor: "rgba(0, 0, 0, 0.5)" }]}>
@@ -59,6 +71,18 @@ export function SelectRoutineModal({ isOpen, onClose, onSelectRoutine }: SelectR
               placeholder={t("routines.searchExercisePlaceholder")}
               variant="compact"
             />
+
+            <Pressable
+              onPress={handleStartWithoutRoutine}
+              style={[
+                styles.startWithoutRoutineButton,
+                { borderColor: palette.border, backgroundColor: palette.page },
+              ]}
+            >
+              <Text style={[styles.startWithoutRoutineButtonText, { color: palette.textPrimary }]}>
+                {t("workouts.startWithoutRoutineCta")}
+              </Text>
+            </Pressable>
 
             <RoutinePickerList
               items={items}
@@ -112,5 +136,20 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     gap: 10,
+  },
+  startWithoutRoutineButton: {
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  startWithoutRoutineButtonText: {
+    fontFamily: monoFont,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
 });

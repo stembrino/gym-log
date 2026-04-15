@@ -1,7 +1,7 @@
 import type { AppLocale } from "@/components/providers/i18n-provider";
 import { db } from "@/db/client";
 import { entityTranslations, exercises, muscleGroups } from "@/db/schema";
-import { and, asc, count, eq, like, notInArray, or } from "drizzle-orm";
+import { and, asc, count, eq, inArray, like, notInArray, or } from "drizzle-orm";
 
 const PAGE_SIZE = 20;
 
@@ -18,17 +18,24 @@ type GetExerciseLibraryPageArgs = {
   query: string;
   locale: AppLocale;
   excludeIds: string[];
+  muscleGroups: string[];
 };
 
 type ExerciseLibraryFilterArgs = {
   query: string;
   locale: AppLocale;
   excludeIds: string[];
+  muscleGroups: string[];
 };
 
-function buildExerciseLibraryWhereClause({ query, locale, excludeIds }: ExerciseLibraryFilterArgs) {
+function buildExerciseLibraryWhereClause({
+  query,
+  locale,
+  excludeIds,
+  muscleGroups,
+}: ExerciseLibraryFilterArgs) {
   const searchColumn = locale === "pt-BR" ? exercises.searchPt : exercises.searchEn;
-  const conditions = [] as (ReturnType<typeof like> | ReturnType<typeof notInArray>)[];
+  const conditions = [];
 
   if (query) {
     conditions.push(
@@ -38,6 +45,10 @@ function buildExerciseLibraryWhereClause({ query, locale, excludeIds }: Exercise
 
   if (excludeIds.length > 0) {
     conditions.push(notInArray(exercises.id, excludeIds));
+  }
+
+  if (muscleGroups.length > 0) {
+    conditions.push(inArray(exercises.muscleGroup, muscleGroups));
   }
 
   if (conditions.length === 0) {
@@ -56,11 +67,13 @@ export async function getExerciseLibraryPage({
   query,
   locale,
   excludeIds,
+  muscleGroups,
 }: GetExerciseLibraryPageArgs): Promise<ExerciseLibraryItem[]> {
   const whereClause = buildExerciseLibraryWhereClause({
     query,
     locale,
     excludeIds,
+    muscleGroups,
   });
 
   const rows = await db
@@ -100,11 +113,13 @@ export async function getExerciseLibraryCount({
   query,
   locale,
   excludeIds,
+  muscleGroups,
 }: ExerciseLibraryFilterArgs): Promise<number> {
   const whereClause = buildExerciseLibraryWhereClause({
     query,
     locale,
     excludeIds,
+    muscleGroups,
   });
 
   const [row] = await db.select({ total: count() }).from(exercises).where(whereClause);

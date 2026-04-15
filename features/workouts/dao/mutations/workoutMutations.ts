@@ -150,6 +150,37 @@ export async function addWorkoutSet(args: {
   };
 }
 
+export async function addWorkoutExercise(args: { workoutId: string; exerciseId: string }): Promise<{
+  id: string;
+  workoutId: string;
+  exerciseId: string;
+  exerciseOrder: number;
+}> {
+  const [latestExercise] = await db
+    .select({ exerciseOrder: workoutExercises.exerciseOrder })
+    .from(workoutExercises)
+    .where(eq(workoutExercises.workoutId, args.workoutId))
+    .orderBy(desc(workoutExercises.exerciseOrder))
+    .limit(1);
+
+  const nextOrder = (latestExercise?.exerciseOrder ?? 0) + 1;
+  const workoutExerciseId = `wte-${args.workoutId}-${Date.now()}`;
+
+  await db.insert(workoutExercises).values({
+    id: workoutExerciseId,
+    workoutId: args.workoutId,
+    exerciseId: args.exerciseId,
+    exerciseOrder: nextOrder,
+  });
+
+  return {
+    id: workoutExerciseId,
+    workoutId: args.workoutId,
+    exerciseId: args.exerciseId,
+    exerciseOrder: nextOrder,
+  };
+}
+
 export async function updateWorkoutStatus(args: {
   workoutId: string;
   status: "in_progress" | "paused";

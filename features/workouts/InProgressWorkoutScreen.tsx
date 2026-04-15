@@ -1,12 +1,15 @@
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useColorScheme } from "@/components/hooks/useColorScheme";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { AvatarWithPreview } from "@/components/AvatarWithPreview";
 import { monoFont } from "@/constants/retroTheme";
+import { resolveExerciseImageSource } from "@/features/exercises/utils/exerciseImageSource";
 import {
   getActiveWorkout,
   type ActiveWorkoutRow,
 } from "@/features/workouts/dao/queries/workoutQueries";
 import {
+  addWorkoutExercise,
   addWorkoutSet,
   cancelWorkout,
   finishWorkout,
@@ -15,6 +18,7 @@ import {
 } from "@/features/workouts/dao/mutations/workoutMutations";
 import { RoundAddButton } from "@/components/RoundAddButton";
 import { WorkoutStatusDot } from "@/features/workouts/components/WorkoutStatusDot";
+import { PrepareWorkoutExercisePickerModal } from "@/features/workouts/components/prepare/PrepareWorkoutExercisePickerModal";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -29,12 +33,13 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import type { ExerciseLibraryItem } from "@/features/exercises/hooks/usePaginatedExerciseLibrary";
 
 export function InProgressWorkoutScreen() {
   const router = useRouter();
   const palette = useRetroPalette();
   const colorScheme = useColorScheme();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [workout, setWorkout] = useState<ActiveWorkoutRow | null>(null);
@@ -42,6 +47,7 @@ export function InProgressWorkoutScreen() {
   const [weightDraftBySetId, setWeightDraftBySetId] = useState<Record<string, string>>({});
   const [canceling, setCanceling] = useState(false);
   const [finishing, setFinishing] = useState(false);
+  const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -218,6 +224,44 @@ export function InProgressWorkoutScreen() {
     }
   };
 
+  const handleAddExercise = async (exercise: ExerciseLibraryItem) => {
+    if (!workout) {
+      return;
+    }
+
+    try {
+      const createdExercise = await addWorkoutExercise({
+        workoutId: workout.id,
+        exerciseId: exercise.id,
+      });
+
+      setWorkout((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          exercises: [
+            ...prev.exercises,
+            {
+              id: createdExercise.id,
+              exerciseOrder: createdExercise.exerciseOrder,
+              exercise: {
+                id: exercise.id,
+                name: exercise.name,
+                muscleGroup: exercise.muscleGroup,
+              },
+              sets: [],
+            },
+          ],
+        };
+      });
+    } catch {
+      Alert.alert(t("workouts.addSetErrorTitle"), t("workouts.addSetErrorBody"));
+    }
+  };
+
   const handleCancelWorkoutPress = () => {
     if (!workout || canceling) {
       return;
@@ -340,6 +384,12 @@ export function InProgressWorkoutScreen() {
                 ]}
               >
                 <View style={styles.exerciseHeaderRow}>
+                  <AvatarWithPreview
+                    label={exercise.exercise.name}
+                    size="sm"
+                    imageSource={resolveExerciseImageSource(exercise.exercise.id, null)}
+                    previewTitle={exercise.exercise.name}
+                  />
                   <Text style={[styles.exerciseOrder, { color: palette.accent }]}>
                     {exercise.exerciseOrder}.
                   </Text>
@@ -497,6 +547,19 @@ export function InProgressWorkoutScreen() {
             ))
           : null}
 
+        {workout ? (
+          <View style={[styles.exerciseActionsGroup, { borderBottomColor: palette.border }]}>
+            <TouchableOpacity
+              style={[styles.addExerciseButton, { borderColor: palette.border }]}
+              onPress={() => setIsExercisePickerOpen(true)}
+            >
+              <Text style={[styles.addExerciseButtonText, { color: palette.textPrimary }]}>
+                + {t("routines.addExerciseButton")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[
@@ -519,6 +582,22 @@ export function InProgressWorkoutScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <PrepareWorkoutExercisePickerModal
+        isOpen={isExercisePickerOpen}
+        onClose={() => setIsExercisePickerOpen(false)}
+        locale={locale}
+        excludeExerciseIds={workout?.exercises.map((exercise) => exercise.exercise.id) ?? []}
+        onAddExercise={(exercise) => {
+          void handleAddExercise(exercise);
+        }}
+        title={t("workouts.addExercisePickerTitle")}
+        hint={t("workouts.addExercisePickerHint")}
+        searchPlaceholder={t("routines.searchExercisePlaceholder")}
+        addButtonLabel={t("routines.addExerciseButton")}
+        emptyLabel={t("routines.noExerciseResults")}
+        loadingLabel={t("routines.loading")}
+      />
     </View>
   );
 }
@@ -574,6 +653,27 @@ const styles = StyleSheet.create({
     fontFamily: monoFont,
     fontSize: 11,
     letterSpacing: 0.2,
+  },
+  exerciseActionsGroup: {
+    marginTop: 8,
+    marginBottom: 6,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
+  addExerciseButton: {
+    minHeight: 36,
+    borderWidth: 1,
+    borderRadius: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  addExerciseButtonText: {
+    fontFamily: monoFont,
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
   },
   meta: {
     fontFamily: monoFont,

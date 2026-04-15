@@ -3,15 +3,15 @@ import { runDevOnlyResetExercisesToBaseline } from "@/db/devOnly/resetExercisesT
 import { runDevOnlyInjectMockRoutines } from "@/db/devOnly/injectMockRoutines.devOnly";
 import { DEFAULT_EXERCISES } from "@/db/patches/data/exercises";
 import { DEFAULT_MUSCLE_GROUPS } from "@/db/patches/data/muscleGroups";
-import {
-  DEFAULT_ROUTINE_GROUP_ROUTINES,
-  DEFAULT_ROUTINE_GROUPS,
-} from "@/db/patches/data/routineGroups";
-import {
-  DEFAULT_ROUTINE_EXERCISES,
-  DEFAULT_ROUTINE_TAG_LINKS,
-  DEFAULT_ROUTINES,
-} from "@/db/patches/data/routines";
+// import {
+//   DEFAULT_ROUTINE_GROUP_ROUTINES,
+//   DEFAULT_ROUTINE_GROUPS,
+// } from "@/db/patches/data/routineGroups";
+// import {
+//   DEFAULT_ROUTINE_EXERCISES,
+//   DEFAULT_ROUTINE_TAG_LINKS,
+//   DEFAULT_ROUTINES,
+// } from "@/db/patches/data/routines";
 import { DEFAULT_ROUTINE_TAGS } from "@/db/patches/data/routineTags";
 import { count, eq, isNull, or } from "drizzle-orm";
 import { db, expoDb } from "./client";
@@ -19,11 +19,11 @@ import {
   entityTranslations,
   exercises,
   muscleGroups,
-  routineGroupRoutines,
+  // routineGroupRoutines,
   routineGroups,
-  routineExercises,
+  // routineExercises,
   routines,
-  routineTagLinks,
+  // routineTagLinks,
   routineTags,
 } from "./schema";
 import { DEFAULT_ENTITY_TRANSLATIONS } from "./seed-data/entityTranslations";
@@ -65,19 +65,19 @@ function buildRoutineTagSearchIndex(tag: { slug: string; labelPt: string; labelE
   };
 }
 
-function buildRoutineSearchIndex(routine: { name: string; labelPt: string; labelEn: string }) {
-  return {
-    searchPt: normalizeSearchText(`${routine.labelPt} ${routine.name}`),
-    searchEn: normalizeSearchText(`${routine.labelEn} ${routine.name}`),
-  };
-}
-
-function buildRoutineGroupSearchIndex(group: { name: string; labelPt: string; labelEn: string }) {
-  return {
-    searchPt: normalizeSearchText(`${group.labelPt} ${group.name}`),
-    searchEn: normalizeSearchText(`${group.labelEn} ${group.name}`),
-  };
-}
+// function buildRoutineSearchIndex(routine: { name: string; labelPt: string; labelEn: string }) {
+//   return {
+//     searchPt: normalizeSearchText(`${routine.labelPt} ${routine.name}`),
+//     searchEn: normalizeSearchText(`${routine.labelEn} ${routine.name}`),
+//   };
+// }
+//
+// function buildRoutineGroupSearchIndex(group: { name: string; labelPt: string; labelEn: string }) {
+//   return {
+//     searchPt: normalizeSearchText(`${group.labelPt} ${group.name}`),
+//     searchEn: normalizeSearchText(`${group.labelEn} ${group.name}`),
+//   };
+// }
 
 function buildBackfillTranslationRows(args: {
   routinesRows: {

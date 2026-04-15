@@ -24,6 +24,7 @@ export default function ExercisesTabScreen() {
       query,
       locale,
       excludeIds: [],
+      muscleGroups: [],
     });
   const { items: muscleGroups } = useMuscleGroups();
   const { createExercise, deleteExercise } = useExerciseMutations(reload);
