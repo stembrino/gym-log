@@ -7,7 +7,8 @@ import DraggableFlatList, {
   ScaleDecorator,
   type RenderItemParams,
 } from "react-native-draggable-flatlist";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export type EditableWorkoutExercise = {
   id: string;
@@ -23,6 +24,7 @@ type PrepareWorkoutExercisesFormProps = {
   locale: AppLocale;
   reorderHint: string;
   addButtonAccessibilityLabel: string;
+  removeButtonLabel: string;
   palette: {
     card: string;
     border: string;
@@ -33,6 +35,7 @@ type PrepareWorkoutExercisesFormProps = {
     listSelected: string;
   };
   onReorder: (nextItems: EditableWorkoutExercise[]) => void;
+  onRemoveExercise: (exerciseId: string) => void;
   onPressAddExercise: () => void;
 };
 
@@ -41,8 +44,10 @@ export function PrepareWorkoutExercisesForm({
   locale,
   reorderHint,
   addButtonAccessibilityLabel,
+  removeButtonLabel,
   palette,
   onReorder,
+  onRemoveExercise,
   onPressAddExercise,
 }: PrepareWorkoutExercisesFormProps) {
   const renderItem = ({ item, drag, isActive }: RenderItemParams<EditableWorkoutExercise>) => {
@@ -50,7 +55,9 @@ export function PrepareWorkoutExercisesForm({
 
     return (
       <ScaleDecorator>
-        <View
+        <Pressable
+          onLongPress={drag}
+          delayLongPress={120}
           style={[
             styles.exerciseRow,
             {
@@ -59,9 +66,9 @@ export function PrepareWorkoutExercisesForm({
             },
           ]}
         >
-          <Pressable onLongPress={drag} delayLongPress={120} style={styles.dragHandle}>
+          <View style={styles.dragHandle}>
             <Text style={[styles.dragHandleText, { color: palette.textSecondary }]}>::</Text>
-          </Pressable>
+          </View>
 
           <AvatarWithPreview
             label={item.name}
@@ -77,7 +84,17 @@ export function PrepareWorkoutExercisesForm({
           <View style={styles.exerciseCopy}>
             <Text style={[styles.exerciseName, { color: palette.textPrimary }]}>{item.name}</Text>
           </View>
-        </View>
+
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => onRemoveExercise(item.id)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={removeButtonLabel}
+          >
+            <FontAwesome name="times" size={16} color={palette.textSecondary} />
+          </TouchableOpacity>
+        </Pressable>
       </ScaleDecorator>
     );
   };
@@ -86,7 +103,9 @@ export function PrepareWorkoutExercisesForm({
     <View style={styles.container}>
       <Text style={[styles.hint, { color: palette.textSecondary }]}>
         {reorderHint}
-        {locale === "pt-BR" ? " (segure e arraste)" : " (long press and drag)"}
+        {locale === "pt-BR"
+          ? " (segure qualquer linha e arraste)"
+          : " (long press any row and drag)"}
       </Text>
       <DraggableFlatList
         data={items}
@@ -168,6 +187,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.2,
+  },
+  removeButton: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
   },
   addFooter: {
     paddingTop: 2,

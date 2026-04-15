@@ -64,10 +64,12 @@ export const translations = {
       prepareWorkoutNoRoutineSelectedTitle: "Treino sem rotina",
       prepareWorkoutNoRoutineSelectedBody:
         "Voce pode adicionar exercicios agora e iniciar sem vincular uma rotina.",
-      prepareWorkoutNoExercises: "Esta rotina ainda nao possui exercicios.",
+      prepareWorkoutNoExercises:
+        "Adicione exercicios para iniciar o treino ou comece agora e adicione durante o treino.",
       addExercisePickerTitle: "Adicionar exercicio",
       addExercisePickerHint: "Busque e adicione exercicios durante o treino.",
       addExerciseAccessibilityLabel: "Adicionar exercicio ao treino",
+      exerciseAddedFeedback: "%{name} adicionado",
       cancelPreparationCta: "CANCELAR",
       gymFieldLabel: "Academia",
       gymFieldHint:
@@ -290,10 +292,12 @@ export const translations = {
       prepareWorkoutNoRoutineSelectedTitle: "Workout without routine",
       prepareWorkoutNoRoutineSelectedBody:
         "You can add exercises now and start without linking a routine.",
-      prepareWorkoutNoExercises: "This routine has no exercises yet.",
+      prepareWorkoutNoExercises:
+        "Add exercises to start the workout, or start now and add exercises during the workout.",
       addExercisePickerTitle: "Add exercise",
       addExercisePickerHint: "Search and add exercises during the workout.",
       addExerciseAccessibilityLabel: "Add exercise to workout",
+      exerciseAddedFeedback: "%{name} added",
       cancelPreparationCta: "CANCEL",
       gymFieldLabel: "Gym",
       gymFieldHint: "Optional. If undefined, workout will be saved without a gym.",

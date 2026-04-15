@@ -2,6 +2,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { AvatarWithPreview } from "@/components/AvatarWithPreview";
 import { Checkbox } from "@/components/Checkbox";
 import { ControlledSearchInput } from "@/components/ControlledSearchInput";
+import { Snackbar } from "@/components/Snackbar";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import type { AppLocale } from "@/components/providers/i18n-provider";
@@ -51,6 +52,8 @@ export function PrepareWorkoutExercisePickerModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const selectedMuscleGroupValues = selectedMuscleGroup ? [selectedMuscleGroup] : [];
 
   const { items, hasMore, loadingInitial, loadingMore, loadMore, reload } =
@@ -72,6 +75,8 @@ export function PrepareWorkoutExercisePickerModal({
 
   const handleAddExercise = (exercise: ExerciseLibraryItem) => {
     onAddExercise(exercise);
+    setSnackbarMessage(t("workouts.exerciseAddedFeedback", { name: exercise.name }));
+    setSnackbarVisible(true);
   };
 
   const handleCreateExercise = async (payload: { name: string; muscleGroup: string }) => {
@@ -202,6 +207,14 @@ export function PrepareWorkoutExercisePickerModal({
         onClose={() => setCreateModalVisible(false)}
         muscleGroups={muscleGroups}
         onSubmit={handleCreateExercise}
+      />
+
+      <Snackbar
+        visible={snackbarVisible}
+        message={snackbarMessage}
+        onDismiss={() => setSnackbarVisible(false)}
+        position="top"
+        align="end"
       />
     </Modal>
   );

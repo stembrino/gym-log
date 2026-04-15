@@ -79,6 +79,14 @@ export function PrepareWorkoutScreen() {
     ]);
   };
 
+  const handleRemoveExercise = (exerciseId: string) => {
+    setEditableExercises((prev) =>
+      prev
+        .filter((exercise) => exercise.id !== exerciseId)
+        .map((exercise, index) => ({ ...exercise, exerciseOrder: index + 1 })),
+    );
+  };
+
   const handleStartWorkout = async () => {
     if (isStarting) {
       return;
@@ -183,20 +191,15 @@ export function PrepareWorkoutScreen() {
         </Text>
       ) : (
         <View style={[styles.card, { backgroundColor: palette.card, borderColor: palette.border }]}>
-          <Text style={[styles.routineName, { color: palette.textPrimary }]}>
-            {routine?.name ?? t("workouts.prepareWorkoutNoRoutineSelectedTitle")}
-          </Text>
-          {!routine ? (
-            <Text style={[styles.routineDetail, { color: palette.textSecondary }]}>
-              {t("workouts.prepareWorkoutNoRoutineSelectedBody")}
-            </Text>
+          {routine ? (
+            <Text style={[styles.routineName, { color: palette.textPrimary }]}>{routine.name}</Text>
           ) : null}
-          {routine?.detail ? (
+          {routine && routine.detail ? (
             <Text style={[styles.routineDetail, { color: palette.textSecondary }]}>
               {routine.detail}
             </Text>
           ) : null}
-          {routine?.description ? (
+          {routine && routine.description ? (
             <Text style={[styles.routineDescription, { color: palette.textSecondary }]}>
               {routine.description}
             </Text>
@@ -217,7 +220,9 @@ export function PrepareWorkoutScreen() {
             locale={locale}
             reorderHint={t("workouts.prepareWorkoutReorderHint")}
             addButtonAccessibilityLabel={t("workouts.addExerciseAccessibilityLabel")}
+            removeButtonLabel={t("routines.removeExerciseButton")}
             onReorder={handleReorderExercises}
+            onRemoveExercise={handleRemoveExercise}
             onPressAddExercise={() => setIsExercisePickerOpen(true)}
             palette={palette}
           />
