@@ -52,12 +52,12 @@ export function Snackbar({
         style={[
           styles.body,
           {
-            backgroundColor: "rgba(233, 84, 32, 0.18)",
-            borderColor: "rgba(233, 84, 32, 0.55)",
+            backgroundColor: "rgba(34, 197, 94, 0.18)",
+            borderColor: "rgba(34, 197, 94, 0.55)",
           },
         ]}
       >
-        <Text style={[styles.message, { color: "#E95420" }]}>{message}</Text>
+        <Text style={[styles.message, { color: "#22C55E" }]}>{message}</Text>
       </View>
     </View>
   );

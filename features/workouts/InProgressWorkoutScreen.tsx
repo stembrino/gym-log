@@ -9,11 +9,12 @@ import {
   type ActiveWorkoutRow,
 } from "@/features/workouts/dao/queries/workoutQueries";
 import {
-  addWorkoutExercise,
+  addWorkoutExerciseWithInitialSet,
   addWorkoutSet,
   cancelWorkout,
   finishWorkout,
   removeWorkoutExercise,
+  removeWorkoutSet,
   updateWorkoutSet,
   updateWorkoutSetCompleted,
 } from "@/features/workouts/dao/mutations/workoutMutations";
@@ -50,6 +51,7 @@ export function InProgressWorkoutScreen() {
   const [finishing, setFinishing] = useState(false);
   const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false);
   const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(null);
+  const [deletingSetId, setDeletingSetId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -232,7 +234,7 @@ export function InProgressWorkoutScreen() {
     }
 
     try {
-      const createdExercise = await addWorkoutExercise({
+      const created = await addWorkoutExerciseWithInitialSet({
         workoutId: workout.id,
         exerciseId: exercise.id,
       });
@@ -247,18 +249,27 @@ export function InProgressWorkoutScreen() {
           exercises: [
             ...prev.exercises,
             {
-              id: createdExercise.id,
-              exerciseOrder: createdExercise.exerciseOrder,
+              id: created.exercise.id,
+              exerciseOrder: created.exercise.exerciseOrder,
               exercise: {
                 id: exercise.id,
                 name: exercise.name,
                 muscleGroup: exercise.muscleGroup,
               },
-              sets: [],
+              sets: [created.initialSet],
             },
           ],
         };
       });
+
+      setRepsDraftBySetId((prev) => ({
+        ...prev,
+        [created.initialSet.id]: "",
+      }));
+      setWeightDraftBySetId((prev) => ({
+        ...prev,
+        [created.initialSet.id]: "",
+      }));
     } catch {
       Alert.alert(t("workouts.addSetErrorTitle"), t("workouts.addSetErrorBody"));
     }
@@ -337,6 +348,72 @@ export function InProgressWorkoutScreen() {
         },
       ],
     );
+  };
+
+  const handleDeleteSetPress = (args: {
+    setId: string;
+    workoutExerciseId: string;
+    setIndex: number;
+  }) => {
+    if (deletingSetId) {
+      return;
+    }
+
+    Alert.alert(t("workouts.removeSetTitle"), t("workouts.removeSetBody"), [
+      {
+        text: t("exercises.cancel"),
+        style: "cancel",
+      },
+      {
+        text: t("workouts.removeSetConfirmCta"),
+        style: "destructive",
+        onPress: () => {
+          void (async () => {
+            setDeletingSetId(args.setId);
+
+            try {
+              await removeWorkoutSet({
+                setId: args.setId,
+              });
+
+              setWorkout((prev) => {
+                if (!prev) {
+                  return prev;
+                }
+
+                return {
+                  ...prev,
+                  exercises: prev.exercises.map((exercise) =>
+                    exercise.id === args.workoutExerciseId
+                      ? {
+                          ...exercise,
+                          sets: exercise.sets.filter((set) => set.id !== args.setId),
+                        }
+                      : exercise,
+                  ),
+                };
+              });
+
+              setRepsDraftBySetId((prev) => {
+                const next = { ...prev };
+                delete next[args.setId];
+                return next;
+              });
+
+              setWeightDraftBySetId((prev) => {
+                const next = { ...prev };
+                delete next[args.setId];
+                return next;
+              });
+            } catch {
+              Alert.alert(t("workouts.removeSetErrorTitle"), t("workouts.removeSetErrorBody"));
+            } finally {
+              setDeletingSetId(null);
+            }
+          })();
+        },
+      },
+    ]);
   };
 
   const handleCancelWorkoutPress = () => {
@@ -520,7 +597,9 @@ export function InProgressWorkoutScreen() {
                                     backgroundColor: palette.page,
                                   },
                                 ]}
-                                value={repsDraftBySetId[set.id] ?? String(set.reps)}
+                                value={
+                                  repsDraftBySetId[set.id] ?? (set.reps > 0 ? String(set.reps) : "")
+                                }
                                 onChangeText={(value) => {
                                   setRepsDraftBySetId((prev) => ({
                                     ...prev,
@@ -585,6 +664,22 @@ export function InProgressWorkoutScreen() {
                               </Text>
                             </View>
                           </View>
+                          <TouchableOpacity
+                            style={styles.removeSetButton}
+                            onPress={() => {
+                              handleDeleteSetPress({
+                                setId: set.id,
+                                workoutExerciseId: exercise.id,
+                                setIndex: index,
+                              });
+                            }}
+                            disabled={deletingSetId === set.id}
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={t("workouts.removeSetAccessibilityLabel")}
+                          >
+                            <FontAwesome name="trash-o" size={16} color={palette.textSecondary} />
+                          </TouchableOpacity>
                           <TouchableOpacity
                             style={[
                               styles.completeSetButton,
@@ -869,6 +964,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 0,
+  },
+  removeSetButton: {
+    minWidth: 28,
+    minHeight: 28,
+    alignItems: "center",
+    justifyContent: "center",
   },
   addSetButtonRow: {
     marginTop: 4,

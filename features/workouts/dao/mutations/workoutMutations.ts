@@ -150,6 +150,10 @@ export async function addWorkoutSet(args: {
   };
 }
 
+export async function removeWorkoutSet(args: { setId: string }): Promise<void> {
+  await db.delete(sets).where(eq(sets.id, args.setId));
+}
+
 export async function addWorkoutExercise(args: { workoutId: string; exerciseId: string }): Promise<{
   id: string;
   workoutId: string;
@@ -179,6 +183,71 @@ export async function addWorkoutExercise(args: { workoutId: string; exerciseId: 
     exerciseId: args.exerciseId,
     exerciseOrder: nextOrder,
   };
+}
+
+export async function addWorkoutExerciseWithInitialSet(args: {
+  workoutId: string;
+  exerciseId: string;
+}): Promise<{
+  exercise: {
+    id: string;
+    workoutId: string;
+    exerciseId: string;
+    exerciseOrder: number;
+  };
+  initialSet: {
+    id: string;
+    reps: number;
+    weight: number;
+    completed: boolean;
+    timestamp: string;
+  };
+}> {
+  return db.transaction(async (tx) => {
+    const [latestExercise] = await tx
+      .select({ exerciseOrder: workoutExercises.exerciseOrder })
+      .from(workoutExercises)
+      .where(eq(workoutExercises.workoutId, args.workoutId))
+      .orderBy(desc(workoutExercises.exerciseOrder))
+      .limit(1);
+
+    const nextOrder = (latestExercise?.exerciseOrder ?? 0) + 1;
+    const workoutExerciseId = `wte-${args.workoutId}-${Date.now()}`;
+    const timestamp = new Date().toISOString();
+    const setId = `set-${workoutExerciseId}-1`;
+
+    await tx.insert(workoutExercises).values({
+      id: workoutExerciseId,
+      workoutId: args.workoutId,
+      exerciseId: args.exerciseId,
+      exerciseOrder: nextOrder,
+    });
+
+    await tx.insert(sets).values({
+      id: setId,
+      workoutExerciseId,
+      reps: 0,
+      weight: 0,
+      completed: false,
+      timestamp,
+    });
+
+    return {
+      exercise: {
+        id: workoutExerciseId,
+        workoutId: args.workoutId,
+        exerciseId: args.exerciseId,
+        exerciseOrder: nextOrder,
+      },
+      initialSet: {
+        id: setId,
+        reps: 0,
+        weight: 0,
+        completed: false,
+        timestamp,
+      },
+    };
+  });
 }
 
 export async function removeWorkoutExercise(args: {
