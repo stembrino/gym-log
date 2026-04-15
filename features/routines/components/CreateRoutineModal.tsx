@@ -287,7 +287,7 @@ export function CreateRoutineModal({
                 style={[styles.button, styles.primaryButton, { backgroundColor: palette.accent }]}
                 onPress={handleNext}
               >
-                <Text style={[styles.buttonText, { color: palette.card }]}>
+                <Text style={[styles.buttonText, { color: palette.onAccent }]}>
                   {t("routines.nextButton")} →
                 </Text>
               </TouchableOpacity>
@@ -310,7 +310,7 @@ export function CreateRoutineModal({
                   void handleCreate();
                 }}
               >
-                <Text style={[styles.buttonText, { color: palette.card }]}>
+                <Text style={[styles.buttonText, { color: palette.onAccent }]}>
                   {mode === "edit" ? t("routines.saveButton") : t("routines.createButton")} ✓
                 </Text>
               </TouchableOpacity>

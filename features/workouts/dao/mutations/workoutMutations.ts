@@ -1,6 +1,6 @@
 import { db } from "@/db/client";
 import { sets, workoutExercises, workouts } from "@/db/schema";
-import { desc, eq, inArray } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 import { WORKOUT_ACTIVE_STATUSES } from "@/features/workouts/dao/queries/workoutQueries";
 
 type StartWorkoutArgs = {
@@ -179,6 +179,36 @@ export async function addWorkoutExercise(args: { workoutId: string; exerciseId: 
     exerciseId: args.exerciseId,
     exerciseOrder: nextOrder,
   };
+}
+
+export async function removeWorkoutExercise(args: {
+  workoutId: string;
+  workoutExerciseId: string;
+}): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.delete(workoutExercises).where(eq(workoutExercises.id, args.workoutExerciseId));
+
+    const remaining = await tx
+      .select({ id: workoutExercises.id, exerciseOrder: workoutExercises.exerciseOrder })
+      .from(workoutExercises)
+      .where(eq(workoutExercises.workoutId, args.workoutId))
+      .orderBy(asc(workoutExercises.exerciseOrder));
+
+    for (let index = 0; index < remaining.length; index += 1) {
+      const row = remaining[index];
+      if (!row) {
+        continue;
+      }
+
+      const nextOrder = index + 1;
+      if (row.exerciseOrder !== nextOrder) {
+        await tx
+          .update(workoutExercises)
+          .set({ exerciseOrder: nextOrder })
+          .where(eq(workoutExercises.id, row.id));
+      }
+    }
+  });
 }
 
 export async function updateWorkoutStatus(args: {

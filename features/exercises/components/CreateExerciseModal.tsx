@@ -187,7 +187,7 @@ export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }
             }}
             disabled={submitting}
           >
-            <Text style={[styles.buttonText, { color: palette.card }]}>
+            <Text style={[styles.buttonText, { color: palette.onAccent }]}>
               {t("exercises.addExercise")}
             </Text>
           </TouchableOpacity>

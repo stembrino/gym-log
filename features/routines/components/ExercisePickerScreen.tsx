@@ -1,8 +1,10 @@
 import { ControlledSearchInput } from "@/components/ControlledSearchInput";
+import { AvatarWithPreview } from "@/components/AvatarWithPreview";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
 import type { ExerciseLibraryItem } from "@/features/exercises/hooks/usePaginatedExerciseLibrary";
+import { resolveExerciseImageSource } from "@/features/exercises/utils/exerciseImageSource";
 import { useMemo } from "react";
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import type { SelectedRoutineExercise } from "./types";
@@ -174,6 +176,12 @@ export function ExercisePickerScreen({
             { borderColor: palette.border, backgroundColor: palette.card },
           ]}
         >
+          <AvatarWithPreview
+            label={getExerciseLabel(item)}
+            size="lg"
+            imageSource={resolveExerciseImageSource(item.id, item.imageUrl ?? null)}
+            previewTitle={getExerciseLabel(item)}
+          />
           <View style={styles.catalogCopy}>
             <Text style={[styles.catalogTitle, { color: palette.textPrimary }]}>
               {getExerciseLabel(item)}
@@ -186,7 +194,7 @@ export function ExercisePickerScreen({
             style={[styles.addExerciseButton, { backgroundColor: palette.accent }]}
             onPress={() => onAddExercise(item)}
           >
-            <Text style={[styles.addExerciseButtonText, { color: palette.card }]}>
+            <Text style={[styles.addExerciseButtonText, { color: palette.onAccent }]}>
               {t("routines.addExerciseButton")}
             </Text>
           </TouchableOpacity>

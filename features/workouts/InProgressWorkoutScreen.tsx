@@ -13,6 +13,7 @@ import {
   addWorkoutSet,
   cancelWorkout,
   finishWorkout,
+  removeWorkoutExercise,
   updateWorkoutSet,
   updateWorkoutSetCompleted,
 } from "@/features/workouts/dao/mutations/workoutMutations";
@@ -48,6 +49,7 @@ export function InProgressWorkoutScreen() {
   const [canceling, setCanceling] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false);
+  const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -262,6 +264,81 @@ export function InProgressWorkoutScreen() {
     }
   };
 
+  const handleDeleteExercisePress = (exerciseId: string, exerciseName: string) => {
+    if (!workout || deletingExerciseId) {
+      return;
+    }
+
+    Alert.alert(
+      t("workouts.removeExerciseTitle"),
+      t("workouts.removeExerciseBody", { name: exerciseName }),
+      [
+        {
+          text: t("exercises.cancel"),
+          style: "cancel",
+        },
+        {
+          text: t("workouts.removeExerciseConfirmCta"),
+          style: "destructive",
+          onPress: () => {
+            void (async () => {
+              setDeletingExerciseId(exerciseId);
+
+              try {
+                await removeWorkoutExercise({
+                  workoutId: workout.id,
+                  workoutExerciseId: exerciseId,
+                });
+
+                setWorkout((prev) => {
+                  if (!prev) {
+                    return prev;
+                  }
+
+                  const remainingExercises = prev.exercises
+                    .filter((exercise) => exercise.id !== exerciseId)
+                    .map((exercise, index) => ({ ...exercise, exerciseOrder: index + 1 }));
+
+                  return {
+                    ...prev,
+                    exercises: remainingExercises,
+                  };
+                });
+
+                setRepsDraftBySetId((prev) => {
+                  const next = { ...prev };
+                  const removedSetIds =
+                    workout.exercises.find((exercise) => exercise.id === exerciseId)?.sets ?? [];
+                  removedSetIds.forEach((set) => {
+                    delete next[set.id];
+                  });
+                  return next;
+                });
+
+                setWeightDraftBySetId((prev) => {
+                  const next = { ...prev };
+                  const removedSetIds =
+                    workout.exercises.find((exercise) => exercise.id === exerciseId)?.sets ?? [];
+                  removedSetIds.forEach((set) => {
+                    delete next[set.id];
+                  });
+                  return next;
+                });
+              } catch {
+                Alert.alert(
+                  t("workouts.removeExerciseErrorTitle"),
+                  t("workouts.removeExerciseErrorBody"),
+                );
+              } finally {
+                setDeletingExerciseId(null);
+              }
+            })();
+          },
+        },
+      ],
+    );
+  };
+
   const handleCancelWorkoutPress = () => {
     if (!workout || canceling) {
       return;
@@ -396,6 +473,15 @@ export function InProgressWorkoutScreen() {
                   <Text style={[styles.exerciseName, { color: palette.textPrimary }]}>
                     {exercise.exercise.name}
                   </Text>
+                  <TouchableOpacity
+                    style={styles.removeExerciseButton}
+                    onPress={() => handleDeleteExercisePress(exercise.id, exercise.exercise.name)}
+                    disabled={deletingExerciseId === exercise.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("workouts.removeExerciseConfirmCta")}
+                  >
+                    <FontAwesome name="trash-o" size={18} color={palette.textSecondary} />
+                  </TouchableOpacity>
                 </View>
 
                 {exercise.sets.length === 0 ? (
@@ -707,6 +793,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.2,
     flex: 1,
+  },
+  removeExerciseButton: {
+    minWidth: 32,
+    minHeight: 32,
+    alignItems: "center",
+    justifyContent: "center",
   },
   noSetsText: {
     fontFamily: monoFont,
