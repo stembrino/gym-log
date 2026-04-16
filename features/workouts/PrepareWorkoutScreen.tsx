@@ -164,12 +164,7 @@ export function PrepareWorkoutScreen() {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: palette.page, paddingTop: Math.max(16, insets.top + 8) },
-      ]}
-    >
+    <View style={[styles.container, { backgroundColor: palette.page }]}>
       <Text style={[styles.title, { color: palette.textPrimary }]}>
         {t("workouts.prepareWorkoutTitle")}
       </Text>

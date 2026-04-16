@@ -689,7 +689,6 @@ export function InProgressWorkoutScreen() {
         styles.container,
         {
           backgroundColor: palette.page,
-          paddingTop: Math.max(16, insets.top + 8),
           paddingBottom: Math.max(12, insets.bottom + 8),
         },
       ]}
