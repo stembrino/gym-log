@@ -1,11 +1,11 @@
 import { Chip } from "@/components/Chip";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
+import { WindowControlButton } from "@/components/WindowControlButton";
 import { monoFont } from "@/constants/retroTheme";
 import type { GymItem } from "@/features/workouts/dao/queries/gymQueries";
 import { useState } from "react";
 import {
   Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -65,9 +65,15 @@ export function SelectGymModal({
         <View style={[styles.container, { backgroundColor: palette.card }]}>
           <View style={styles.header}>
             <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>{title}</Text>
-            <Pressable onPress={onClose} hitSlop={8}>
-              <Text style={[styles.closeButton, { color: palette.textPrimary }]}>✕</Text>
-            </Pressable>
+            <WindowControlButton
+              variant="close"
+              size="md"
+              onPress={onClose}
+              accessibilityLabel="Close gym selector"
+              borderColor={palette.border}
+              backgroundColor={palette.page}
+              iconColor={palette.textPrimary}
+            />
           </View>
 
           <View style={styles.addRow}>
@@ -153,10 +159,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.6,
-  },
-  closeButton: {
-    fontSize: 24,
-    fontWeight: "700",
   },
   addRow: {
     flexDirection: "row",

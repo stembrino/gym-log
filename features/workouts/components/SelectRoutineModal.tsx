@@ -4,6 +4,7 @@ import type { WorkoutRoutinePickerItem } from "@/features/workouts/hooks/useRout
 import { useRoutinePicker } from "@/features/workouts/hooks/useRoutinePicker";
 import { monoFont } from "@/constants/retroTheme";
 import { ControlledSearchInput } from "@/components/ControlledSearchInput";
+import { WindowControlButton } from "@/components/WindowControlButton";
 import { useEffect } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { RoutinePickerList } from "./routine-picker/RoutinePickerList";
@@ -61,9 +62,15 @@ export function SelectRoutineModal({
             <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
               {t("workouts.startWorkoutShortCta")}
             </Text>
-            <Pressable onPress={onClose} hitSlop={8}>
-              <Text style={[styles.closeButton, { color: palette.textPrimary }]}>✕</Text>
-            </Pressable>
+            <WindowControlButton
+              variant="close"
+              size="md"
+              onPress={onClose}
+              accessibilityLabel={t("routines.closeActionsButton")}
+              borderColor={palette.border}
+              backgroundColor={palette.page}
+              iconColor={palette.textPrimary}
+            />
           </View>
 
           <View style={styles.content}>
@@ -130,10 +137,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
-  },
-  closeButton: {
-    fontSize: 24,
-    fontWeight: "700",
   },
   content: {
     flex: 1,

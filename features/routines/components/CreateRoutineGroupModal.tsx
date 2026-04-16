@@ -1,6 +1,7 @@
 import { CharacterCounter } from "@/components/CharacterCounter";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { WindowControlButton } from "@/components/WindowControlButton";
 import { monoFont } from "@/constants/retroTheme";
 import { useEffect, useState } from "react";
 import {
@@ -127,15 +128,19 @@ export function CreateRoutineGroupModal({
     >
       <View style={[styles.container, { backgroundColor: palette.page }]}>
         <View style={[styles.header, { borderBottomColor: palette.border }]}>
-          <TouchableOpacity onPress={resetAndClose}>
-            <Text style={[styles.closeButton, { color: palette.textPrimary }]}>✕</Text>
-          </TouchableOpacity>
-
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
             {mode === "edit" ? t("routines.editGroup") : t("routines.createGroup")}
           </Text>
 
-          <View style={styles.headerSpacer} />
+          <WindowControlButton
+            variant="close"
+            size="md"
+            onPress={resetAndClose}
+            accessibilityLabel={t("routines.closeActionsButton")}
+            borderColor={palette.border}
+            backgroundColor={palette.card}
+            iconColor={palette.textPrimary}
+          />
         </View>
 
         <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
@@ -326,13 +331,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.6,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  closeButton: {
-    fontSize: 24,
-    padding: 8,
   },
   content: {
     flex: 1,

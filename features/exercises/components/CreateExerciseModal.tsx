@@ -1,4 +1,5 @@
 import { SingleSelectChipGroup } from "@/components/SingleSelectChipGroup";
+import { WindowControlButton } from "@/components/WindowControlButton";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
@@ -93,15 +94,19 @@ export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }
     >
       <View style={[styles.container, { backgroundColor: palette.page }]}>
         <View style={[styles.header, { borderBottomColor: palette.border }]}>
-          <TouchableOpacity onPress={resetAndClose} accessibilityLabel={t("exercises.cancel")}>
-            <Text style={[styles.closeButton, { color: palette.textPrimary }]}>X</Text>
-          </TouchableOpacity>
-
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
             {t("exercises.createExercise")}
           </Text>
 
-          <View style={styles.headerSpacer} />
+          <WindowControlButton
+            variant="close"
+            size="md"
+            onPress={resetAndClose}
+            accessibilityLabel={t("exercises.cancel")}
+            borderColor={palette.border}
+            backgroundColor={palette.card}
+            iconColor={palette.textPrimary}
+          />
         </View>
 
         <View style={styles.content}>
@@ -209,23 +214,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  closeButton: {
-    fontFamily: monoFont,
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 22,
-    minWidth: 24,
-    textAlign: "left",
-  },
   headerTitle: {
     fontFamily: monoFont,
     fontSize: 14,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
-  },
-  headerSpacer: {
-    width: 24,
   },
   content: {
     flex: 1,

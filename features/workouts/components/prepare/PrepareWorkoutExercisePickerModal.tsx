@@ -1,8 +1,8 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { AvatarWithPreview } from "@/components/AvatarWithPreview";
 import { Checkbox } from "@/components/Checkbox";
 import { ControlledSearchInput } from "@/components/ControlledSearchInput";
 import { Snackbar } from "@/components/Snackbar";
+import { WindowControlButton } from "@/components/WindowControlButton";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import type { AppLocale } from "@/components/providers/i18n-provider";
@@ -91,9 +91,15 @@ export function PrepareWorkoutExercisePickerModal({
         <View style={[styles.container, { backgroundColor: palette.card }]}>
           <View style={styles.header}>
             <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>{title}</Text>
-            <Pressable onPress={onClose} hitSlop={8} style={styles.closeButton}>
-              <FontAwesome name="times-circle-o" size={22} color={palette.textPrimary} />
-            </Pressable>
+            <WindowControlButton
+              variant="close"
+              size="md"
+              onPress={onClose}
+              accessibilityLabel={t("routines.closeActionsButton")}
+              borderColor={palette.border}
+              backgroundColor={palette.page}
+              iconColor={palette.textPrimary}
+            />
           </View>
 
           <ControlledSearchInput
@@ -247,12 +253,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.6,
-  },
-  closeButton: {
-    width: 28,
-    height: 28,
-    alignItems: "center",
-    justifyContent: "center",
   },
   filterSection: {
     gap: 8,

@@ -1,6 +1,7 @@
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
+import { WindowControlButton } from "@/components/WindowControlButton";
 import { monoFont } from "@/constants/retroTheme";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, StyleSheet, Text, View } from "react-native";
 
 interface SelectRoutineGroupModalProps {
   isOpen: boolean;
@@ -18,9 +19,15 @@ export function SelectRoutineGroupModal({ isOpen, onClose }: SelectRoutineGroupM
             <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
               Start Routine Group
             </Text>
-            <Pressable onPress={onClose} hitSlop={8}>
-              <Text style={[styles.closeButton, { color: palette.textPrimary }]}>✕</Text>
-            </Pressable>
+            <WindowControlButton
+              variant="close"
+              size="md"
+              onPress={onClose}
+              accessibilityLabel="Close routine group modal"
+              borderColor={palette.border}
+              backgroundColor={palette.page}
+              iconColor={palette.textPrimary}
+            />
           </View>
 
           <View style={styles.content}>
@@ -58,10 +65,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
-  },
-  closeButton: {
-    fontSize: 24,
-    fontWeight: "700",
   },
   content: {
     flex: 1,

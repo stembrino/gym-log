@@ -22,6 +22,7 @@ import {
   updateWorkoutSetCompleted,
 } from "@/features/workouts/dao/mutations/workoutMutations";
 import { RoundAddButton } from "@/components/RoundAddButton";
+import { WindowControlButton } from "@/components/WindowControlButton";
 import { SelectGymModal } from "@/features/workouts/components/SelectGymModal";
 import { WorkoutStatusDot } from "@/features/workouts/components/WorkoutStatusDot";
 import { PrepareWorkoutExercisePickerModal } from "@/features/workouts/components/prepare/PrepareWorkoutExercisePickerModal";
@@ -697,17 +698,15 @@ export function InProgressWorkoutScreen() {
         <View style={styles.headerRow}>
           <View style={styles.headerActions}>
             <WorkoutStatusDot status={workout?.status} />
-            <TouchableOpacity
-              style={[
-                styles.minimizeIconButton,
-                { borderColor: palette.border, backgroundColor: palette.card },
-              ]}
+            <WindowControlButton
+              variant="minimize"
+              size="md"
               onPress={handleMinimizeWorkout}
-              accessibilityRole="button"
               accessibilityLabel={t("workouts.minimizeWorkoutCta")}
-            >
-              <FontAwesome name="minus" size={11} color={palette.textPrimary} />
-            </TouchableOpacity>
+              borderColor={palette.border}
+              backgroundColor={palette.card}
+              iconColor={palette.textPrimary}
+            />
           </View>
         </View>
       </View>
@@ -1062,14 +1061,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-  },
-  minimizeIconButton: {
-    width: 24,
-    height: 24,
-    borderWidth: 1,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
   },
   gymText: {
     fontFamily: monoFont,

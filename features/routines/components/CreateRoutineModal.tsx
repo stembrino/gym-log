@@ -1,5 +1,6 @@
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { WindowControlButton } from "@/components/WindowControlButton";
 import { monoFont } from "@/constants/retroTheme";
 import {
   usePaginatedExerciseLibrary,
@@ -214,10 +215,6 @@ export function CreateRoutineModal({
     >
       <View style={[styles.container, { backgroundColor: palette.page }]}>
         <View style={[styles.header, { borderBottomColor: palette.border }]}>
-          <TouchableOpacity onPress={handleModalClose}>
-            <Text style={[styles.closeButton, { color: palette.textPrimary }]}>✕</Text>
-          </TouchableOpacity>
-
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
             {screen === "basic"
               ? mode === "edit"
@@ -226,9 +223,20 @@ export function CreateRoutineModal({
               : t("routines.addExercises")}
           </Text>
 
-          <Text style={[styles.stepIndicator, { color: palette.textSecondary }]}>
-            {screen === "basic" ? "1/2" : "2/2"}
-          </Text>
+          <View style={styles.headerRightActions}>
+            <Text style={[styles.stepIndicator, { color: palette.textSecondary }]}>
+              {screen === "basic" ? "1/2" : "2/2"}
+            </Text>
+            <WindowControlButton
+              variant="close"
+              size="md"
+              onPress={handleModalClose}
+              accessibilityLabel={t("routines.closeActionsButton")}
+              borderColor={palette.border}
+              backgroundColor={palette.card}
+              iconColor={palette.textPrimary}
+            />
+          </View>
         </View>
 
         {screen === "basic" ? (
@@ -341,9 +349,10 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.6,
   },
-  closeButton: {
-    fontSize: 24,
-    padding: 8,
+  headerRightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   stepIndicator: {
     fontFamily: monoFont,
