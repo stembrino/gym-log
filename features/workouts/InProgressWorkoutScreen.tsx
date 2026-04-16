@@ -28,11 +28,14 @@ import { WorkoutStatusDot } from "@/features/workouts/components/WorkoutStatusDo
 import { PrepareWorkoutExercisePickerModal } from "@/features/workouts/components/prepare/PrepareWorkoutExercisePickerModal";
 import { createGym } from "@/features/workouts/dao/queries/gymQueries";
 import { useGymPicker } from "@/features/workouts/hooks/useGymPicker";
+import { useKeyboardInputAutoScroll } from "@/features/workouts/hooks/useKeyboardInputAutoScroll";
 import { PostFinishQuickActionsSheet } from "./components/PostFinishQuickActionsSheet";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Share,
   ScrollView,
   StyleSheet,
@@ -65,6 +68,7 @@ export function InProgressWorkoutScreen() {
   const [isPostFinishGymModalOpen, setIsPostFinishGymModalOpen] = useState(false);
   const [savingAsRoutine, setSavingAsRoutine] = useState(false);
   const [updatingGym, setUpdatingGym] = useState(false);
+  const { scrollRef, setInputRef, handleInputFocus, handleScroll } = useKeyboardInputAutoScroll();
   const { showAlert, showConfirm, alertElement } = useGlobalAlert();
   const {
     gyms,
@@ -394,10 +398,12 @@ export function InProgressWorkoutScreen() {
 
   const handleAddSet = async (workoutExerciseId: string) => {
     try {
+      const lastSet = workout?.exercises.find((e) => e.id === workoutExerciseId)?.sets.at(-1);
+
       const createdSet = await addWorkoutSet({
         workoutExerciseId,
-        reps: 0,
-        weight: 0,
+        reps: lastSet?.reps ?? 0,
+        weight: lastSet?.weight ?? 0,
       });
 
       setWorkout((prev) => {
@@ -418,13 +424,20 @@ export function InProgressWorkoutScreen() {
         };
       });
 
+      const lastRepsDraft = lastSet
+        ? (repsDraftBySetId[lastSet.id] ?? String(lastSet.reps || ""))
+        : "";
+      const lastWeightDraft = lastSet
+        ? (weightDraftBySetId[lastSet.id] ?? String(lastSet.weight || ""))
+        : "";
+
       setRepsDraftBySetId((prev) => ({
         ...prev,
-        [createdSet.id]: "",
+        [createdSet.id]: lastRepsDraft,
       }));
       setWeightDraftBySetId((prev) => ({
         ...prev,
-        [createdSet.id]: "",
+        [createdSet.id]: lastWeightDraft,
       }));
     } catch {
       showAlert({
@@ -684,368 +697,401 @@ export function InProgressWorkoutScreen() {
   const canFinishWorkout = Boolean(workout) && (workout?.exercises.length ?? 0) > 0;
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: palette.page,
-          paddingBottom: Math.max(12, insets.bottom + 8),
-        },
-      ]}
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingView}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 24}
     >
-      <View style={styles.stickyHeaderWrap}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerActions}>
-            <WorkoutStatusDot status={workout?.status} />
-            <WindowControlButton
-              variant="minimize"
-              size="md"
-              onPress={handleMinimizeWorkout}
-              accessibilityLabel={t("workouts.minimizeWorkoutCta")}
-              borderColor={palette.border}
-              backgroundColor={palette.card}
-              iconColor={palette.textPrimary}
-            />
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: palette.page,
+            paddingBottom: Math.max(12, insets.bottom + 8),
+          },
+        ]}
+      >
+        <View style={styles.stickyHeaderWrap}>
+          <View style={styles.headerRow}>
+            <View style={styles.headerActions}>
+              <WorkoutStatusDot status={workout?.status} />
+              <Text style={[styles.headerSubtitle, { color: palette.textSecondary }]}>
+                {t("workouts.inProgressSheetSubtitle")}
+              </Text>
+              <WindowControlButton
+                variant="minimize"
+                size="md"
+                onPress={handleMinimizeWorkout}
+                accessibilityLabel={t("workouts.minimizeWorkoutCta")}
+                borderColor={palette.border}
+                backgroundColor={palette.card}
+                iconColor={palette.textPrimary}
+              />
+            </View>
           </View>
         </View>
-      </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        contentInsetAdjustmentBehavior="never"
-      >
-        {workout?.gym ? (
-          <Text style={[styles.gymText, { color: palette.accent }]}>
-            {t("workouts.gymFieldLabel")}: {workout.gym.name}
-          </Text>
-        ) : null}
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={[styles.content, { paddingBottom: Math.max(24, insets.bottom) }]}
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior="never"
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
+          {workout?.gym ? (
+            <Text style={[styles.gymText, { color: palette.accent }]}>
+              {t("workouts.gymFieldLabel")}: {workout.gym.name}
+            </Text>
+          ) : null}
 
-        {loading ? (
-          <Text style={[styles.meta, { color: palette.textSecondary }]}>
-            {t("routines.loading")}
-          </Text>
-        ) : null}
+          {loading ? (
+            <Text style={[styles.meta, { color: palette.textSecondary }]}>
+              {t("routines.loading")}
+            </Text>
+          ) : null}
 
-        {!loading && !workout ? (
-          <Text style={[styles.meta, { color: palette.textSecondary }]}>
-            {t("workouts.inProgressNoActive")}
-          </Text>
-        ) : null}
+          {!loading && !workout ? (
+            <Text style={[styles.meta, { color: palette.textSecondary }]}>
+              {t("workouts.inProgressNoActive")}
+            </Text>
+          ) : null}
 
-        {workout
-          ? workout.exercises.map((exercise) => (
-              <View
-                key={exercise.id}
-                style={[
-                  styles.exerciseCard,
-                  { borderColor: palette.border, backgroundColor: palette.card },
-                ]}
-              >
-                <View style={styles.exerciseHeaderRow}>
-                  <AvatarWithPreview
-                    label={exercise.exercise.name}
-                    size="sm"
-                    imageSource={resolveExerciseImageSource(exercise.exercise.id, null)}
-                    previewTitle={exercise.exercise.name}
-                  />
-                  <Text style={[styles.exerciseOrder, { color: palette.accent }]}>
-                    {exercise.exerciseOrder}.
-                  </Text>
-                  <Text style={[styles.exerciseName, { color: palette.textPrimary }]}>
-                    {exercise.exercise.name}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.removeExerciseButton}
-                    onPress={() => handleDeleteExercisePress(exercise.id, exercise.exercise.name)}
-                    disabled={deletingExerciseId === exercise.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={t("workouts.removeExerciseConfirmCta")}
-                  >
-                    <FontAwesome name="trash-o" size={18} color={palette.textSecondary} />
-                  </TouchableOpacity>
-                </View>
+          {workout
+            ? workout.exercises.map((exercise) => (
+                <View
+                  key={exercise.id}
+                  style={[
+                    styles.exerciseCard,
+                    { borderColor: palette.border, backgroundColor: palette.card },
+                  ]}
+                >
+                  <View style={styles.exerciseHeaderRow}>
+                    <AvatarWithPreview
+                      label={exercise.exercise.name}
+                      size="sm"
+                      imageSource={resolveExerciseImageSource(exercise.exercise.id, null)}
+                      previewTitle={exercise.exercise.name}
+                    />
+                    <Text style={[styles.exerciseOrder, { color: palette.accent }]}>
+                      {exercise.exerciseOrder}.
+                    </Text>
+                    <Text style={[styles.exerciseName, { color: palette.textPrimary }]}>
+                      {exercise.exercise.name}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.removeExerciseButton}
+                      onPress={() => handleDeleteExercisePress(exercise.id, exercise.exercise.name)}
+                      disabled={deletingExerciseId === exercise.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("workouts.removeExerciseConfirmCta")}
+                    >
+                      <FontAwesome name="trash-o" size={18} color={palette.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
 
-                {exercise.sets.length === 0 ? (
-                  <Text style={[styles.noSetsText, { color: palette.textSecondary }]}>
-                    {t("workouts.inProgressNoSets")}
-                  </Text>
-                ) : (
-                  <>
-                    <View style={[styles.setListDivider, { backgroundColor: palette.border }]} />
-                    <View style={styles.setList}>
-                      {exercise.sets.map((set, index) => (
-                        <View
-                          key={set.id}
-                          style={[
-                            styles.setRow,
-                            {
-                              borderColor: set.completed ? completedSetColor : palette.border,
-                              backgroundColor: set.completed
-                                ? `${completedSetColor}14`
-                                : palette.card,
-                            },
-                          ]}
-                        >
-                          <Text style={[styles.setIndex, { color: palette.textPrimary }]}>
-                            {index + 1}
-                          </Text>
-                          <View style={styles.compactFieldGroup}>
-                            <View style={styles.inputWithSuffix}>
-                              <TextInput
-                                style={[
-                                  styles.compactInput,
-                                  styles.compactInputWithSuffix,
-                                  {
-                                    borderColor: palette.border,
-                                    color: palette.textPrimary,
-                                    backgroundColor: palette.page,
-                                  },
-                                ]}
-                                value={
-                                  repsDraftBySetId[set.id] ?? (set.reps > 0 ? String(set.reps) : "")
-                                }
-                                onChangeText={(value) => {
-                                  setRepsDraftBySetId((prev) => ({
-                                    ...prev,
-                                    [set.id]: value,
-                                  }));
-                                }}
-                                onEndEditing={() => {
-                                  void handlePersistSet({
-                                    setId: set.id,
-                                    currentReps: set.reps,
-                                    currentWeight: set.weight,
-                                  });
-                                }}
-                                placeholder={t("workouts.repsInputPlaceholder")}
-                                placeholderTextColor={palette.textSecondary}
-                                keyboardType="number-pad"
-                              />
-                              <Text
-                                style={[styles.inputInlineSuffix, { color: palette.textSecondary }]}
-                              >
-                                {t("workouts.repsUnitSuffix")}
-                              </Text>
-                            </View>
-                          </View>
-                          <View style={styles.compactFieldGroup}>
-                            <View style={styles.inputWithSuffix}>
-                              <TextInput
-                                style={[
-                                  styles.compactInput,
-                                  styles.compactInputWithSuffix,
-                                  {
-                                    borderColor: palette.border,
-                                    color: palette.textPrimary,
-                                    backgroundColor: palette.page,
-                                  },
-                                ]}
-                                value={
-                                  weightDraftBySetId[set.id] ??
-                                  (set.weight > 0 ? formatWeight(set.weight) : "")
-                                }
-                                onChangeText={(value) => {
-                                  setWeightDraftBySetId((prev) => ({
-                                    ...prev,
-                                    [set.id]: value,
-                                  }));
-                                }}
-                                onEndEditing={() => {
-                                  void handlePersistSet({
-                                    setId: set.id,
-                                    currentReps: set.reps,
-                                    currentWeight: set.weight,
-                                  });
-                                }}
-                                placeholder={t("workouts.weightInputPlaceholder")}
-                                placeholderTextColor={palette.textSecondary}
-                                keyboardType="decimal-pad"
-                              />
-                              <Text
-                                style={[styles.inputInlineSuffix, { color: palette.textSecondary }]}
-                              >
-                                {t("workouts.weightUnit")}
-                              </Text>
-                            </View>
-                          </View>
-                          <TouchableOpacity
-                            style={styles.removeSetButton}
-                            onPress={() => {
-                              handleDeleteSetPress({
-                                setId: set.id,
-                                workoutExerciseId: exercise.id,
-                                setIndex: index,
-                              });
-                            }}
-                            disabled={deletingSetId === set.id}
-                            activeOpacity={0.7}
-                            accessibilityRole="button"
-                            accessibilityLabel={t("workouts.removeSetAccessibilityLabel")}
-                          >
-                            <FontAwesome name="trash-o" size={16} color={palette.textSecondary} />
-                          </TouchableOpacity>
-                          <TouchableOpacity
+                  {exercise.sets.length === 0 ? (
+                    <Text style={[styles.noSetsText, { color: palette.textSecondary }]}>
+                      {t("workouts.inProgressNoSets")}
+                    </Text>
+                  ) : (
+                    <>
+                      <View style={[styles.setListDivider, { backgroundColor: palette.border }]} />
+                      <View style={styles.setList}>
+                        {exercise.sets.map((set, index) => (
+                          <View
+                            key={set.id}
                             style={[
-                              styles.completeSetButton,
+                              styles.setRow,
                               {
+                                borderColor: set.completed ? completedSetColor : palette.border,
                                 backgroundColor: set.completed
-                                  ? `${completedSetColor}1F`
-                                  : "transparent",
+                                  ? `${completedSetColor}14`
+                                  : palette.card,
                               },
                             ]}
-                            onPress={() => {
-                              void handleToggleSetCompleted({
-                                setId: set.id,
-                                completed: set.completed,
-                              });
-                            }}
-                            activeOpacity={0.8}
-                            accessibilityRole="button"
-                            accessibilityLabel={
-                              set.completed
-                                ? t("workouts.setCompletedShortLabel")
-                                : t("workouts.completeSetShortLabel")
-                            }
                           >
-                            <FontAwesome
-                              name={set.completed ? "check-square" : "square-o"}
-                              size={22}
-                              color={set.completed ? completedSetColor : palette.textSecondary}
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      ))}
-                    </View>
-                  </>
-                )}
+                            <Text style={[styles.setIndex, { color: palette.textPrimary }]}>
+                              {index + 1}
+                            </Text>
+                            <View style={styles.compactFieldGroup}>
+                              <View style={styles.inputWithSuffix}>
+                                <TextInput
+                                  ref={(ref) => {
+                                    setInputRef(`reps-${set.id}`, ref);
+                                  }}
+                                  style={[
+                                    styles.compactInput,
+                                    styles.compactInputWithSuffix,
+                                    {
+                                      borderColor: palette.border,
+                                      color: palette.textPrimary,
+                                      backgroundColor: palette.page,
+                                    },
+                                  ]}
+                                  value={
+                                    repsDraftBySetId[set.id] ??
+                                    (set.reps > 0 ? String(set.reps) : "")
+                                  }
+                                  onChangeText={(value) => {
+                                    setRepsDraftBySetId((prev) => ({
+                                      ...prev,
+                                      [set.id]: value,
+                                    }));
+                                  }}
+                                  onFocus={() => {
+                                    handleInputFocus(`reps-${set.id}`);
+                                  }}
+                                  onEndEditing={() => {
+                                    void handlePersistSet({
+                                      setId: set.id,
+                                      currentReps: set.reps,
+                                      currentWeight: set.weight,
+                                    });
+                                  }}
+                                  placeholder={t("workouts.repsInputPlaceholder")}
+                                  placeholderTextColor={palette.textSecondary}
+                                  keyboardType="number-pad"
+                                />
+                                <Text
+                                  style={[
+                                    styles.inputInlineSuffix,
+                                    { color: palette.textSecondary },
+                                  ]}
+                                >
+                                  {t("workouts.repsUnitSuffix")}
+                                </Text>
+                              </View>
+                            </View>
+                            <View style={styles.compactFieldGroup}>
+                              <View style={styles.inputWithSuffix}>
+                                <TextInput
+                                  ref={(ref) => {
+                                    setInputRef(`weight-${set.id}`, ref);
+                                  }}
+                                  style={[
+                                    styles.compactInput,
+                                    styles.compactInputWithSuffix,
+                                    {
+                                      borderColor: palette.border,
+                                      color: palette.textPrimary,
+                                      backgroundColor: palette.page,
+                                    },
+                                  ]}
+                                  value={
+                                    weightDraftBySetId[set.id] ??
+                                    (set.weight > 0 ? formatWeight(set.weight) : "")
+                                  }
+                                  onChangeText={(value) => {
+                                    setWeightDraftBySetId((prev) => ({
+                                      ...prev,
+                                      [set.id]: value,
+                                    }));
+                                  }}
+                                  onFocus={() => {
+                                    handleInputFocus(`weight-${set.id}`);
+                                  }}
+                                  onEndEditing={() => {
+                                    void handlePersistSet({
+                                      setId: set.id,
+                                      currentReps: set.reps,
+                                      currentWeight: set.weight,
+                                    });
+                                  }}
+                                  placeholder={t("workouts.weightInputPlaceholder")}
+                                  placeholderTextColor={palette.textSecondary}
+                                  keyboardType="decimal-pad"
+                                />
+                                <Text
+                                  style={[
+                                    styles.inputInlineSuffix,
+                                    { color: palette.textSecondary },
+                                  ]}
+                                >
+                                  {t("workouts.weightUnit")}
+                                </Text>
+                              </View>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.removeSetButton}
+                              onPress={() => {
+                                handleDeleteSetPress({
+                                  setId: set.id,
+                                  workoutExerciseId: exercise.id,
+                                  setIndex: index,
+                                });
+                              }}
+                              disabled={deletingSetId === set.id}
+                              activeOpacity={0.7}
+                              accessibilityRole="button"
+                              accessibilityLabel={t("workouts.removeSetAccessibilityLabel")}
+                            >
+                              <FontAwesome name="trash-o" size={16} color={palette.textSecondary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={[
+                                styles.completeSetButton,
+                                {
+                                  backgroundColor: set.completed
+                                    ? `${completedSetColor}1F`
+                                    : "transparent",
+                                },
+                              ]}
+                              onPress={() => {
+                                void handleToggleSetCompleted({
+                                  setId: set.id,
+                                  completed: set.completed,
+                                });
+                              }}
+                              activeOpacity={0.8}
+                              accessibilityRole="button"
+                              accessibilityLabel={
+                                set.completed
+                                  ? t("workouts.setCompletedShortLabel")
+                                  : t("workouts.completeSetShortLabel")
+                              }
+                            >
+                              <FontAwesome
+                                name={set.completed ? "check-square" : "square-o"}
+                                size={22}
+                                color={set.completed ? completedSetColor : palette.textSecondary}
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                      </View>
+                    </>
+                  )}
 
-                <View style={styles.addSetButtonRow}>
-                  <RoundAddButton
-                    size="small"
-                    accessibilityLabel={t("workouts.addSetAccessibilityLabel")}
-                    onPress={() => {
-                      void handleAddSet(exercise.id);
-                    }}
-                  />
+                  <View style={styles.addSetButtonRow}>
+                    <RoundAddButton
+                      size="small"
+                      accessibilityLabel={t("workouts.addSetAccessibilityLabel")}
+                      onPress={() => {
+                        void handleAddSet(exercise.id);
+                      }}
+                    />
+                  </View>
                 </View>
-              </View>
-            ))
-          : null}
+              ))
+            : null}
 
-        {workout ? (
-          <View style={[styles.exerciseActionsGroup, { borderBottomColor: palette.border }]}>
+          {workout ? (
+            <View style={[styles.exerciseActionsGroup, { borderBottomColor: palette.border }]}>
+              <TouchableOpacity
+                style={[styles.addExerciseButton, { borderColor: palette.border }]}
+                onPress={() => setIsExercisePickerOpen(true)}
+              >
+                <View style={styles.addExerciseButtonContent}>
+                  <FontAwesome name="plus" size={11} color={palette.textPrimary} />
+                  <Text style={[styles.addExerciseButtonText, { color: palette.textPrimary }]}>
+                    {t("workouts.addExerciseInlineCta")}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          <View style={styles.actionsRow}>
             <TouchableOpacity
-              style={[styles.addExerciseButton, { borderColor: palette.border }]}
-              onPress={() => setIsExercisePickerOpen(true)}
+              style={[
+                styles.primaryButton,
+                canFinishWorkout
+                  ? { backgroundColor: palette.accent, borderColor: palette.accent }
+                  : {
+                      backgroundColor: palette.page,
+                      borderColor: palette.border,
+                      opacity: 0.5,
+                    },
+              ]}
+              onPress={handleFinishWorkoutPress}
+              disabled={!canFinishWorkout || finishing}
             >
-              <View style={styles.addExerciseButtonContent}>
-                <FontAwesome name="plus" size={11} color={palette.textPrimary} />
-                <Text style={[styles.addExerciseButtonText, { color: palette.textPrimary }]}>
-                  {t("workouts.addExerciseInlineCta")}
-                </Text>
-              </View>
+              <Text
+                style={[
+                  styles.primaryButtonText,
+                  { color: canFinishWorkout ? palette.onAccent : palette.textSecondary },
+                ]}
+              >
+                {finishing ? t("routines.loading") : t("workouts.finishWorkoutCta")}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.secondaryButton, { borderColor: palette.border }]}
+              onPress={handleCancelWorkoutPress}
+            >
+              <Text style={[styles.secondaryButtonText, { color: palette.textPrimary }]}>
+                {canceling ? t("routines.loading") : t("workouts.cancelWorkoutCta")}
+              </Text>
             </TouchableOpacity>
           </View>
-        ) : null}
+        </ScrollView>
 
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              canFinishWorkout
-                ? { backgroundColor: palette.accent, borderColor: palette.accent }
-                : {
-                    backgroundColor: palette.page,
-                    borderColor: palette.border,
-                    opacity: 0.5,
-                  },
-            ]}
-            onPress={handleFinishWorkoutPress}
-            disabled={!canFinishWorkout || finishing}
-          >
-            <Text
-              style={[
-                styles.primaryButtonText,
-                { color: canFinishWorkout ? palette.onAccent : palette.textSecondary },
-              ]}
-            >
-              {finishing ? t("routines.loading") : t("workouts.finishWorkoutCta")}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.secondaryButton, { borderColor: palette.border }]}
-            onPress={handleCancelWorkoutPress}
-          >
-            <Text style={[styles.secondaryButtonText, { color: palette.textPrimary }]}>
-              {canceling ? t("routines.loading") : t("workouts.cancelWorkoutCta")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        <PrepareWorkoutExercisePickerModal
+          isOpen={isExercisePickerOpen}
+          onClose={() => setIsExercisePickerOpen(false)}
+          locale={locale}
+          excludeExerciseIds={workout?.exercises.map((exercise) => exercise.exercise.id) ?? []}
+          onAddExercise={(exercise) => {
+            void handleAddExercise(exercise);
+          }}
+          title={t("workouts.addExercisePickerTitle")}
+          hint={t("workouts.addExercisePickerHint")}
+          searchPlaceholder={t("routines.searchExercisePlaceholder")}
+          addButtonLabel={t("routines.addExerciseButton")}
+          emptyLabel={t("routines.noExerciseResults")}
+          loadingLabel={t("routines.loading")}
+        />
 
-      <PrepareWorkoutExercisePickerModal
-        isOpen={isExercisePickerOpen}
-        onClose={() => setIsExercisePickerOpen(false)}
-        locale={locale}
-        excludeExerciseIds={workout?.exercises.map((exercise) => exercise.exercise.id) ?? []}
-        onAddExercise={(exercise) => {
-          void handleAddExercise(exercise);
-        }}
-        title={t("workouts.addExercisePickerTitle")}
-        hint={t("workouts.addExercisePickerHint")}
-        searchPlaceholder={t("routines.searchExercisePlaceholder")}
-        addButtonLabel={t("routines.addExerciseButton")}
-        emptyLabel={t("routines.noExerciseResults")}
-        loadingLabel={t("routines.loading")}
-      />
+        <PostFinishQuickActionsSheet
+          isOpen={isPostFinishPanelOpen}
+          savingAsRoutine={savingAsRoutine}
+          currentGymName={workout?.gym?.name ?? null}
+          showSaveAsRoutine={shouldSuggestSaveAsRoutine}
+          updatingGym={updatingGym}
+          defaultRoutineName={buildDefaultRoutineName()}
+          onClose={handleClosePostFinishPanel}
+          onManageGym={() => setIsPostFinishGymModalOpen(true)}
+          onSaveAsRoutine={(name) => {
+            void handleSaveAsRoutine(name);
+          }}
+          onCopyWorkoutAsText={() => {
+            void handleCopyWorkoutAsText();
+          }}
+        />
 
-      <PostFinishQuickActionsSheet
-        isOpen={isPostFinishPanelOpen}
-        savingAsRoutine={savingAsRoutine}
-        currentGymName={workout?.gym?.name ?? null}
-        showSaveAsRoutine={shouldSuggestSaveAsRoutine}
-        updatingGym={updatingGym}
-        defaultRoutineName={buildDefaultRoutineName()}
-        onClose={handleClosePostFinishPanel}
-        onManageGym={() => setIsPostFinishGymModalOpen(true)}
-        onSaveAsRoutine={(name) => {
-          void handleSaveAsRoutine(name);
-        }}
-        onCopyWorkoutAsText={() => {
-          void handleCopyWorkoutAsText();
-        }}
-      />
+        <SelectGymModal
+          isOpen={isPostFinishGymModalOpen}
+          onClose={() => setIsPostFinishGymModalOpen(false)}
+          gyms={gyms}
+          selectedGymId={selectedGymId}
+          loading={loadingGyms || updatingGym}
+          title={t("workouts.selectGymModalTitle")}
+          noneLabel={t("workouts.gymNoneOption")}
+          addPlaceholder={t("workouts.gymAddPlaceholder")}
+          addButtonLabel={t("workouts.gymAddButton")}
+          emptyLabel={t("workouts.gymEmptyState")}
+          onSelectGym={(gymId) => {
+            void handleAssignWorkoutGym(gymId);
+          }}
+          onAddGym={handleCreateGymForCompletedWorkout}
+        />
 
-      <SelectGymModal
-        isOpen={isPostFinishGymModalOpen}
-        onClose={() => setIsPostFinishGymModalOpen(false)}
-        gyms={gyms}
-        selectedGymId={selectedGymId}
-        loading={loadingGyms || updatingGym}
-        title={t("workouts.selectGymModalTitle")}
-        noneLabel={t("workouts.gymNoneOption")}
-        addPlaceholder={t("workouts.gymAddPlaceholder")}
-        addButtonLabel={t("workouts.gymAddButton")}
-        emptyLabel={t("workouts.gymEmptyState")}
-        onSelectGym={(gymId) => {
-          void handleAssignWorkoutGym(gymId);
-        }}
-        onAddGym={handleCreateGymForCompletedWorkout}
-      />
-
-      {alertElement}
-    </View>
+        {alertElement}
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     padding: 16,
   },
   content: {
-    paddingBottom: 24,
     gap: 10,
   },
   stickyHeaderWrap: {
@@ -1060,6 +1106,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+  headerSubtitle: {
+    fontFamily: monoFont,
+    fontSize: 10,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+    opacity: 0.75,
   },
   gymText: {
     fontFamily: monoFont,
