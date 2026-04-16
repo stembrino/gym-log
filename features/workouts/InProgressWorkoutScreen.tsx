@@ -695,20 +695,20 @@ export function InProgressWorkoutScreen() {
     >
       <View style={styles.stickyHeaderWrap}>
         <View style={styles.headerRow}>
-          <View style={styles.titleRow}>
+          <View style={styles.headerActions}>
             <WorkoutStatusDot status={workout?.status} />
-            <Text style={[styles.title, { color: palette.textPrimary }]}>
-              {t("workouts.inProgressTitle")}
-            </Text>
+            <TouchableOpacity
+              style={[
+                styles.minimizeIconButton,
+                { borderColor: palette.border, backgroundColor: palette.card },
+              ]}
+              onPress={handleMinimizeWorkout}
+              accessibilityRole="button"
+              accessibilityLabel={t("workouts.minimizeWorkoutCta")}
+            >
+              <FontAwesome name="minus" size={11} color={palette.textPrimary} />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={[styles.minimizeInlineButton, { borderColor: palette.border }]}
-            onPress={handleMinimizeWorkout}
-          >
-            <Text style={[styles.minimizeInlineText, { color: palette.textPrimary }]}>
-              {t("workouts.minimizeWorkoutCta")}
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -941,9 +941,12 @@ export function InProgressWorkoutScreen() {
               style={[styles.addExerciseButton, { borderColor: palette.border }]}
               onPress={() => setIsExercisePickerOpen(true)}
             >
-              <Text style={[styles.addExerciseButtonText, { color: palette.textPrimary }]}>
-                + {t("routines.addExerciseButton")}
-              </Text>
+              <View style={styles.addExerciseButtonContent}>
+                <FontAwesome name="plus" size={11} color={palette.textPrimary} />
+                <Text style={[styles.addExerciseButtonText, { color: palette.textPrimary }]}>
+                  {t("workouts.addExerciseInlineCta")}
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -1053,37 +1056,20 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    paddingLeft: 4,
+    justifyContent: "flex-end",
   },
-  titleRow: {
+  headerActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    flex: 1,
+    gap: 10,
   },
-  title: {
-    fontFamily: monoFont,
-    fontSize: 18,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  minimizeInlineButton: {
-    minHeight: 36,
+  minimizeIconButton: {
+    width: 24,
+    height: 24,
     borderWidth: 1,
-    borderRadius: 2,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 10,
-  },
-  minimizeInlineText: {
-    fontFamily: monoFont,
-    fontSize: 10,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
   },
   gymText: {
     fontFamily: monoFont,
@@ -1103,6 +1089,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 10,
+  },
+  addExerciseButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   addExerciseButtonText: {
     fontFamily: monoFont,

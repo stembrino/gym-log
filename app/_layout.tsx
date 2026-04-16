@@ -63,6 +63,7 @@ function ThemedNavigation() {
       <ThemeProvider value={theme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="workout-prepare" options={{ headerShown: false }} />
           <Stack.Screen name="workout-in-progress" options={{ headerShown: false }} />
           <Stack.Screen name="routine-collections" />
           <Stack.Screen name="modal" options={{ presentation: "modal" }} />
