@@ -2,9 +2,7 @@ import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useColorScheme } from "@/components/hooks/useColorScheme";
 import { useGlobalAlert } from "@/components/hooks/useGlobalAlert";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { AvatarWithPreview } from "@/components/AvatarWithPreview";
 import { monoFont } from "@/constants/retroTheme";
-import { resolveExerciseImageSource } from "@/features/exercises/utils/exerciseImageSource";
 import {
   getActiveWorkout,
   type ActiveWorkoutRow,
@@ -21,11 +19,11 @@ import {
   updateWorkoutSet,
   updateWorkoutSetCompleted,
 } from "@/features/workouts/dao/mutations/workoutMutations";
-import { RoundAddButton } from "@/components/RoundAddButton";
 import { WindowControlButton } from "@/components/WindowControlButton";
 import { SelectGymModal } from "@/features/workouts/components/SelectGymModal";
 import { WorkoutStatusDot } from "@/features/workouts/components/WorkoutStatusDot";
 import { PrepareWorkoutExercisePickerModal } from "@/features/workouts/components/prepare/PrepareWorkoutExercisePickerModal";
+import { InProgressExerciseCard } from "@/features/workouts/components/in-progress/InProgressExerciseCard";
 import { createGym } from "@/features/workouts/dao/queries/gymQueries";
 import { useGymPicker } from "@/features/workouts/hooks/useGymPicker";
 import { useKeyboardInputAutoScroll } from "@/features/workouts/hooks/useKeyboardInputAutoScroll";
@@ -40,7 +38,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -759,220 +756,27 @@ export function InProgressWorkoutScreen() {
 
           {workout
             ? workout.exercises.map((exercise) => (
-                <View
+                <InProgressExerciseCard
                   key={exercise.id}
-                  style={[
-                    styles.exerciseCard,
-                    { borderColor: palette.border, backgroundColor: palette.card },
-                  ]}
-                >
-                  <View style={styles.exerciseHeaderRow}>
-                    <AvatarWithPreview
-                      label={exercise.exercise.name}
-                      size="sm"
-                      imageSource={resolveExerciseImageSource(exercise.exercise.id, null)}
-                      previewTitle={exercise.exercise.name}
-                    />
-                    <Text style={[styles.exerciseOrder, { color: palette.accent }]}>
-                      {exercise.exerciseOrder}.
-                    </Text>
-                    <Text style={[styles.exerciseName, { color: palette.textPrimary }]}>
-                      {exercise.exercise.name}
-                    </Text>
-                    <TouchableOpacity
-                      style={styles.removeExerciseButton}
-                      onPress={() => handleDeleteExercisePress(exercise.id, exercise.exercise.name)}
-                      disabled={deletingExerciseId === exercise.id}
-                      accessibilityRole="button"
-                      accessibilityLabel={t("workouts.removeExerciseConfirmCta")}
-                    >
-                      <FontAwesome name="trash-o" size={18} color={palette.textSecondary} />
-                    </TouchableOpacity>
-                  </View>
-
-                  {exercise.sets.length === 0 ? (
-                    <Text style={[styles.noSetsText, { color: palette.textSecondary }]}>
-                      {t("workouts.inProgressNoSets")}
-                    </Text>
-                  ) : (
-                    <>
-                      <View style={[styles.setListDivider, { backgroundColor: palette.border }]} />
-                      <View style={styles.setList}>
-                        {exercise.sets.map((set, index) => (
-                          <View
-                            key={set.id}
-                            style={[
-                              styles.setRow,
-                              {
-                                borderColor: set.completed ? completedSetColor : palette.border,
-                                backgroundColor: set.completed
-                                  ? `${completedSetColor}14`
-                                  : palette.card,
-                              },
-                            ]}
-                          >
-                            <Text style={[styles.setIndex, { color: palette.textPrimary }]}>
-                              {index + 1}
-                            </Text>
-                            <View style={styles.compactFieldGroup}>
-                              <View style={styles.inputWithSuffix}>
-                                <TextInput
-                                  ref={(ref) => {
-                                    setInputRef(`reps-${set.id}`, ref);
-                                  }}
-                                  style={[
-                                    styles.compactInput,
-                                    styles.compactInputWithSuffix,
-                                    {
-                                      borderColor: palette.border,
-                                      color: palette.textPrimary,
-                                      backgroundColor: palette.page,
-                                    },
-                                  ]}
-                                  value={
-                                    repsDraftBySetId[set.id] ??
-                                    (set.reps > 0 ? String(set.reps) : "")
-                                  }
-                                  onChangeText={(value) => {
-                                    setRepsDraftBySetId((prev) => ({
-                                      ...prev,
-                                      [set.id]: value,
-                                    }));
-                                  }}
-                                  onFocus={() => {
-                                    handleInputFocus(`reps-${set.id}`);
-                                  }}
-                                  onEndEditing={() => {
-                                    void handlePersistSet({
-                                      setId: set.id,
-                                      currentReps: set.reps,
-                                      currentWeight: set.weight,
-                                    });
-                                  }}
-                                  placeholder={t("workouts.repsInputPlaceholder")}
-                                  placeholderTextColor={palette.textSecondary}
-                                  keyboardType="number-pad"
-                                />
-                                <Text
-                                  style={[
-                                    styles.inputInlineSuffix,
-                                    { color: palette.textSecondary },
-                                  ]}
-                                >
-                                  {t("workouts.repsUnitSuffix")}
-                                </Text>
-                              </View>
-                            </View>
-                            <View style={styles.compactFieldGroup}>
-                              <View style={styles.inputWithSuffix}>
-                                <TextInput
-                                  ref={(ref) => {
-                                    setInputRef(`weight-${set.id}`, ref);
-                                  }}
-                                  style={[
-                                    styles.compactInput,
-                                    styles.compactInputWithSuffix,
-                                    {
-                                      borderColor: palette.border,
-                                      color: palette.textPrimary,
-                                      backgroundColor: palette.page,
-                                    },
-                                  ]}
-                                  value={
-                                    weightDraftBySetId[set.id] ??
-                                    (set.weight > 0 ? formatWeight(set.weight) : "")
-                                  }
-                                  onChangeText={(value) => {
-                                    setWeightDraftBySetId((prev) => ({
-                                      ...prev,
-                                      [set.id]: value,
-                                    }));
-                                  }}
-                                  onFocus={() => {
-                                    handleInputFocus(`weight-${set.id}`);
-                                  }}
-                                  onEndEditing={() => {
-                                    void handlePersistSet({
-                                      setId: set.id,
-                                      currentReps: set.reps,
-                                      currentWeight: set.weight,
-                                    });
-                                  }}
-                                  placeholder={t("workouts.weightInputPlaceholder")}
-                                  placeholderTextColor={palette.textSecondary}
-                                  keyboardType="decimal-pad"
-                                />
-                                <Text
-                                  style={[
-                                    styles.inputInlineSuffix,
-                                    { color: palette.textSecondary },
-                                  ]}
-                                >
-                                  {t("workouts.weightUnit")}
-                                </Text>
-                              </View>
-                            </View>
-                            <TouchableOpacity
-                              style={styles.removeSetButton}
-                              onPress={() => {
-                                handleDeleteSetPress({
-                                  setId: set.id,
-                                  workoutExerciseId: exercise.id,
-                                  setIndex: index,
-                                });
-                              }}
-                              disabled={deletingSetId === set.id}
-                              activeOpacity={0.7}
-                              accessibilityRole="button"
-                              accessibilityLabel={t("workouts.removeSetAccessibilityLabel")}
-                            >
-                              <FontAwesome name="trash-o" size={16} color={palette.textSecondary} />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={[
-                                styles.completeSetButton,
-                                {
-                                  backgroundColor: set.completed
-                                    ? `${completedSetColor}1F`
-                                    : "transparent",
-                                },
-                              ]}
-                              onPress={() => {
-                                void handleToggleSetCompleted({
-                                  setId: set.id,
-                                  completed: set.completed,
-                                });
-                              }}
-                              activeOpacity={0.8}
-                              accessibilityRole="button"
-                              accessibilityLabel={
-                                set.completed
-                                  ? t("workouts.setCompletedShortLabel")
-                                  : t("workouts.completeSetShortLabel")
-                              }
-                            >
-                              <FontAwesome
-                                name={set.completed ? "check-square" : "square-o"}
-                                size={22}
-                                color={set.completed ? completedSetColor : palette.textSecondary}
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        ))}
-                      </View>
-                    </>
-                  )}
-
-                  <View style={styles.addSetButtonRow}>
-                    <RoundAddButton
-                      size="small"
-                      accessibilityLabel={t("workouts.addSetAccessibilityLabel")}
-                      onPress={() => {
-                        void handleAddSet(exercise.id);
-                      }}
-                    />
-                  </View>
-                </View>
+                  exercise={exercise}
+                  palette={palette}
+                  completedSetColor={completedSetColor}
+                  t={t}
+                  deletingExerciseId={deletingExerciseId}
+                  deletingSetId={deletingSetId}
+                  repsDraftBySetId={repsDraftBySetId}
+                  weightDraftBySetId={weightDraftBySetId}
+                  formatWeight={formatWeight}
+                  setInputRef={setInputRef}
+                  handleInputFocus={handleInputFocus}
+                  onDeleteExercisePress={handleDeleteExercisePress}
+                  onPersistSet={handlePersistSet}
+                  onDeleteSetPress={handleDeleteSetPress}
+                  onToggleSetCompleted={handleToggleSetCompleted}
+                  onAddSet={handleAddSet}
+                  setRepsDraftBySetId={setRepsDraftBySetId}
+                  setWeightDraftBySetId={setWeightDraftBySetId}
+                />
               ))
             : null}
 
