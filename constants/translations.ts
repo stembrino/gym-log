@@ -167,7 +167,7 @@ export const translations = {
     routines: {
       title: "",
       subtitle: "",
-      systemRoutines: "Rotinas do LyteLog",
+      systemRoutines: "Rotinas do Gym Log",
       systemRoutinesHint: "Use estas rotinas como base e adapte conforme seu objetivo.",
       emptySystemRoutines: "Nenhuma rotina padrão encontrada.",
       loading: "Carregando rotinas...",
@@ -455,7 +455,7 @@ export const translations = {
     routines: {
       title: "",
       subtitle: "",
-      systemRoutines: "LyteLog Routines",
+      systemRoutines: "Gym Log Routines",
       systemRoutinesHint: "Use these routines as a base and adapt them to your goals.",
       emptySystemRoutines: "No default routines found.",
       loading: "Loading routines...",

@@ -1,4 +1,4 @@
-# LYTELOG DESIGN SYSTEM: RETRO-TECH SPECIFICATIONS
+# GYM LOG DESIGN SYSTEM: RETRO-TECH SPECIFICATIONS
 
 ## 1. Design Philosophy
 
@@ -140,7 +140,7 @@ module.exports = {
 
 ## 10. Copilot Generation Instruction
 
-When generating React Native components for Lytelog:
+When generating React Native components for Gym Log:
 
 - Use monospace typography by default.
 - Apply Retro-Tech color tokens from this guide.

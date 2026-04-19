@@ -2,7 +2,7 @@
 
 ## Goal
 
-Right now, the app treats a routine as the main organizational unit and still highlights where routines come from with the idea of LyteLog routines.
+Right now, the app treats a routine as the main organizational unit and still highlights where routines come from with the idea of Gym Log routines.
 
 That works for initial seeding and curation, but it does not fully match what users need most:
 
@@ -217,7 +217,7 @@ This enables routine reuse without data duplication.
 
 ### Main routines screen
 
-Instead of sections like LyteLog routines, show:
+Instead of sections like Gym Log routines, show:
 
 - routine groups
 - favorites
@@ -349,7 +349,7 @@ This reduces coupling to the app catalog concept.
 1. Update routines main screen to show groups.
 2. Build group card.
 3. Build group detail screen or expandable section.
-4. Remove LyteLog routines as the main organizational section.
+4. Remove Gym Log routines as the main organizational section.
 
 ### Phase 5: Create and edit
 
@@ -403,7 +403,7 @@ Best path: implement group-based organization first.
 
 This refactor is worth doing.
 
-Not because LyteLog routines is technically wrong, but because groups align the product with what users actually want:
+Not because Gym Log routines is technically wrong, but because groups align the product with what users actually want:
 
 - build training blocks
 - navigate faster

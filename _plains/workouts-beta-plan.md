@@ -2,7 +2,7 @@
 
 ## Goal
 
-Ship the first workouts entry flow in a way that makes LyteLog's product difference explicit:
+Ship the first workouts entry flow in a way that makes Gym Log's product difference explicit:
 
 - a user can start a workout right now without planning friction
 - a user can also start from a training routine structure
@@ -10,7 +10,7 @@ Ship the first workouts entry flow in a way that makes LyteLog's product differe
 
 ## Core Product Distinction
 
-LyteLog should treat these as separate layers:
+Gym Log should treat these as separate layers:
 
 ### Workout
 
@@ -49,7 +49,7 @@ Many apps force one mental model:
 - either everything starts from a template
 - or everything is a manual log
 
-LyteLog should support both:
+Gym Log should support both:
 
 - `INICIAR TREINO` for users who want to log a session now
 - `INICIAR ROTINA DE TREINOS` for users who want to enter through a structured training flow
@@ -296,7 +296,7 @@ The direction is working when:
 
 ## Summary Decision
 
-LyteLog should not treat workout and training routine as two labels for the same start flow.
+Gym Log should not treat workout and training routine as two labels for the same start flow.
 
 The product should make this explicit:
 

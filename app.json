@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "lyte-log",
+    "name": "Gym Log",
     "slug": "lyte-log",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo-logym-appicon.png",
-    "scheme": "lytelog",
+    "scheme": "gymlog",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/logo-brand-name.png",

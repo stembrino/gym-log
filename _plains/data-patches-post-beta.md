@@ -6,7 +6,7 @@ Scope: SQLite data seed, backfill, and one-time data fixes
 
 ## Summary
 
-LyteLog now uses a data patch manager with persistent patch tracking in SQLite.
+Gym Log now uses a data patch manager with persistent patch tracking in SQLite.
 
 Current behavior:
 
