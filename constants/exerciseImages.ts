@@ -16,6 +16,7 @@ export const LOCAL_EXERCISE_IMAGE_BY_ID: Record<string, ImageSourcePropType> = {
   "ex-06-legs": require("@/assets/images/avatars/calf-raise.webp"),
   "ex-07-legs": require("@/assets/images/avatars/lying-leg-curl.webp"),
   "ex-08-legs": require("@/assets/images/avatars/hip-thrust.webp"),
+  "ex-09-legs": require("@/assets/images/avatars/adductor-chair.webp"),
   "ex-02-shoulders": require("@/assets/images/avatars/larteral-rise.webp"),
   "ex-03-shoulders": require("@/assets/images/avatars/front-rise.webp"),
   "ex-01-arms": require("@/assets/images/avatars/barbell-curl.webp"),

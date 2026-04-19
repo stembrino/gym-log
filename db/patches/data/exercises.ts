@@ -155,6 +155,15 @@ export const DEFAULT_EXERCISES = [
     labelEn: "Hip Thrust",
     imageUrl: TEST_AVATAR_IMAGE,
   },
+  {
+    id: "ex-09-legs",
+    name: "Adductor Chair",
+    muscleGroup: "Legs",
+    isCustom: false,
+    labelPt: "Cadeira Abdutora",
+    labelEn: "Adductor Chair",
+    imageUrl: TEST_AVATAR_IMAGE,
+  },
 
   // Shoulders
   {
