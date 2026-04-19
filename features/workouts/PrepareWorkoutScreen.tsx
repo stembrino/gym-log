@@ -182,7 +182,15 @@ export function PrepareWorkoutScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: palette.page }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: palette.page,
+          paddingTop: Math.max(16, insets.top + 8),
+        },
+      ]}
+    >
       <Text style={[styles.title, { color: palette.textPrimary }]}>
         {t("workouts.prepareWorkoutTitle")}
       </Text>
@@ -339,7 +347,8 @@ export function PrepareWorkoutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    paddingInline: 16,
+    paddingBlockEnd: 16,
     gap: 12,
   },
   title: {

@@ -4,7 +4,6 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 
-import { useClientOnlyValue } from "@/components/hooks/useClientOnlyValue";
 import { useColorScheme } from "@/components/hooks/useColorScheme";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useThemePreference } from "@/components/theme-preference";
@@ -51,9 +50,6 @@ export default function TabLayout() {
           letterSpacing: 0.8,
           color: Colors[colorScheme ?? "light"].text,
         },
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
         headerRight: () => (
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Pressable
