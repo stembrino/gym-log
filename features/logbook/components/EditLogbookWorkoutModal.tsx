@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type EditLogbookWorkoutPayload = {
   workoutId: string;
@@ -83,6 +84,7 @@ export function EditLogbookWorkoutModal({
   onSave,
 }: EditLogbookWorkoutModalProps) {
   const palette = useRetroPalette();
+  const insets = useSafeAreaInsets();
   const [durationDraft, setDurationDraft] = useState("");
   const [setDrafts, setSetDrafts] = useState<SetDraft[]>([]);
   const [saving, setSaving] = useState(false);
@@ -139,7 +141,12 @@ export function EditLogbookWorkoutModal({
       onRequestClose={onClose}
     >
       <View style={[styles.container, { backgroundColor: palette.page }]}>
-        <View style={[styles.header, { borderBottomColor: palette.border }]}>
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: palette.border, paddingTop: Math.max(12, insets.top + 8) },
+          ]}
+        >
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>{title}</Text>
           <WindowControlButton
             variant="close"
@@ -262,7 +269,12 @@ export function EditLogbookWorkoutModal({
           ))}
         </ScrollView>
 
-        <View style={[styles.footer, { borderTopColor: palette.border }]}>
+        <View
+          style={[
+            styles.footer,
+            { borderTopColor: palette.border, paddingBottom: Math.max(16, insets.bottom + 8) },
+          ]}
+        >
           <TouchableOpacity
             style={[styles.secondaryButton, { borderColor: palette.border }]}
             onPress={onClose}

@@ -5,6 +5,7 @@ import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
 import { useEffect, useState } from "react";
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export type CreateExercisePayload = {
   name: string;
@@ -21,6 +22,7 @@ type Props = {
 export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }: Props) {
   const { t } = useI18n();
   const palette = useRetroPalette();
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const [muscleGroup, setMuscleGroup] = useState<string | null>(null);
   const [nameError, setNameError] = useState(false);
@@ -93,7 +95,12 @@ export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }
       onRequestClose={resetAndClose}
     >
       <View style={[styles.container, { backgroundColor: palette.page }]}>
-        <View style={[styles.header, { borderBottomColor: palette.border }]}>
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: palette.border, paddingTop: Math.max(12, insets.top + 8) },
+          ]}
+        >
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
             {t("exercises.createExercise")}
           </Text>
@@ -174,7 +181,12 @@ export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }
           </View>
         </View>
 
-        <View style={[styles.footer, { borderTopColor: palette.border }]}>
+        <View
+          style={[
+            styles.footer,
+            { borderTopColor: palette.border, paddingBottom: Math.max(16, insets.bottom + 8) },
+          ]}
+        >
           <TouchableOpacity
             style={[styles.button, styles.cancelButton, { borderColor: palette.border }]}
             onPress={resetAndClose}

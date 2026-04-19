@@ -138,6 +138,7 @@ export async function getLogbookWorkoutsPage(args: {
       return (
         sum +
         workoutExercise.sets.reduce((setsSum, set) => {
+          if (!set.completed) return setsSum;
           return setsSum + Math.max(0, set.reps) * Math.max(0, set.weight);
         }, 0)
       );
