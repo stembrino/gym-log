@@ -80,7 +80,8 @@ export function PrepareWorkoutExercisePickerModal({
   };
 
   const handleCreateExercise = async (payload: { name: string; muscleGroup: string }) => {
-    await createExercise(payload);
+    const createdExercise = await createExercise(payload);
+    handleAddExercise(createdExercise);
     setCreateModalVisible(false);
   };
 

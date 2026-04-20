@@ -10,9 +10,11 @@ export type { CreateExerciseInput } from "../dao/mutations/exerciseMutations";
 export function useExerciseMutations(reload: () => Promise<void>) {
   const createExercise = useCallback(
     async (input: CreateExerciseInput) => {
-      await createCustomExercise(input);
+      const createdExercise = await createCustomExercise(input);
 
       await reload();
+
+      return createdExercise;
     },
     [reload],
   );
