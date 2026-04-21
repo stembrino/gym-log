@@ -27,6 +27,8 @@ export type ExercisePickerScreenProps = {
   onAddExercise: (e: ExerciseLibraryItem) => void;
   palette: Palette;
   t: TFn;
+  showCreateExerciseButton?: boolean;
+  onCreateExercisePress?: () => void;
 };
 
 export function ExercisePickerScreen({
@@ -44,6 +46,8 @@ export function ExercisePickerScreen({
   onAddExercise,
   palette,
   t,
+  showCreateExerciseButton = false,
+  onCreateExercisePress,
 }: ExercisePickerScreenProps) {
   const selectedExercisesList = useMemo(
     () =>
@@ -165,6 +169,17 @@ export function ExercisePickerScreen({
             placeholder={t("routines.searchExercisePlaceholder")}
             variant="compact"
           />
+
+          {showCreateExerciseButton ? (
+            <TouchableOpacity
+              style={[styles.createExerciseButton, { borderColor: palette.border }]}
+              onPress={onCreateExercisePress}
+            >
+              <Text style={[styles.createExerciseButtonText, { color: palette.textPrimary }]}>
+                + {t("exercises.createExercise")}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       }
       ListEmptyComponent={
@@ -347,6 +362,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   addExerciseButtonText: {
+    fontFamily: monoFont,
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  createExerciseButton: {
+    minHeight: 36,
+    borderWidth: 1,
+    borderRadius: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  createExerciseButtonText: {
     fontFamily: monoFont,
     fontSize: 11,
     fontWeight: "700",

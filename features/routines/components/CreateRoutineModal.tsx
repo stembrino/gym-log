@@ -8,6 +8,10 @@ import {
 } from "@/features/exercises/hooks/usePaginatedExerciseLibrary";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CreateExerciseModal } from "@/features/exercises/components/CreateExerciseModal";
+import { useExerciseMutations } from "@/features/exercises/hooks/useExerciseMutations";
+import { useMuscleGroups } from "@/features/exercises/hooks/useMuscleGroups";
 import { BasicInfoScreen } from "./BasicInfoScreen";
 import { ExercisePickerScreen } from "./ExercisePickerScreen";
 import type { RoutineGroupOption, SelectedRoutineExercise } from "./types";
@@ -58,6 +62,7 @@ export function CreateRoutineModal({
 }: CreateRoutineModalProps) {
   const { t, locale } = useI18n();
   const palette = useRetroPalette();
+  const insets = useSafeAreaInsets();
 
   const [screen, setScreen] = useState<Screen>("basic");
   const [name, setName] = useState("");
@@ -68,6 +73,7 @@ export function CreateRoutineModal({
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<SelectedRoutineExercise[]>([]);
+  const [createExerciseModalVisible, setCreateExerciseModalVisible] = useState(false);
 
   useEffect(() => {
     if (!visible) {
@@ -97,12 +103,15 @@ export function CreateRoutineModal({
     loadingInitial: loadingInitialExercises,
     loadingMore: loadingMoreExercises,
     loadMore: handleLoadMoreExercises,
+    reload,
   } = usePaginatedExerciseLibrary({
     query: searchQuery,
     locale,
     excludeIds: excludedExerciseIds,
     muscleGroups: [],
   });
+  const { items: muscleGroups } = useMuscleGroups();
+  const { createExercise } = useExerciseMutations(reload);
 
   const handleToggleTag = (tagId: string) => {
     setSelectedTags((prev) => {
@@ -193,6 +202,11 @@ export function CreateRoutineModal({
     );
   };
 
+  const handleCreateExercise = async (payload: { name: string; muscleGroup: string }) => {
+    await createExercise(payload);
+    setCreateExerciseModalVisible(false);
+  };
+
   const handleModalClose = () => {
     setName("");
     setNameError(false);
@@ -203,6 +217,7 @@ export function CreateRoutineModal({
     setSelectedExercises([]);
     setSearchQuery("");
     setScreen("basic");
+    setCreateExerciseModalVisible(false);
     onClose();
   };
 
@@ -214,7 +229,12 @@ export function CreateRoutineModal({
       onRequestClose={handleModalClose}
     >
       <View style={[styles.container, { backgroundColor: palette.page }]}>
-        <View style={[styles.header, { borderBottomColor: palette.border }]}>
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: palette.border, paddingTop: Math.max(12, insets.top + 8) },
+          ]}
+        >
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
             {screen === "basic"
               ? mode === "edit"
@@ -275,12 +295,19 @@ export function CreateRoutineModal({
             loadingMoreExercises={loadingMoreExercises}
             onLoadMoreExercises={handleLoadMoreExercises}
             onAddExercise={handleAddExercise}
+            showCreateExerciseButton
+            onCreateExercisePress={() => setCreateExerciseModalVisible(true)}
             palette={palette}
             t={t}
           />
         )}
 
-        <View style={[styles.footer, { borderTopColor: palette.border }]}>
+        <View
+          style={[
+            styles.footer,
+            { borderTopColor: palette.border, paddingBottom: Math.max(16, insets.bottom + 8) },
+          ]}
+        >
           {screen === "basic" && (
             <>
               <TouchableOpacity
@@ -325,6 +352,13 @@ export function CreateRoutineModal({
             </>
           )}
         </View>
+
+        <CreateExerciseModal
+          visible={createExerciseModalVisible}
+          onClose={() => setCreateExerciseModalVisible(false)}
+          muscleGroups={muscleGroups}
+          onSubmit={handleCreateExercise}
+        />
       </View>
     </Modal>
   );
