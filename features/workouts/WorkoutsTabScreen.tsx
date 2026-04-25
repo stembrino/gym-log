@@ -10,7 +10,7 @@ import {
 import type { WorkoutRoutinePickerItem } from "@/features/workouts/hooks/useRoutinePicker";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { SelectRoutineModal } from "./components/SelectRoutineModal";
 
@@ -123,9 +123,32 @@ export function WorkoutsTabScreen() {
           </View>
         </View>
       ) : (
-        <View style={styles.buttonWrapper}>
-          <PrimaryButton label={t("workouts.startWorkoutCta")} onPress={handleStartWorkoutPress} />
-        </View>
+        <Pressable
+          onPress={handleStartWorkoutPress}
+          accessibilityRole="button"
+          accessibilityLabel={t("workouts.startWorkoutCta")}
+        >
+          {({ pressed }) => (
+            <View
+              style={[
+                styles.goButton,
+                {
+                  backgroundColor: "transparent",
+                  borderColor: pressed ? palette.accentPressed : palette.accent,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.goButtonLabel,
+                  { color: pressed ? palette.accentPressed : palette.accent },
+                ]}
+              >
+                GO
+              </Text>
+            </View>
+          )}
+        </Pressable>
       )}
       <SelectRoutineModal
         isOpen={isSelectRoutineModalOpen}
@@ -148,6 +171,19 @@ const styles = StyleSheet.create({
     marginTop: 16,
     width: "100%",
     maxWidth: 320,
+  },
+  goButton: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  goButtonLabel: {
+    fontSize: 32,
+    fontWeight: "700",
+    letterSpacing: 1.2,
   },
   activeCard: {
     width: "100%",
