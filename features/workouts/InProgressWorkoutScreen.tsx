@@ -89,7 +89,6 @@ export function InProgressWorkoutScreen() {
   } = useGymPicker({ autoSelectDefault: false });
   const { handleCopySetsFromLastSession, copyingSetsForExerciseId } = useCopySetsFromLastSession({
     workout,
-    getHistoryState,
     onWorkoutUpdated: setWorkout,
   });
 
@@ -636,8 +635,23 @@ export function InProgressWorkoutScreen() {
     }));
 
     if (shouldOpen) {
-      await ensureLoaded(exerciseId);
+      await ensureLoaded(exerciseId, "currentGym");
     }
+  };
+
+  const getDisplayHistoryState = (exerciseId: string) => {
+    const currentGymState = getHistoryState(exerciseId, "currentGym");
+    const otherGymsState = getHistoryState(exerciseId, "otherGyms");
+
+    if (currentGymState.status === "loaded") {
+      return currentGymState;
+    }
+
+    if (currentGymState.status === "empty" && otherGymsState.status === "loaded") {
+      return otherGymsState;
+    }
+
+    return currentGymState;
   };
 
   const handleDeleteSetPress = (args: {
@@ -850,13 +864,25 @@ export function InProgressWorkoutScreen() {
                   onToggleHistoryPanel={() => {
                     void handleToggleExerciseHistoryPanel(exercise.id, exercise.exercise.id);
                   }}
-                  historyState={getHistoryState(exercise.exercise.id)}
-                  onRetryHistory={() => {
-                    void retryHistory(exercise.exercise.id);
+                  currentGymHistoryState={getHistoryState(exercise.exercise.id, "currentGym")}
+                  otherGymsHistoryState={getHistoryState(exercise.exercise.id, "otherGyms")}
+                  historyGymName={workout.gym?.name ?? null}
+                  onRetryCurrentGymHistory={() => {
+                    void retryHistory(exercise.exercise.id, "currentGym");
+                  }}
+                  onLoadOtherGymsHistory={() => {
+                    void ensureLoaded(exercise.exercise.id, "otherGyms");
+                  }}
+                  onRetryOtherGymsHistory={() => {
+                    void retryHistory(exercise.exercise.id, "otherGyms");
                   }}
                   onCopySets={
-                    getHistoryState(exercise.exercise.id).status === "loaded"
-                      ? () => handleCopySetsFromLastSession(exercise.id, exercise.exercise.id)
+                    getDisplayHistoryState(exercise.exercise.id).status === "loaded"
+                      ? () =>
+                          handleCopySetsFromLastSession(
+                            exercise.id,
+                            getDisplayHistoryState(exercise.exercise.id),
+                          )
                       : undefined
                   }
                   copyingSetS={copyingSetsForExerciseId === exercise.id}

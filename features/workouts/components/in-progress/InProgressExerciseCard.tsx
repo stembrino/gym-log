@@ -3,7 +3,7 @@ import { AvatarWithPreview } from "@/components/AvatarWithPreview";
 import { RoundAddButton } from "@/components/RoundAddButton";
 import { monoFont } from "@/constants/retroTheme";
 import { resolveExerciseImageSource } from "@/features/exercises/utils/exerciseImageSource";
-import { InProgressExerciseHistoryPanel } from "@/features/workouts/components/in-progress/InProgressExerciseHistoryPanel";
+import { InProgressExerciseHistoryPanel } from "./InProgressExerciseHistoryPanel";
 import type { ExerciseLastSessionState } from "@/features/workouts/hooks/useExerciseLastSession";
 import type { ActiveWorkoutRow } from "@/features/workouts/dao/queries/workoutQueries";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -34,8 +34,12 @@ type InProgressExerciseCardProps = {
   onDeleteExercisePress: (exerciseId: string, exerciseName: string) => void;
   isHistoryPanelOpen: boolean;
   onToggleHistoryPanel: () => void;
-  historyState: ExerciseLastSessionState;
-  onRetryHistory: () => void;
+  currentGymHistoryState: ExerciseLastSessionState;
+  otherGymsHistoryState: ExerciseLastSessionState;
+  historyGymName: string | null;
+  onRetryCurrentGymHistory: () => void;
+  onLoadOtherGymsHistory: () => void;
+  onRetryOtherGymsHistory: () => void;
   onCopySets?: () => Promise<void>;
   copyingSetS?: boolean;
   onPersistSet: (args: {
@@ -65,8 +69,12 @@ export function InProgressExerciseCard({
   onDeleteExercisePress,
   isHistoryPanelOpen,
   onToggleHistoryPanel,
-  historyState,
-  onRetryHistory,
+  currentGymHistoryState,
+  otherGymsHistoryState,
+  historyGymName,
+  onRetryCurrentGymHistory,
+  onLoadOtherGymsHistory,
+  onRetryOtherGymsHistory,
   onCopySets,
   copyingSetS,
   onPersistSet,
@@ -120,8 +128,12 @@ export function InProgressExerciseCard({
         <InProgressExerciseHistoryPanel
           palette={palette}
           t={t}
-          state={historyState}
-          onRetry={onRetryHistory}
+          currentGymState={currentGymHistoryState}
+          otherGymsState={otherGymsHistoryState}
+          gymName={historyGymName}
+          onRetryCurrentGym={onRetryCurrentGymHistory}
+          onLoadOtherGyms={onLoadOtherGymsHistory}
+          onRetryOtherGyms={onRetryOtherGymsHistory}
           onCopySets={onCopySets}
           copyingSetS={copyingSetS}
         />

@@ -4,6 +4,8 @@ import {
 } from "@/features/workouts/dao/queries/workoutSetQueries";
 import { useCallback, useState } from "react";
 
+export type ExerciseHistoryScope = "currentGym" | "otherGyms";
+
 type ExerciseLastSessionState =
   | {
       status: "idle";
@@ -31,14 +33,19 @@ const IDLE_STATE: ExerciseLastSessionState = {
   snapshot: null,
 };
 
+function buildStateKey(exerciseId: string, scope: ExerciseHistoryScope) {
+  return `${scope}:${exerciseId}`;
+}
+
 export function useExerciseLastSession(activeWorkoutId: string | null, activeGymId: string | null) {
-  const [stateByExerciseId, setStateByExerciseId] = useState<
+  const [stateByExerciseScope, setStateByExerciseScope] = useState<
     Record<string, ExerciseLastSessionState>
   >({});
 
   const ensureLoaded = useCallback(
-    async (exerciseId: string) => {
-      const currentState = stateByExerciseId[exerciseId];
+    async (exerciseId: string, scope: ExerciseHistoryScope = "currentGym") => {
+      const stateKey = buildStateKey(exerciseId, scope);
+      const currentState = stateByExerciseScope[stateKey];
 
       if (
         currentState?.status === "loading" ||
@@ -48,24 +55,26 @@ export function useExerciseLastSession(activeWorkoutId: string | null, activeGym
         return;
       }
 
-      setStateByExerciseId((prev) => ({
+      setStateByExerciseScope((prev) => ({
         ...prev,
-        [exerciseId]: {
+        [stateKey]: {
           status: "loading",
           snapshot: null,
         },
       }));
 
       try {
+        const gymIdFilter = scope === "currentGym" ? activeGymId : undefined;
+
         const snapshot = await getLastCompletedExerciseSnapshot({
           exerciseId,
           excludeWorkoutId: activeWorkoutId ?? undefined,
-          gymId: activeGymId,
+          gymId: gymIdFilter,
         });
 
-        setStateByExerciseId((prev) => ({
+        setStateByExerciseScope((prev) => ({
           ...prev,
-          [exerciseId]: snapshot
+          [stateKey]: snapshot
             ? {
                 status: "loaded",
                 snapshot,
@@ -76,39 +85,42 @@ export function useExerciseLastSession(activeWorkoutId: string | null, activeGym
               },
         }));
       } catch {
-        setStateByExerciseId((prev) => ({
+        setStateByExerciseScope((prev) => ({
           ...prev,
-          [exerciseId]: {
+          [stateKey]: {
             status: "error",
             snapshot: null,
           },
         }));
       }
     },
-    [activeGymId, activeWorkoutId, stateByExerciseId],
+    [activeGymId, activeWorkoutId, stateByExerciseScope],
   );
 
   const retry = useCallback(
-    async (exerciseId: string) => {
-      setStateByExerciseId((prev) => ({
+    async (exerciseId: string, scope: ExerciseHistoryScope = "currentGym") => {
+      const stateKey = buildStateKey(exerciseId, scope);
+
+      setStateByExerciseScope((prev) => ({
         ...prev,
-        [exerciseId]: IDLE_STATE,
+        [stateKey]: IDLE_STATE,
       }));
 
-      await ensureLoaded(exerciseId);
+      await ensureLoaded(exerciseId, scope);
     },
     [ensureLoaded],
   );
 
   const getState = useCallback(
-    (exerciseId: string): ExerciseLastSessionState => {
-      return stateByExerciseId[exerciseId] ?? IDLE_STATE;
+    (exerciseId: string, scope: ExerciseHistoryScope = "currentGym"): ExerciseLastSessionState => {
+      const stateKey = buildStateKey(exerciseId, scope);
+      return stateByExerciseScope[stateKey] ?? IDLE_STATE;
     },
-    [stateByExerciseId],
+    [stateByExerciseScope],
   );
 
   const resetAll = useCallback(() => {
-    setStateByExerciseId({});
+    setStateByExerciseScope({});
   }, []);
 
   return {

@@ -11,7 +11,6 @@ import { useGlobalAlert } from "@/components/hooks/useGlobalAlert";
 
 type UseCopySetsFromLastSessionParams = {
   workout: ActiveWorkoutRow | null;
-  getHistoryState: (exerciseId: string) => ExerciseLastSessionState;
   onWorkoutUpdated: (workout: ActiveWorkoutRow) => void;
 };
 
@@ -24,7 +23,6 @@ function formatWeight(value: number): string {
 
 export function useCopySetsFromLastSession({
   workout,
-  getHistoryState,
   onWorkoutUpdated,
 }: UseCopySetsFromLastSessionParams) {
   const { locale, t } = useI18n();
@@ -32,7 +30,7 @@ export function useCopySetsFromLastSession({
   const [copyingSetsForExerciseId, setCopyingSetsForExerciseId] = useState<string | null>(null);
 
   const handleCopySetsFromLastSession = useCallback(
-    async (workoutExerciseId: string, exerciseId: string) => {
+    async (workoutExerciseId: string, historyState: ExerciseLastSessionState) => {
       if (copyingSetsForExerciseId || !workout) {
         return;
       }
@@ -40,8 +38,6 @@ export function useCopySetsFromLastSession({
       setCopyingSetsForExerciseId(workoutExerciseId);
 
       try {
-        const historyState = getHistoryState(exerciseId);
-
         if (historyState.status !== "loaded" || !historyState.snapshot) {
           showAlert({
             title: t("workouts.copySetsErrorTitle") || "Copy error",
@@ -109,7 +105,7 @@ export function useCopySetsFromLastSession({
         setCopyingSetsForExerciseId(null);
       }
     },
-    [copyingSetsForExerciseId, workout, getHistoryState, showAlert, t, locale, onWorkoutUpdated],
+    [copyingSetsForExerciseId, workout, showAlert, t, locale, onWorkoutUpdated],
   );
 
   return {

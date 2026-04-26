@@ -13,8 +13,12 @@ type Palette = {
 type InProgressExerciseHistoryPanelProps = {
   palette: Palette;
   t: (key: string, vars?: Record<string, unknown>) => string;
-  state: ExerciseLastSessionState;
-  onRetry: () => void;
+  currentGymState: ExerciseLastSessionState;
+  otherGymsState: ExerciseLastSessionState;
+  gymName: string | null;
+  onRetryCurrentGym: () => void;
+  onLoadOtherGyms: () => void;
+  onRetryOtherGyms: () => void;
   onCopySets?: () => Promise<void>;
   copyingSetS?: boolean;
 };
@@ -48,41 +52,18 @@ function getRelativeDaysLabel(
 export function InProgressExerciseHistoryPanel({
   palette,
   t,
-  state,
-  onRetry,
+  currentGymState,
+  otherGymsState,
+  gymName,
+  onRetryCurrentGym,
+  onLoadOtherGyms,
+  onRetryOtherGyms,
   onCopySets,
   copyingSetS,
 }: InProgressExerciseHistoryPanelProps) {
-  const renderContent = () => {
-    if (state.status === "loading" || state.status === "idle") {
-      return (
-        <Text style={[styles.message, { color: palette.textSecondary }]}>
-          {t("workouts.historyPanelLoading")}
-        </Text>
-      );
-    }
-
-    if (state.status === "error") {
-      return (
-        <View style={styles.contentGroup}>
-          <Text style={[styles.message, { color: palette.textSecondary }]}>
-            {t("workouts.historyPanelError")}
-          </Text>
-          <Text style={[styles.retryText, { color: palette.accent }]} onPress={onRetry}>
-            {t("workouts.historyPanelRetry")}
-          </Text>
-        </View>
-      );
-    }
-
-    if (state.status === "empty") {
-      return (
-        <Text style={[styles.message, { color: palette.textSecondary }]}>
-          {t("workouts.historyPanelEmpty")}
-        </Text>
-      );
-    }
-
+  const renderSnapshotContent = (
+    state: Extract<ExerciseLastSessionState, { status: "loaded" }>,
+  ) => {
     const { snapshot } = state;
 
     return (
@@ -126,12 +107,111 @@ export function InProgressExerciseHistoryPanel({
     );
   };
 
+  const renderFallbackSection = () => {
+    if (currentGymState.status !== "empty") {
+      return null;
+    }
+
+    if (otherGymsState.status === "loaded") {
+      return (
+        <View style={styles.fallbackGroup}>
+          <Text style={[styles.message, { color: palette.accent }]}>
+            {t("workouts.historyPanelFoundInOtherGymPrefix")}:{" "}
+            {otherGymsState.snapshot.gymName ?? t("workouts.gymNotDefined")}
+          </Text>
+          {renderSnapshotContent(otherGymsState)}
+        </View>
+      );
+    }
+
+    if (otherGymsState.status === "loading") {
+      return (
+        <Text style={[styles.message, { color: palette.textSecondary }]}>
+          {t("workouts.historyPanelSearchOtherGymsLoading")}
+        </Text>
+      );
+    }
+
+    if (otherGymsState.status === "error") {
+      return (
+        <View style={styles.contentGroup}>
+          <Text style={[styles.message, { color: palette.textSecondary }]}>
+            {t("workouts.historyPanelOtherGymsError")}
+          </Text>
+          <Text style={[styles.retryText, { color: palette.accent }]} onPress={onRetryOtherGyms}>
+            {t("workouts.historyPanelOtherGymsRetry")}
+          </Text>
+        </View>
+      );
+    }
+
+    if (otherGymsState.status === "empty") {
+      return (
+        <Text style={[styles.message, { color: palette.textSecondary }]}>
+          {t("workouts.historyPanelNoOtherGymsHistory")}
+        </Text>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        style={[styles.searchOtherGymsButton, { borderColor: palette.border }]}
+        onPress={onLoadOtherGyms}
+      >
+        <Text style={[styles.searchOtherGymsButtonText, { color: palette.textPrimary }]}>
+          {t("workouts.historyPanelSearchOtherGymsCta")}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderContent = () => {
+    if (currentGymState.status === "loading" || currentGymState.status === "idle") {
+      return (
+        <Text style={[styles.message, { color: palette.textSecondary }]}>
+          {t("workouts.historyPanelLoading")}
+        </Text>
+      );
+    }
+
+    if (currentGymState.status === "error") {
+      return (
+        <View style={styles.contentGroup}>
+          <Text style={[styles.message, { color: palette.textSecondary }]}>
+            {t("workouts.historyPanelError")}
+          </Text>
+          <Text style={[styles.retryText, { color: palette.accent }]} onPress={onRetryCurrentGym}>
+            {t("workouts.historyPanelRetry")}
+          </Text>
+        </View>
+      );
+    }
+
+    if (currentGymState.status === "empty") {
+      return (
+        <View style={styles.contentGroup}>
+          <Text style={[styles.message, { color: palette.textSecondary }]}>
+            {gymName
+              ? t("workouts.historyPanelEmptyWithGym")
+              : t("workouts.historyPanelEmptyWithoutGym")}
+          </Text>
+          {renderFallbackSection()}
+        </View>
+      );
+    }
+
+    return renderSnapshotContent(currentGymState);
+  };
+
   return (
     <View
       style={[styles.container, { borderColor: palette.border, backgroundColor: palette.page }]}
     >
       <Text style={[styles.title, { color: palette.textPrimary }]}>
         {t("workouts.historyPanelTitle")}
+      </Text>
+      <Text style={[styles.message, { color: palette.textSecondary }]}>
+        {t("workouts.gymFieldLabel")}: {gymName ?? t("workouts.gymNotDefined")}
       </Text>
       {renderContent()}
     </View>
@@ -179,6 +259,26 @@ const styles = StyleSheet.create({
     fontFamily: monoFont,
     fontSize: 11,
     letterSpacing: 0.2,
+  },
+  fallbackGroup: {
+    gap: 4,
+    marginTop: 2,
+  },
+  searchOtherGymsButton: {
+    minHeight: 32,
+    borderWidth: 1,
+    borderRadius: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 4,
+    paddingHorizontal: 10,
+  },
+  searchOtherGymsButtonText: {
+    fontFamily: monoFont,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
   copySetsButton: {
     minHeight: 32,

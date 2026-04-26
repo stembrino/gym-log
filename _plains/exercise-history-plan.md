@@ -14,6 +14,133 @@ Show exact historical numbers without charts, with optional interactions that ne
 
 ---
 
+## Current Implementation (April 2026)
+
+This section explains the exact flow currently implemented in code for:
+
+- last session in current gym
+- fallback to other gyms if current gym has no history
+
+### Core idea
+
+History is loaded per exercise and per scope:
+
+- `currentGym`: uses active workout gym filter
+- `otherGyms`: no gym filter (global fallback)
+
+Each scope has an independent state machine:
+
+- `idle`
+- `loading`
+- `loaded`
+- `empty`
+- `error`
+
+### Step-by-step flow in the screen
+
+1. User opens history panel in one exercise card (`HISTORICO`).
+2. Screen loads `currentGym` history only.
+3. If `currentGym` returns `loaded`, panel shows that snapshot.
+4. If `currentGym` returns `empty`, panel shows empty message for this gym and a CTA:
+   - `BUSCAR EM OUTRAS ACADEMIAS`
+5. User taps CTA to load `otherGyms` scope.
+6. If `otherGyms` returns `loaded`, panel shows:
+   - source gym name (`Historico encontrado em: ...`)
+   - the same last-session metrics and sets list
+7. If `otherGyms` returns `empty`, panel states there is no history in other gyms.
+8. If `otherGyms` fails, panel shows retry only for fallback scope.
+
+### Why it is decoupled
+
+The decision and loading logic are separated by responsibility:
+
+- Hook owns loading/caching by scope (`currentGym` vs `otherGyms`).
+- Screen decides what to display and when to trigger fallback.
+- Panel component only renders state + triggers callbacks.
+
+This keeps business logic out of the UI component and avoids coupling fallback behavior to a single view.
+
+### Which snapshot is used for "Copy Sets"
+
+When the copy button is shown, the screen picks the displayed snapshot source:
+
+- current gym snapshot, if available
+- otherwise fallback snapshot from other gyms (only after explicit user action)
+
+So copy behavior is always aligned with what user sees in the panel.
+
+### Main files in this flow
+
+- `features/workouts/hooks/useExerciseLastSession.ts`
+  - scoped state key: `${scope}:${exerciseId}`
+  - loaders: `ensureLoaded(exerciseId, scope)` and `retry(exerciseId, scope)`
+- `features/workouts/InProgressWorkoutScreen.tsx`
+  - opens panel, loads `currentGym`, triggers `otherGyms` on CTA
+  - computes displayed state and passes callbacks to card/panel
+- `features/workouts/components/in-progress/InProgressExerciseHistoryPanel.tsx`
+  - renders current-gym state and fallback section
+  - shows gym label and fallback source gym label
+- `features/workouts/hooks/useCopySetsFromLastSession.ts`
+  - receives selected history state directly
+  - copies sets from whichever loaded snapshot is currently selected by the screen
+
+### Query behavior used by the hook
+
+`getLastCompletedExerciseSnapshot` supports gym filtering:
+
+- `gymId = activeGymId` for current gym scope
+- `gymId = undefined` for global fallback scope
+
+Shared constraints:
+
+- only completed workouts
+- excludes active/current workout
+- picks most recent session by date/creation order
+
+### Sequence diagram (current gym with optional fallback)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant C as InProgressExerciseCard
+  participant S as InProgressWorkoutScreen
+  participant H as useExerciseLastSession
+  participant Q as getLastCompletedExerciseSnapshot
+  participant P as InProgressExerciseHistoryPanel
+
+  U->>C: Tap HISTORICO
+  C->>S: onToggleHistoryPanel(exercise)
+  S->>H: ensureLoaded(exerciseId, currentGym)
+  H->>Q: query with gymId = activeGymId
+  Q-->>H: loaded | empty | error
+  H-->>S: currentGym state
+  S-->>P: render currentGymState
+
+  alt currentGym loaded
+    P-->>U: Show last session (current gym)
+  else currentGym empty
+    P-->>U: Show empty + CTA buscar outras academias
+    U->>P: Tap CTA
+    P->>S: onLoadOtherGyms
+    S->>H: ensureLoaded(exerciseId, otherGyms)
+    H->>Q: query with gymId = undefined
+    Q-->>H: loaded | empty | error
+    H-->>S: otherGyms state
+    S-->>P: render otherGymsState
+
+    alt otherGyms loaded
+      P-->>U: Show source gym + last session
+    else otherGyms empty/error
+      P-->>U: Show no history or retry
+    end
+  else currentGym error
+    P-->>U: Show retry currentGym
+  end
+```
+
+---
+
 ## Active Surfaces
 
 ### Surface 1 - Workout In Progress (lazy, on-demand)
