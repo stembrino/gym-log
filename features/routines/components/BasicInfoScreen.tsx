@@ -60,6 +60,7 @@ export function BasicInfoScreen({
             placeholderTextColor={palette.textSecondary}
             value={name}
             onChangeText={onChangeName}
+            autoCapitalize="characters"
             maxLength={50}
           />
           {nameError ? (

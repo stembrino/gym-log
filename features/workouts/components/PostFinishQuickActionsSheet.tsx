@@ -41,13 +41,13 @@ export function PostFinishQuickActionsSheet({
   onCopyWorkoutAsText,
 }: PostFinishQuickActionsSheetProps) {
   const palette = useRetroPalette();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const insets = useSafeAreaInsets();
   const [isNamingRoutine, setIsNamingRoutine] = useState(false);
   const [routineName, setRoutineName] = useState("");
 
   const handleOpenNaming = () => {
-    setRoutineName(defaultRoutineName);
+    setRoutineName(defaultRoutineName.toLocaleUpperCase(locale));
     setIsNamingRoutine(true);
   };
 
@@ -138,9 +138,10 @@ export function PostFinishQuickActionsSheet({
                     },
                   ]}
                   value={routineName}
-                  onChangeText={setRoutineName}
+                  onChangeText={(value) => setRoutineName(value.toLocaleUpperCase(locale))}
                   placeholder={t("workouts.postFinishRoutineNamePlaceholder")}
                   placeholderTextColor={palette.textSecondary}
+                  autoCapitalize="characters"
                   autoFocus
                   returnKeyType="done"
                   onSubmitEditing={handleConfirmSave}

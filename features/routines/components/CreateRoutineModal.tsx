@@ -8,7 +8,15 @@ import {
   type ExerciseLibraryItem,
 } from "@/features/exercises/hooks/usePaginatedExerciseLibrary";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CreateExerciseModal } from "@/features/exercises/components/CreateExerciseModal";
 import { useExerciseMutations } from "@/features/exercises/hooks/useExerciseMutations";
@@ -272,141 +280,150 @@ export function CreateRoutineModal({
       presentationStyle="formSheet"
       onRequestClose={handleRequestClose}
     >
-      <View style={[styles.container, { backgroundColor: palette.page }]}>
-        <View
-          style={[
-            styles.header,
-            { borderBottomColor: palette.border, paddingTop: Math.max(12, insets.top + 8) },
-          ]}
-        >
-          <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
-            {screen === "basic"
-              ? mode === "edit"
-                ? t("routines.editRoutine")
-                : t("routines.createRoutine")
-              : t("routines.addExercises")}
-          </Text>
-
-          <View style={styles.headerRightActions}>
-            <Text style={[styles.stepIndicator, { color: palette.textSecondary }]}>
-              {screen === "basic" ? "1/2" : "2/2"}
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? Math.max(0, insets.top) : 0}
+      >
+        <View style={[styles.container, { backgroundColor: palette.page }]}>
+          <View
+            style={[
+              styles.header,
+              { borderBottomColor: palette.border, paddingTop: Math.max(12, insets.top + 8) },
+            ]}
+          >
+            <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
+              {screen === "basic"
+                ? mode === "edit"
+                  ? t("routines.editRoutine")
+                  : t("routines.createRoutine")
+                : t("routines.addExercises")}
             </Text>
-            <WindowControlButton
-              variant="close"
-              size="md"
-              onPress={handleRequestClose}
-              accessibilityLabel={t("routines.closeActionsButton")}
-              borderColor={palette.border}
-              backgroundColor={palette.card}
-              iconColor={palette.textPrimary}
-            />
-          </View>
-        </View>
 
-        {screen === "basic" ? (
-          <BasicInfoScreen
-            name={name}
-            onChangeName={(newName) => {
-              setName(newName);
-              if (newName.trim()) setNameError(false);
-            }}
-            detail={detail}
-            onChangeDetail={setDetail}
-            description={description}
-            onChangeDescription={setDescription}
-            selectedTags={selectedTags}
-            onToggleTag={handleToggleTag}
-            locale={locale}
-            palette={palette}
-            t={t}
-            nameError={nameError}
-          />
-        ) : (
-          <ExercisePickerScreen
-            searchQuery={searchQuery}
-            onChangeSearchQuery={setSearchQuery}
-            selectedExercises={selectedExercises}
-            onRemoveExercise={handleRemoveExercise}
-            onUpdateExerciseField={handleUpdateExerciseField}
-            getExerciseLabel={getExerciseLabel}
-            pagedExercises={pagedExercises}
-            hasMoreExercises={hasMoreExercises}
-            loadingInitialExercises={loadingInitialExercises}
-            loadingMoreExercises={loadingMoreExercises}
-            onLoadMoreExercises={handleLoadMoreExercises}
-            onAddExercise={handleAddExercise}
-            showCreateExerciseButton
-            onCreateExercisePress={() => setCreateExerciseModalVisible(true)}
-            palette={palette}
-            t={t}
-          />
-        )}
-
-        <View
-          style={[
-            styles.footer,
-            { borderTopColor: palette.border, paddingBottom: Math.max(16, insets.bottom + 8) },
-          ]}
-        >
-          {screen === "basic" && (
-            <>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton, { borderColor: palette.border }]}
+            <View style={styles.headerRightActions}>
+              <Text style={[styles.stepIndicator, { color: palette.textSecondary }]}>
+                {screen === "basic" ? "1/2" : "2/2"}
+              </Text>
+              <WindowControlButton
+                variant="close"
+                size="md"
                 onPress={handleRequestClose}
-              >
-                <Text style={[styles.buttonText, { color: palette.textPrimary }]}>
-                  {t("routines.cancelButton")}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.primaryButton, { backgroundColor: palette.accent }]}
-                onPress={handleNext}
-              >
-                <Text style={[styles.buttonText, { color: palette.onAccent }]}>
-                  {t("routines.nextButton")} →
-                </Text>
-              </TouchableOpacity>
-            </>
+                accessibilityLabel={t("routines.closeActionsButton")}
+                borderColor={palette.border}
+                backgroundColor={palette.card}
+                iconColor={palette.textPrimary}
+              />
+            </View>
+          </View>
+
+          {screen === "basic" ? (
+            <BasicInfoScreen
+              name={name}
+              onChangeName={(newName) => {
+                setName(newName.toLocaleUpperCase(locale));
+                if (newName.trim()) setNameError(false);
+              }}
+              detail={detail}
+              onChangeDetail={setDetail}
+              description={description}
+              onChangeDescription={setDescription}
+              selectedTags={selectedTags}
+              onToggleTag={handleToggleTag}
+              locale={locale}
+              palette={palette}
+              t={t}
+              nameError={nameError}
+            />
+          ) : (
+            <ExercisePickerScreen
+              searchQuery={searchQuery}
+              onChangeSearchQuery={setSearchQuery}
+              selectedExercises={selectedExercises}
+              onRemoveExercise={handleRemoveExercise}
+              onUpdateExerciseField={handleUpdateExerciseField}
+              getExerciseLabel={getExerciseLabel}
+              pagedExercises={pagedExercises}
+              hasMoreExercises={hasMoreExercises}
+              loadingInitialExercises={loadingInitialExercises}
+              loadingMoreExercises={loadingMoreExercises}
+              onLoadMoreExercises={handleLoadMoreExercises}
+              onAddExercise={handleAddExercise}
+              showCreateExerciseButton
+              onCreateExercisePress={() => setCreateExerciseModalVisible(true)}
+              palette={palette}
+              t={t}
+            />
           )}
 
-          {screen === "exercises" && (
-            <>
-              <TouchableOpacity
-                style={[styles.button, styles.secondaryButton, { borderColor: palette.border }]}
-                onPress={handleBack}
-              >
-                <Text style={[styles.buttonText, { color: palette.textPrimary }]}>
-                  ← {t("routines.backButton")}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.primaryButton, { backgroundColor: palette.accent }]}
-                onPress={() => {
-                  void handleCreate();
-                }}
-              >
-                <Text style={[styles.buttonText, { color: palette.onAccent }]}>
-                  {mode === "edit" ? t("routines.saveButton") : t("routines.createButton")} ✓
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
+          <View
+            style={[
+              styles.footer,
+              { borderTopColor: palette.border, paddingBottom: Math.max(16, insets.bottom + 8) },
+            ]}
+          >
+            {screen === "basic" && (
+              <>
+                <TouchableOpacity
+                  style={[styles.button, styles.cancelButton, { borderColor: palette.border }]}
+                  onPress={handleRequestClose}
+                >
+                  <Text style={[styles.buttonText, { color: palette.textPrimary }]}>
+                    {t("routines.cancelButton")}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.primaryButton, { backgroundColor: palette.accent }]}
+                  onPress={handleNext}
+                >
+                  <Text style={[styles.buttonText, { color: palette.onAccent }]}>
+                    {t("routines.nextButton")} →
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {screen === "exercises" && (
+              <>
+                <TouchableOpacity
+                  style={[styles.button, styles.secondaryButton, { borderColor: palette.border }]}
+                  onPress={handleBack}
+                >
+                  <Text style={[styles.buttonText, { color: palette.textPrimary }]}>
+                    ← {t("routines.backButton")}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.primaryButton, { backgroundColor: palette.accent }]}
+                  onPress={() => {
+                    void handleCreate();
+                  }}
+                >
+                  <Text style={[styles.buttonText, { color: palette.onAccent }]}>
+                    {mode === "edit" ? t("routines.saveButton") : t("routines.createButton")} ✓
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+
+          <CreateExerciseModal
+            visible={createExerciseModalVisible}
+            onClose={() => setCreateExerciseModalVisible(false)}
+            muscleGroups={muscleGroups}
+            onSubmit={handleCreateExercise}
+          />
+
+          {alertElement}
         </View>
-
-        <CreateExerciseModal
-          visible={createExerciseModalVisible}
-          onClose={() => setCreateExerciseModalVisible(false)}
-          muscleGroups={muscleGroups}
-          onSubmit={handleCreateExercise}
-        />
-
-        {alertElement}
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
