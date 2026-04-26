@@ -318,7 +318,6 @@ export function LogbookTabScreen() {
                       completedLabel={t("performance.logbookCardCompleted")}
                       totalLoadLabel={t("performance.logbookCardTotalLoad")}
                       noSetDetailsLabel={t("performance.logbookCardNoSetDetails")}
-                      setLabel={t("workouts.setLabel")}
                       repsUnitSuffix={t("workouts.repsUnitSuffix")}
                       weightUnit={t("workouts.weightUnit")}
                       expanded={expandedWorkoutIds.has(item.id)}

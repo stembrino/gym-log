@@ -5,6 +5,7 @@ import { monoFont } from "@/constants/retroTheme";
 import type { AppLocale } from "@/constants/translations";
 import type { LogbookWorkoutItem } from "@/features/logbook/dao/queries/logbookQueries";
 import { getHighlightedSetIds } from "@/features/logbook/utils/setHighlightUtils";
+import { LogbookSetDetailsList } from "./LogbookSetDetailsList";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
@@ -19,7 +20,6 @@ type LogbookWorkoutCardProps = {
   completedLabel: string;
   totalLoadLabel: string;
   noSetDetailsLabel: string;
-  setLabel: string;
   repsUnitSuffix: string;
   weightUnit: string;
   expanded: boolean;
@@ -68,7 +68,6 @@ export function LogbookWorkoutCard({
   completedLabel,
   totalLoadLabel,
   noSetDetailsLabel,
-  setLabel,
   repsUnitSuffix,
   weightUnit,
   expanded,
@@ -91,6 +90,7 @@ export function LogbookWorkoutCard({
     <ExpandedPanel
       title={title}
       subtitle={subtitle}
+      titleStyle={styles.dateTitle}
       count={item.exerciseCount}
       expanded={expanded}
       onToggle={onToggleExpanded}
@@ -148,28 +148,17 @@ export function LogbookWorkoutCard({
       <View style={[styles.divider, { backgroundColor: palette.border }]} />
 
       <View style={styles.setDetailsCol}>
-        {item.setDetails.length === 0 ? (
-          <Text style={[styles.setDetailText, { color: palette.textSecondary }]}>
-            {noSetDetailsLabel}
-          </Text>
-        ) : (
-          item.setDetails.map((set) => {
-            const isMaxWeight = lastMaxSetIds.has(set.id);
-            return (
-              <Text
-                key={set.id}
-                style={[
-                  styles.setDetailText,
-                  { color: isMaxWeight ? palette.accent : palette.textSecondary },
-                ]}
-              >
-                {set.exerciseName} {setLabel} {set.setOrder}: {set.reps} {repsUnitSuffix} x{" "}
-                {formatNumber(set.weight, locale)}
-                {weightUnit}
-              </Text>
-            );
-          })
-        )}
+        <LogbookSetDetailsList
+          setDetails={item.setDetails}
+          locale={locale}
+          noSetDetailsLabel={noSetDetailsLabel}
+          repsUnitSuffix={repsUnitSuffix}
+          weightUnit={weightUnit}
+          highlightedSetIds={lastMaxSetIds}
+          dividerColor={palette.border}
+          textColor={palette.textSecondary}
+          highlightColor={palette.accent}
+        />
       </View>
 
       <View style={[styles.divider, { backgroundColor: palette.border }]} />
@@ -220,6 +209,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     textTransform: "uppercase",
   },
+  dateTitle: {
+    fontSize: 14,
+  },
   divider: {
     height: 1,
   },
@@ -239,11 +231,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 2,
-  },
-  setDetailText: {
-    fontFamily: monoFont,
-    fontSize: 10,
-    letterSpacing: 0.2,
   },
   statText: {
     fontFamily: monoFont,

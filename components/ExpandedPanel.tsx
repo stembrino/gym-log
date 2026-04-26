@@ -2,7 +2,15 @@ import { Badge } from "@/components/Badge";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { monoFont } from "@/constants/retroTheme";
 import type { PropsWithChildren, ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type TextStyle,
+  type ViewStyle,
+} from "react-native";
 
 type ExpandedPanelProps = PropsWithChildren<{
   title: string;
@@ -11,6 +19,7 @@ type ExpandedPanelProps = PropsWithChildren<{
   expanded: boolean;
   onToggle: () => void;
   headerAction?: ReactNode;
+  titleStyle?: StyleProp<TextStyle>;
   style?: StyleProp<ViewStyle>;
 }>;
 
@@ -21,6 +30,7 @@ export function ExpandedPanel({
   expanded,
   onToggle,
   headerAction,
+  titleStyle,
   style,
   children,
 }: ExpandedPanelProps) {
@@ -47,7 +57,7 @@ export function ExpandedPanel({
         ]}
       >
         <View style={styles.headerCopy}>
-          <Text style={[styles.title, { color: palette.textPrimary }]}>{title}</Text>
+          <Text style={[styles.title, { color: palette.textPrimary }, titleStyle]}>{title}</Text>
           {subtitle ? (
             <Text style={[styles.subtitle, { color: palette.textSecondary }]}>{subtitle}</Text>
           ) : null}
