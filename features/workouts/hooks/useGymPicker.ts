@@ -1,4 +1,9 @@
-import { createGym, getGyms, type GymItem } from "@/features/workouts/dao/queries/gymQueries";
+import {
+  createGym,
+  deleteGym,
+  getGyms,
+  type GymItem,
+} from "@/features/workouts/dao/queries/gymQueries";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type UseGymPickerOptions = {
@@ -12,6 +17,7 @@ type UseGymPickerResult = {
   loading: boolean;
   setSelectedGymId: (gymId: string | null) => void;
   addGym: (name: string) => Promise<void>;
+  removeGym: (gymId: string) => Promise<void>;
   reload: () => Promise<void>;
 };
 
@@ -38,11 +44,16 @@ export function useGymPicker(options?: UseGymPickerOptions): UseGymPickerResult 
         const defaultGymId = pickDefaultGymId(rows);
         setSelectedGymId(defaultGymId);
         hasAutoSelectedRef.current = true;
+        return;
+      }
+
+      if (selectedGymId && !rows.some((gym) => gym.id === selectedGymId)) {
+        setSelectedGymId(autoSelectDefault ? pickDefaultGymId(rows) : null);
       }
     } finally {
       setLoading(false);
     }
-  }, [autoSelectDefault]);
+  }, [autoSelectDefault, selectedGymId]);
 
   useEffect(() => {
     void reload();
@@ -56,6 +67,19 @@ export function useGymPicker(options?: UseGymPickerOptions): UseGymPickerResult 
     hasAutoSelectedRef.current = true;
   }, []);
 
+  const removeGym = useCallback(
+    async (gymId: string) => {
+      await deleteGym(gymId);
+      const rows = await getGyms();
+      setGyms(rows);
+
+      if (selectedGymId === gymId) {
+        setSelectedGymId(autoSelectDefault ? pickDefaultGymId(rows) : null);
+      }
+    },
+    [autoSelectDefault, selectedGymId],
+  );
+
   const selectedGym = useMemo(
     () => gyms.find((gym) => gym.id === selectedGymId) ?? null,
     [gyms, selectedGymId],
@@ -68,6 +92,7 @@ export function useGymPicker(options?: UseGymPickerOptions): UseGymPickerResult 
     loading,
     setSelectedGymId,
     addGym,
+    removeGym,
     reload,
   };
 }

@@ -84,6 +84,7 @@ export function InProgressWorkoutScreen() {
     selectedGym,
     selectedGymId,
     setSelectedGymId,
+    removeGym,
     loading: loadingGyms,
     reload: reloadGyms,
   } = useGymPicker({ autoSelectDefault: false });
@@ -324,6 +325,38 @@ export function InProgressWorkoutScreen() {
       });
       return false;
     }
+  };
+
+  const handleDeleteGymForCompletedWorkout = (gymId: string) => {
+    const gym = gyms.find((item) => item.id === gymId);
+
+    if (!gym) {
+      return;
+    }
+
+    showConfirm({
+      title: t("workouts.gymDeleteTitle"),
+      message: t("workouts.gymDeleteBody", { name: gym.name }),
+      cancelLabel: t("exercises.cancel"),
+      confirmLabel: t("workouts.gymDeleteConfirm"),
+      confirmVariant: "destructive",
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await removeGym(gymId);
+            if (selectedGymId === gymId) {
+              await handleAssignWorkoutGym(null);
+            }
+          } catch {
+            showAlert({
+              title: t("workouts.gymDeleteErrorTitle"),
+              message: t("workouts.gymDeleteErrorBody"),
+              buttonLabel: t("workouts.postFinishCloseCta"),
+            });
+          }
+        })();
+      },
+    });
   };
 
   const handleMinimizeWorkout = () => {
@@ -981,6 +1014,8 @@ export function InProgressWorkoutScreen() {
             void handleAssignWorkoutGym(gymId);
           }}
           onAddGym={handleCreateGymForCompletedWorkout}
+          onDeleteGym={handleDeleteGymForCompletedWorkout}
+          deleteGymButtonAccessibilityLabel={t("workouts.gymDeleteButton")}
         />
 
         {alertElement}

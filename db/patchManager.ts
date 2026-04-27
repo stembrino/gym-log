@@ -1,5 +1,6 @@
 import { db, expoDb } from "@/db/client";
 import { runV1InitialSeedPatch } from "@/db/patches/v001_initial_seed";
+import { runV2AddMachineBarbellExercisesPatch } from "@/db/patches/v002_add_machine_barbell_exercises";
 import { dataPatches } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -14,6 +15,10 @@ const PATCHES: DataPatch[] = [
   {
     id: "v001_initial_seed",
     run: runV1InitialSeedPatch,
+  },
+  {
+    id: "v002_add_machine_barbell_exercises",
+    run: runV2AddMachineBarbellExercisesPatch,
   },
 ];
 

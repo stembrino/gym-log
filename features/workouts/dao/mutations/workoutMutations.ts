@@ -429,6 +429,7 @@ export async function softDeleteWorkout(workoutId: string): Promise<void> {
 export async function updateCompletedWorkoutFromLogbook(args: {
   workoutId: string;
   duration: number | null;
+  gymId: string | null;
   sourceRoutineId: string | null;
   sets: {
     setId: string;
@@ -442,6 +443,7 @@ export async function updateCompletedWorkoutFromLogbook(args: {
       .update(workouts)
       .set({
         duration: args.duration,
+        gymId: args.gymId,
         sourceRoutineId: args.sourceRoutineId,
       })
       .where(eq(workouts.id, args.workoutId));

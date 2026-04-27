@@ -8,14 +8,19 @@ import { useI18n } from "@/components/providers/i18n-provider";
 import Colors from "@/constants/Colors";
 import { monoFont } from "@/constants/retroTheme";
 import { SelectGymModal } from "@/features/workouts/components/SelectGymModal";
-import { createGym, setDefaultGym, type GymItem } from "@/features/workouts/dao/queries/gymQueries";
+import {
+  createGym,
+  deleteGym,
+  setDefaultGym,
+  type GymItem,
+} from "@/features/workouts/dao/queries/gymQueries";
 import { useGymPicker } from "@/features/workouts/hooks/useGymPicker";
 
 export function DefaultGymSettingRow() {
   const colorScheme = useColorScheme();
   const palette = useRetroPalette();
   const { t } = useI18n();
-  const { showAlert, alertElement } = useGlobalAlert();
+  const { showAlert, showConfirm, alertElement } = useGlobalAlert();
   const { gyms, loading, reload } = useGymPicker({ autoSelectDefault: false });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const textColor = Colors[colorScheme ?? "light"].text;
@@ -57,6 +62,36 @@ export function DefaultGymSettingRow() {
     }
   };
 
+  const handleDeleteGym = (gymId: string) => {
+    const gym = gyms.find((item) => item.id === gymId);
+
+    if (!gym) {
+      return;
+    }
+
+    showConfirm({
+      title: t("workouts.gymDeleteTitle"),
+      message: t("workouts.gymDeleteBody", { name: gym.name }),
+      cancelLabel: t("exercises.cancel"),
+      confirmLabel: t("workouts.gymDeleteConfirm"),
+      confirmVariant: "destructive",
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await deleteGym(gymId);
+            await reload();
+          } catch {
+            showAlert({
+              title: t("workouts.gymDeleteErrorTitle"),
+              message: t("workouts.gymDeleteErrorBody"),
+              buttonLabel: t("workouts.postFinishCloseCta"),
+            });
+          }
+        })();
+      },
+    });
+  };
+
   return (
     <>
       <Pressable style={styles.settingRow} onPress={() => setIsModalOpen(true)}>
@@ -89,6 +124,8 @@ export function DefaultGymSettingRow() {
         emptyLabel={t("workouts.gymEmptyState")}
         onSelectGym={handleSelectDefaultGym}
         onAddGym={handleAddGym}
+        onDeleteGym={handleDeleteGym}
+        deleteGymButtonAccessibilityLabel={t("workouts.gymDeleteButton")}
       />
 
       {alertElement}

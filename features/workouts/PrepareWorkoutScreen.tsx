@@ -25,7 +25,7 @@ export function PrepareWorkoutScreen() {
   const insets = useSafeAreaInsets();
   const { t, locale } = useI18n();
   const palette = useRetroPalette();
-  const { showAlert, alertElement } = useGlobalAlert();
+  const { showAlert, showConfirm, alertElement } = useGlobalAlert();
   const params = useLocalSearchParams<{ routineId?: string | string[] }>();
   const routineIdParam = params.routineId;
   const routineId = Array.isArray(routineIdParam) ? routineIdParam[0] : routineIdParam;
@@ -40,6 +40,7 @@ export function PrepareWorkoutScreen() {
     selectedGymId,
     setSelectedGymId,
     addGym,
+    removeGym,
     loading: loadingGyms,
   } = useGymPicker();
   const [editableExercises, setEditableExercises] = useState<EditableWorkoutExercise[]>([]);
@@ -179,6 +180,35 @@ export function PrepareWorkoutScreen() {
     } finally {
       setIsStarting(false);
     }
+  };
+
+  const handleDeleteGym = (gymId: string) => {
+    const gym = gyms.find((item) => item.id === gymId);
+
+    if (!gym) {
+      return;
+    }
+
+    showConfirm({
+      title: t("workouts.gymDeleteTitle"),
+      message: t("workouts.gymDeleteBody", { name: gym.name }),
+      cancelLabel: t("exercises.cancel"),
+      confirmLabel: t("workouts.gymDeleteConfirm"),
+      confirmVariant: "destructive",
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await removeGym(gymId);
+          } catch {
+            showAlert({
+              title: t("workouts.gymDeleteErrorTitle"),
+              message: t("workouts.gymDeleteErrorBody"),
+              buttonLabel: t("workouts.postFinishCloseCta"),
+            });
+          }
+        })();
+      },
+    });
   };
 
   return (
@@ -323,6 +353,8 @@ export function PrepareWorkoutScreen() {
         emptyLabel={t("workouts.gymEmptyState")}
         onSelectGym={setSelectedGymId}
         onAddGym={addGym}
+        onDeleteGym={handleDeleteGym}
+        deleteGymButtonAccessibilityLabel={t("workouts.gymDeleteButton")}
       />
 
       <PrepareWorkoutExercisePickerModal

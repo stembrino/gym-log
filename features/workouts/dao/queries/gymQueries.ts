@@ -1,6 +1,6 @@
 import { db } from "@/db/client";
 import { gyms } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { asc, desc, eq, ne } from "drizzle-orm";
 
 export type GymItem = {
   id: string;
@@ -96,4 +96,34 @@ export async function setDefaultGym(gymId: string | null): Promise<void> {
   }
 
   await db.update(gyms).set({ isDefault: true }).where(eq(gyms.id, gymId));
+}
+
+export async function deleteGym(gymId: string): Promise<void> {
+  const target = await db.query.gyms.findFirst({
+    where: eq(gyms.id, gymId),
+  });
+
+  if (!target) {
+    return;
+  }
+
+  await db.transaction(async (tx) => {
+    if (target.isDefault) {
+      const replacement = await tx
+        .select({ id: gyms.id })
+        .from(gyms)
+        .where(ne(gyms.id, gymId))
+        .orderBy(desc(gyms.isDefault), asc(gyms.createdAt), asc(gyms.name))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+
+      await tx.update(gyms).set({ isDefault: false });
+
+      if (replacement) {
+        await tx.update(gyms).set({ isDefault: true }).where(eq(gyms.id, replacement.id));
+      }
+    }
+
+    await tx.delete(gyms).where(eq(gyms.id, gymId));
+  });
 }

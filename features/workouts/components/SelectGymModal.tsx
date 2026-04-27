@@ -3,9 +3,12 @@ import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { WindowControlButton } from "@/components/WindowControlButton";
 import { monoFont } from "@/constants/retroTheme";
 import type { GymItem } from "@/features/workouts/dao/queries/gymQueries";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useState } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -28,6 +31,8 @@ type SelectGymModalProps = {
   emptyLabel: string;
   onSelectGym: (gymId: string | null) => void;
   onAddGym: (name: string) => Promise<boolean | void>;
+  onDeleteGym?: (gymId: string) => void;
+  deleteGymButtonAccessibilityLabel?: string;
 };
 
 export function SelectGymModal({
@@ -43,6 +48,8 @@ export function SelectGymModal({
   emptyLabel,
   onSelectGym,
   onAddGym,
+  onDeleteGym,
+  deleteGymButtonAccessibilityLabel,
 }: SelectGymModalProps) {
   const palette = useRetroPalette();
   const insets = useSafeAreaInsets();
@@ -63,91 +70,148 @@ export function SelectGymModal({
 
   return (
     <Modal visible={isOpen} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.overlay, { backgroundColor: "rgba(0, 0, 0, 0.5)" }]}>
-        <View
-          style={[
-            styles.container,
-            {
-              backgroundColor: palette.card,
-              paddingBottom: 20 + insets.bottom,
-            },
-          ]}
-        >
-          <View style={styles.header}>
-            <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>{title}</Text>
-            <WindowControlButton
-              variant="close"
-              size="md"
-              onPress={onClose}
-              accessibilityLabel="Close gym selector"
-              borderColor={palette.border}
-              backgroundColor={palette.page}
-              iconColor={palette.textPrimary}
-            />
-          </View>
-
-          <View style={styles.addRow}>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: palette.border,
-                  color: palette.textPrimary,
-                  backgroundColor: palette.page,
-                },
-              ]}
-              value={draftGymName}
-              onChangeText={setDraftGymName}
-              placeholder={addPlaceholder}
-              placeholderTextColor={palette.textSecondary}
-              autoCapitalize="words"
-              returnKeyType="done"
-              onSubmitEditing={() => {
-                void handleAdd();
-              }}
-            />
-            <TouchableOpacity
-              style={[styles.addButton, { borderColor: palette.border }]}
-              onPress={() => {
-                void handleAdd();
-              }}
-            >
-              <Text style={[styles.addButtonText, { color: palette.textPrimary }]}>
-                {addButtonLabel}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            contentContainerStyle={[styles.chipsWrap, { paddingBottom: 12 + insets.bottom }]}
-            keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Math.max(0, insets.top - 6)}
+      >
+        <View style={[styles.overlay, { backgroundColor: "rgba(0, 0, 0, 0.5)" }]}>
+          <View
+            style={[
+              styles.container,
+              {
+                backgroundColor: palette.card,
+                paddingBottom: 20 + insets.bottom,
+              },
+            ]}
           >
-            <Chip
-              label={noneLabel}
-              selected={selectedGymId === null}
-              onPress={() => onSelectGym(null)}
-            />
-
-            {gyms.map((gym) => (
-              <Chip
-                key={gym.id}
-                label={gym.name}
-                selected={selectedGymId === gym.id}
-                onPress={() => onSelectGym(gym.id)}
+            <View style={styles.header}>
+              <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>{title}</Text>
+              <WindowControlButton
+                variant="close"
+                size="md"
+                onPress={onClose}
+                accessibilityLabel="Close gym selector"
+                borderColor={palette.border}
+                backgroundColor={palette.page}
+                iconColor={palette.textPrimary}
               />
-            ))}
+            </View>
 
-            {!loading && gyms.length === 0 ? (
-              <Text style={[styles.emptyText, { color: palette.textSecondary }]}>{emptyLabel}</Text>
-            ) : null}
-          </ScrollView>
+            <View style={styles.addRow}>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    borderColor: palette.border,
+                    color: palette.textPrimary,
+                    backgroundColor: palette.page,
+                  },
+                ]}
+                value={draftGymName}
+                onChangeText={setDraftGymName}
+                placeholder={addPlaceholder}
+                placeholderTextColor={palette.textSecondary}
+                autoCapitalize="words"
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  void handleAdd();
+                }}
+              />
+              <TouchableOpacity
+                style={[styles.addButton, { borderColor: palette.border }]}
+                onPress={() => {
+                  void handleAdd();
+                }}
+              >
+                <Text style={[styles.addButtonText, { color: palette.textPrimary }]}>
+                  {addButtonLabel}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              contentContainerStyle={[styles.chipsWrap, { paddingBottom: 12 + insets.bottom }]}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Chip
+                label={noneLabel}
+                selected={selectedGymId === null}
+                onPress={() => onSelectGym(null)}
+              />
+
+              {gyms.map((gym) => {
+                const selected = selectedGymId === gym.id;
+                return (
+                  <View
+                    key={gym.id}
+                    style={[
+                      styles.gymChip,
+                      {
+                        borderColor: selected ? palette.accent : palette.border,
+                        backgroundColor: selected ? palette.accent : palette.card,
+                      },
+                    ]}
+                  >
+                    <TouchableOpacity
+                      style={styles.gymChipMainButton}
+                      onPress={() => onSelectGym(gym.id)}
+                      accessibilityRole="button"
+                    >
+                      <Text
+                        style={[
+                          styles.gymChipText,
+                          { color: selected ? palette.onAccent : palette.textPrimary },
+                        ]}
+                      >
+                        {selected ? "[x] " : "[ ] "}
+                        {gym.name}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {onDeleteGym ? (
+                      <TouchableOpacity
+                        style={[
+                          styles.deleteGymButton,
+                          {
+                            borderLeftColor: selected ? palette.onAccent : palette.border,
+                          },
+                        ]}
+                        onPress={() => onDeleteGym(gym.id)}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          deleteGymButtonAccessibilityLabel
+                            ? `${deleteGymButtonAccessibilityLabel}: ${gym.name}`
+                            : undefined
+                        }
+                        hitSlop={8}
+                      >
+                        <FontAwesome
+                          name="trash"
+                          size={12}
+                          color={selected ? palette.onAccent : palette.textSecondary}
+                        />
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                );
+              })}
+
+              {!loading && gyms.length === 0 ? (
+                <Text style={[styles.emptyText, { color: palette.textSecondary }]}>{emptyLabel}</Text>
+              ) : null}
+            </ScrollView>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
   overlay: {
     flex: 1,
     justifyContent: "flex-end",
@@ -206,6 +270,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+  },
+  gymItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  gymChip: {
+    borderWidth: 1,
+    borderRadius: 2,
+    minHeight: 36,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  gymChipMainButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  gymChipText: {
+    fontFamily: monoFont,
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
+  deleteGymButton: {
+    minWidth: 28,
+    minHeight: 28,
+    borderLeftWidth: 1,
+    marginRight: 4,
+    opacity: 0.75,
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyText: {
     width: "100%",

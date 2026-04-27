@@ -1,8 +1,10 @@
 import { Checkbox } from "@/components/Checkbox";
+import { Chip } from "@/components/Chip";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { WindowControlButton } from "@/components/WindowControlButton";
 import { monoFont } from "@/constants/retroTheme";
 import type { LogbookWorkoutItem } from "@/features/logbook/dao/queries/logbookQueries";
+import { getGyms, type GymItem } from "@/features/workouts/dao/queries/gymQueries";
 import { SelectRoutineModal } from "@/features/workouts/components/SelectRoutineModal";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -19,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 type EditLogbookWorkoutPayload = {
   workoutId: string;
   duration: number | null;
+  gymId: string | null;
   sourceRoutineId: string | null;
   sets: {
     setId: string;
@@ -33,9 +36,14 @@ type EditLogbookWorkoutModalProps = {
   item: LogbookWorkoutItem | null;
   title: string;
   durationLabel: string;
+  gymLabel: string;
   routineLabel: string;
+  noGymLabel: string;
   noRoutineLabel: string;
+  selectGymLabel: string;
   selectRoutineLabel: string;
+  gymEmptyLabel: string;
+  loadingLabel: string;
   setLabel: string;
   repsUnitSuffix: string;
   weightUnit: string;
@@ -78,9 +86,14 @@ export function EditLogbookWorkoutModal({
   item,
   title,
   durationLabel,
+  gymLabel,
   routineLabel,
+  noGymLabel,
   noRoutineLabel,
+  selectGymLabel,
   selectRoutineLabel,
+  gymEmptyLabel,
+  loadingLabel,
   setLabel,
   repsUnitSuffix,
   weightUnit,
@@ -95,6 +108,10 @@ export function EditLogbookWorkoutModal({
   const insets = useSafeAreaInsets();
   const [durationDraft, setDurationDraft] = useState("");
   const [setDrafts, setSetDrafts] = useState<SetDraft[]>([]);
+  const [gymDraft, setGymDraft] = useState<{ id: string; name: string } | null>(null);
+  const [gyms, setGyms] = useState<GymItem[]>([]);
+  const [loadingGyms, setLoadingGyms] = useState(false);
+  const [gymOptionsOpen, setGymOptionsOpen] = useState(false);
   const [routineDraft, setRoutineDraft] = useState<{ id: string; name: string } | null>(null);
   const [selectRoutineOpen, setSelectRoutineOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -105,6 +122,7 @@ export function EditLogbookWorkoutModal({
     }
 
     setDurationDraft(item.duration !== null ? String(item.duration) : "");
+    setGymDraft(item.gym);
     setRoutineDraft(item.sourceRoutine);
     setSetDrafts(
       item.setDetails.map((setRow) => ({
@@ -120,8 +138,37 @@ export function EditLogbookWorkoutModal({
 
   useEffect(() => {
     if (!visible) {
+      setGymOptionsOpen(false);
       setSelectRoutineOpen(false);
     }
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadGyms = async () => {
+      setLoadingGyms(true);
+      try {
+        const rows = await getGyms();
+        if (!cancelled) {
+          setGyms(rows);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingGyms(false);
+        }
+      }
+    };
+
+    void loadGyms();
+
+    return () => {
+      cancelled = true;
+    };
   }, [visible]);
 
   const canSave = useMemo(() => Boolean(item) && !saving, [item, saving]);
@@ -134,6 +181,7 @@ export function EditLogbookWorkoutModal({
     const payload: EditLogbookWorkoutPayload = {
       workoutId: item.id,
       duration: durationDraft.trim() ? Math.max(1, parseNonNegativeInt(durationDraft)) : null,
+      gymId: gymDraft?.id ?? null,
       sourceRoutineId: routineDraft?.id ?? null,
       sets: setDrafts.map((setDraft) => ({
         setId: setDraft.setId,
@@ -179,6 +227,76 @@ export function EditLogbookWorkoutModal({
         </View>
 
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View
+            style={[
+              styles.fieldCard,
+              { borderColor: palette.border, backgroundColor: palette.card },
+            ]}
+          >
+            <Text style={[styles.fieldLabel, { color: palette.textPrimary }]}>{gymLabel}</Text>
+            <TouchableOpacity
+              style={[
+                styles.routineButton,
+                {
+                  borderColor: palette.border,
+                  backgroundColor: palette.page,
+                },
+              ]}
+              onPress={() => setGymOptionsOpen((prev) => !prev)}
+              disabled={saving}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.routineValueText, { color: palette.textPrimary }]}>
+                {gymDraft?.name ?? noGymLabel}
+              </Text>
+              <Text style={[styles.routineActionText, { color: palette.accent }]}>
+                {selectGymLabel}
+              </Text>
+            </TouchableOpacity>
+
+            {gymOptionsOpen ? (
+              <View style={styles.gymOptionsWrap}>
+                {loadingGyms ? (
+                  <Text style={[styles.gymStatusText, { color: palette.textSecondary }]}>
+                    {loadingLabel}
+                  </Text>
+                ) : null}
+
+                {!loadingGyms ? (
+                  <View style={styles.gymChipsWrap}>
+                    <Chip
+                      label={noGymLabel}
+                      selected={gymDraft === null}
+                      size="sm"
+                      onPress={() => {
+                        setGymDraft(null);
+                        setGymOptionsOpen(false);
+                      }}
+                    />
+                    {gyms.map((gym) => (
+                      <Chip
+                        key={gym.id}
+                        label={gym.name}
+                        selected={gymDraft?.id === gym.id}
+                        size="sm"
+                        onPress={() => {
+                          setGymDraft({ id: gym.id, name: gym.name });
+                          setGymOptionsOpen(false);
+                        }}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+
+                {!loadingGyms && gyms.length === 0 ? (
+                  <Text style={[styles.gymStatusText, { color: palette.textSecondary }]}>
+                    {gymEmptyLabel}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+          </View>
+
           <View
             style={[
               styles.fieldCard,
@@ -445,6 +563,19 @@ const styles = StyleSheet.create({
   rowInputs: {
     flexDirection: "row",
     gap: 8,
+  },
+  gymOptionsWrap: {
+    gap: 8,
+  },
+  gymChipsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  gymStatusText: {
+    fontFamily: monoFont,
+    fontSize: 10,
+    letterSpacing: 0.2,
   },
   inputCol: {
     flex: 1,

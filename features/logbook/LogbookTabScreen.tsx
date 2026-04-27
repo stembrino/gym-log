@@ -153,6 +153,7 @@ export function LogbookTabScreen() {
     async (payload: {
       workoutId: string;
       duration: number | null;
+      gymId: string | null;
       sourceRoutineId: string | null;
       sets: {
         setId: string;
@@ -416,9 +417,14 @@ export function LogbookTabScreen() {
         item={editingWorkout}
         title={t("performance.logbookEditTitle")}
         durationLabel={t("performance.logbookEditDurationLabel")}
+        gymLabel={t("performance.logbookGymFilterLabel")}
         routineLabel={t("performance.logbookCardRoutine")}
+        noGymLabel={t("workouts.gymNotDefined")}
         noRoutineLabel={t("performance.logbookCardNoRoutine")}
+        selectGymLabel={t("workouts.selectGymCta")}
         selectRoutineLabel={t("workouts.startWorkoutShortCta")}
+        gymEmptyLabel={t("workouts.gymEmptyState")}
+        loadingLabel={t("routines.loading")}
         setLabel={t("workouts.setLabel")}
         repsUnitSuffix={t("workouts.repsUnitSuffix")}
         weightUnit={t("workouts.weightUnit")}
