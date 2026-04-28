@@ -8,6 +8,8 @@ export type CreateExerciseInput = {
   muscleGroup: string;
 };
 
+export type UpdateExerciseInput = CreateExerciseInput;
+
 function normalizeSearchText(value: string): string {
   return value
     .normalize("NFD")
@@ -44,6 +46,51 @@ export async function createCustomExercise(
     searchPt: searchValue,
     searchEn: searchValue,
   });
+
+  return {
+    id,
+    name: trimmedName,
+    muscleGroup: trimmedMuscleGroup,
+    isCustom: true,
+    imageUrl: null,
+  };
+}
+
+export async function updateCustomExercise(
+  id: string,
+  input: UpdateExerciseInput,
+): Promise<ExerciseLibraryItem> {
+  const trimmedName = input.name.trim().toUpperCase();
+  const trimmedMuscleGroup = input.muscleGroup.trim();
+  const normalizedName = trimmedName.toLowerCase();
+
+  const existingExercise = await db
+    .select({ id: exercises.id })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.isCustom, true),
+        sql`trim(lower(${exercises.name})) = ${normalizedName}`,
+        sql`${exercises.id} <> ${id}`,
+      ),
+    )
+    .limit(1);
+
+  if (existingExercise.length > 0) {
+    throw new Error("duplicate_exercise");
+  }
+
+  const searchValue = normalizeSearchText(`${trimmedName} ${trimmedMuscleGroup}`);
+
+  await db
+    .update(exercises)
+    .set({
+      name: trimmedName,
+      muscleGroup: trimmedMuscleGroup,
+      searchPt: searchValue,
+      searchEn: searchValue,
+    })
+    .where(and(eq(exercises.id, id), eq(exercises.isCustom, true)));
 
   return {
     id,

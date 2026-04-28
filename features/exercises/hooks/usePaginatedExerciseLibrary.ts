@@ -3,10 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getExerciseLibraryCount,
   getExerciseLibraryPage,
+  type ExerciseSourceFilter,
   type ExerciseLibraryItem,
 } from "../dao/queries/exerciseQueries";
 
-export type { ExerciseLibraryItem } from "../dao/queries/exerciseQueries";
+export type { ExerciseLibraryItem, ExerciseSourceFilter } from "../dao/queries/exerciseQueries";
 
 const PAGE_SIZE = 20;
 
@@ -15,6 +16,7 @@ type UsePaginatedExerciseLibraryParams = {
   locale: AppLocale;
   excludeIds: string[];
   muscleGroups: string[];
+  sourceFilter: ExerciseSourceFilter;
 };
 
 export function usePaginatedExerciseLibrary({
@@ -22,6 +24,7 @@ export function usePaginatedExerciseLibrary({
   locale,
   excludeIds,
   muscleGroups,
+  sourceFilter,
 }: UsePaginatedExerciseLibraryParams) {
   const [items, setItems] = useState<ExerciseLibraryItem[]>([]);
   const [page, setPage] = useState(0);
@@ -66,6 +69,7 @@ export function usePaginatedExerciseLibrary({
           locale,
           excludeIds: stableExcludeIds,
           muscleGroups: stableMuscleGroups,
+          sourceFilter,
         };
 
         const [rows, nextTotalCount] = await Promise.all([
@@ -104,7 +108,7 @@ export function usePaginatedExerciseLibrary({
         }
       }
     },
-    [locale, normalizedQuery, stableExcludeIds, stableMuscleGroups],
+    [locale, normalizedQuery, sourceFilter, stableExcludeIds, stableMuscleGroups],
   );
 
   const reload = useCallback(async () => {
@@ -117,7 +121,7 @@ export function usePaginatedExerciseLibrary({
 
   useEffect(() => {
     void reload();
-  }, [excludeKey, muscleGroupKey, reload]);
+  }, [excludeKey, muscleGroupKey, reload, sourceFilter]);
 
   const loadMore = useCallback(() => {
     if (loadingInitial || loadingMore || !hasMore) {

@@ -1,5 +1,5 @@
 export const FEATURE_FLAGS = {
   exercisesTab: false,
-  devResetCustomExercisesOnStart: true,
+  devResetCustomExercisesOnStart: false,
   devInjectMockRoutinesOnStart: true,
 } as const;

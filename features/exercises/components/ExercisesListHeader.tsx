@@ -1,20 +1,37 @@
+import { Chip } from "@/components/Chip";
 import { Badge } from "@/components/Badge";
 import { ControlledSearchInput } from "@/components/ControlledSearchInput";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
+import type { ExerciseSourceFilter } from "../hooks/usePaginatedExerciseLibrary";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
   count: number;
   query: string;
+  sourceFilter: ExerciseSourceFilter;
   onChangeQuery: (value: string) => void;
+  onChangeSourceFilter: (value: ExerciseSourceFilter) => void;
   onPressCreate: () => void;
 };
 
-export function ExercisesListHeader({ count, query, onChangeQuery, onPressCreate }: Props) {
+export function ExercisesListHeader({
+  count,
+  query,
+  sourceFilter,
+  onChangeQuery,
+  onChangeSourceFilter,
+  onPressCreate,
+}: Props) {
   const { t } = useI18n();
   const palette = useRetroPalette();
+
+  const filterOptions: Array<{ key: ExerciseSourceFilter; label: string }> = [
+    { key: "all", label: t("exercises.filterAll") },
+    { key: "custom", label: t("exercises.filterMine") },
+    { key: "system", label: t("exercises.filterSystem") },
+  ];
 
   return (
     <View style={styles.container}>
@@ -50,6 +67,16 @@ export function ExercisesListHeader({ count, query, onChangeQuery, onPressCreate
         onChangeText={onChangeQuery}
         placeholder={t("routines.searchExercisePlaceholder")}
       />
+      <View style={styles.filtersRow}>
+        {filterOptions.map((option) => (
+          <Chip
+            key={option.key}
+            label={option.label}
+            selected={sourceFilter === option.key}
+            onPress={() => onChangeSourceFilter(option.key)}
+          />
+        ))}
+      </View>
     </View>
   );
 }
@@ -104,5 +131,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "bold",
     textTransform: "uppercase",
+  },
+  filtersRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
 });

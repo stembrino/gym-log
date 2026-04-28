@@ -2,7 +2,7 @@ import type { AppLocale } from "@/components/providers/i18n-provider";
 import { db } from "@/db/client";
 import { exercises, muscleGroups } from "@/db/schema";
 import { getEntityFieldTranslationsMap } from "@/features/translations/dao/queries/translationQueries";
-import { and, asc, count, inArray, like, notInArray, or } from "drizzle-orm";
+import { and, asc, count, eq, inArray, like, notInArray, or } from "drizzle-orm";
 
 const PAGE_SIZE = 20;
 
@@ -14,12 +14,15 @@ export type ExerciseLibraryItem = {
   imageUrl: string | null;
 };
 
+export type ExerciseSourceFilter = "all" | "custom" | "system";
+
 type GetExerciseLibraryPageArgs = {
   page: number;
   query: string;
   locale: AppLocale;
   excludeIds: string[];
   muscleGroups: string[];
+  sourceFilter: ExerciseSourceFilter;
 };
 
 type ExerciseLibraryFilterArgs = {
@@ -27,6 +30,7 @@ type ExerciseLibraryFilterArgs = {
   locale: AppLocale;
   excludeIds: string[];
   muscleGroups: string[];
+  sourceFilter: ExerciseSourceFilter;
 };
 
 function buildExerciseLibraryWhereClause({
@@ -34,6 +38,7 @@ function buildExerciseLibraryWhereClause({
   locale,
   excludeIds,
   muscleGroups,
+  sourceFilter,
 }: ExerciseLibraryFilterArgs) {
   const searchColumn = locale === "pt-BR" ? exercises.searchPt : exercises.searchEn;
   const conditions = [];
@@ -50,6 +55,12 @@ function buildExerciseLibraryWhereClause({
 
   if (muscleGroups.length > 0) {
     conditions.push(inArray(exercises.muscleGroup, muscleGroups));
+  }
+
+  if (sourceFilter === "custom") {
+    conditions.push(eq(exercises.isCustom, true));
+  } else if (sourceFilter === "system") {
+    conditions.push(eq(exercises.isCustom, false));
   }
 
   if (conditions.length === 0) {
@@ -69,12 +80,14 @@ export async function getExerciseLibraryPage({
   locale,
   excludeIds,
   muscleGroups,
+  sourceFilter,
 }: GetExerciseLibraryPageArgs): Promise<ExerciseLibraryItem[]> {
   const whereClause = buildExerciseLibraryWhereClause({
     query,
     locale,
     excludeIds,
     muscleGroups,
+    sourceFilter,
   });
 
   const rows = await db
@@ -112,12 +125,14 @@ export async function getExerciseLibraryCount({
   locale,
   excludeIds,
   muscleGroups,
+  sourceFilter,
 }: ExerciseLibraryFilterArgs): Promise<number> {
   const whereClause = buildExerciseLibraryWhereClause({
     query,
     locale,
     excludeIds,
     muscleGroups,
+    sourceFilter,
   });
 
   const [row] = await db.select({ total: count() }).from(exercises).where(whereClause);

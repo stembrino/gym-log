@@ -111,6 +111,7 @@ export function CreateRoutineModal({
     locale,
     excludeIds: excludedExerciseIds,
     muscleGroups: [],
+    sourceFilter: "all",
   });
   const { items: muscleGroups } = useMuscleGroups();
   const { createExercise } = useExerciseMutations(reload);
@@ -281,8 +282,9 @@ export function CreateRoutineModal({
       onRequestClose={handleRequestClose}
     >
       <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={[styles.keyboardView, { backgroundColor: palette.page }]}
+        enabled={Platform.OS === "ios"}
+        behavior="padding"
         keyboardVerticalOffset={Platform.OS === "ios" ? Math.max(0, insets.top) : 0}
       >
         <View style={[styles.container, { backgroundColor: palette.page }]}>

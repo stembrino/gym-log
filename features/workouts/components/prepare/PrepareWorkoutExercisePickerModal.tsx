@@ -62,6 +62,7 @@ export function PrepareWorkoutExercisePickerModal({
       locale,
       excludeIds: excludeExerciseIds,
       muscleGroups: selectedMuscleGroupValues,
+      sourceFilter: "all",
     });
   const { items: muscleGroups } = useMuscleGroups();
   const { createExercise } = useExerciseMutations(reload);

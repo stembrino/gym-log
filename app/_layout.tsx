@@ -65,6 +65,12 @@ function ThemedNavigation() {
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
+            name="exercise-library"
+            options={{
+              title: t("exercises.title"),
+            }}
+          />
+          <Stack.Screen
             name="settings"
             options={{
               title: t("settings.title") || "Settings",

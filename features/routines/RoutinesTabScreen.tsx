@@ -13,11 +13,13 @@ import {
   type RoutineSubmitPayload,
 } from "@/features/routines/hooks/useRoutineMutations";
 import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { CreateRoutineModal, type RoutineFormInitialValues } from "./components/CreateRoutineModal";
 
 export function RoutinesTabScreen() {
+  const router = useRouter();
   const { t, locale } = useI18n();
   const palette = useRetroPalette();
   const { showConfirm, alertElement } = useGlobalAlert();
@@ -144,6 +146,14 @@ export function RoutinesTabScreen() {
                 {t("routines.subtitle")}
               </Text>
               <View style={styles.headerActions}>
+                <TouchableOpacity
+                  style={[styles.manageExercisesButton, { borderColor: palette.border }]}
+                  onPress={() => router.push("/exercise-library")}
+                >
+                  <Text style={[styles.manageExercisesButtonText, { color: palette.textPrimary }]}>
+                    {t("exercises.manageButton")}
+                  </Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.addButton,
@@ -290,6 +300,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0.5,
+  },
+  manageExercisesButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  manageExercisesButtonText: {
+    fontFamily: monoFont,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   emptyState: {
     marginTop: 16,

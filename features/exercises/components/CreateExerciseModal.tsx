@@ -12,14 +12,25 @@ export type CreateExercisePayload = {
   muscleGroup: string;
 };
 
+type ExerciseModalMode = "create" | "edit";
+
 type Props = {
   visible: boolean;
   onClose: () => void;
   muscleGroups: string[];
   onSubmit: (payload: CreateExercisePayload) => Promise<void>;
+  mode?: ExerciseModalMode;
+  initialValues?: CreateExercisePayload;
 };
 
-export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }: Props) {
+export function CreateExerciseModal({
+  visible,
+  onClose,
+  muscleGroups,
+  onSubmit,
+  mode = "create",
+  initialValues,
+}: Props) {
   const { t } = useI18n();
   const palette = useRetroPalette();
   const insets = useSafeAreaInsets();
@@ -30,20 +41,21 @@ export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [focusedField, setFocusedField] = useState<"name" | null>(null);
+  const isEditMode = mode === "edit";
 
   useEffect(() => {
     if (!visible) {
       return;
     }
 
-    setName("");
-    setMuscleGroup(null);
+    setName(initialValues?.name?.toUpperCase() ?? "");
+    setMuscleGroup(initialValues?.muscleGroup ?? null);
     setNameError(false);
     setMuscleGroupError(false);
     setSubmitError(null);
     setSubmitting(false);
     setFocusedField(null);
-  }, [visible]);
+  }, [initialValues, visible]);
 
   const resetAndClose = () => {
     setName("");
@@ -102,7 +114,7 @@ export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }
           ]}
         >
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
-            {t("exercises.createExercise")}
+            {isEditMode ? t("exercises.editExercise") : t("exercises.createExercise")}
           </Text>
 
           <WindowControlButton
@@ -118,7 +130,7 @@ export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }
 
         <View style={styles.content}>
           <Text style={[styles.description, { color: palette.textSecondary }]}>
-            {t("exercises.subtitle")}
+            {isEditMode ? t("exercises.editExerciseHint") : t("exercises.subtitle")}
           </Text>
 
           <View style={styles.field}>
@@ -207,7 +219,7 @@ export function CreateExerciseModal({ visible, onClose, muscleGroups, onSubmit }
             disabled={submitting}
           >
             <Text style={[styles.buttonText, { color: palette.onAccent }]}>
-              {t("exercises.addExercise")}
+              {isEditMode ? t("exercises.saveExercise") : t("exercises.addExercise")}
             </Text>
           </TouchableOpacity>
         </View>

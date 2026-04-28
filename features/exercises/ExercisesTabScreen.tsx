@@ -1,6 +1,7 @@
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
+import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { CreateExerciseModal } from "./components/CreateExerciseModal";
@@ -9,14 +10,19 @@ import { ExercisesEmptyState } from "./components/ExercisesEmptyState";
 import { ExercisesListHeader } from "./components/ExercisesListHeader";
 import { useExerciseMutations } from "./hooks/useExerciseMutations";
 import { useMuscleGroups } from "./hooks/useMuscleGroups";
-import type { ExerciseLibraryItem } from "./hooks/usePaginatedExerciseLibrary";
+import type {
+  ExerciseLibraryItem,
+  ExerciseSourceFilter,
+} from "./hooks/usePaginatedExerciseLibrary";
 import { usePaginatedExerciseLibrary } from "./hooks/usePaginatedExerciseLibrary";
 
 export default function ExercisesTabScreen() {
   const { t, locale } = useI18n();
   const palette = useRetroPalette();
   const [query, setQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<ExerciseSourceFilter>("all");
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<ExerciseLibraryItem | null>(null);
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
 
   const { items, totalCount, hasMore, loadMore, loadingInitial, loadingMore, reload } =
@@ -25,9 +31,16 @@ export default function ExercisesTabScreen() {
       locale,
       excludeIds: [],
       muscleGroups: [],
+      sourceFilter,
     });
   const { items: muscleGroups } = useMuscleGroups();
-  const { createExercise, deleteExercise } = useExerciseMutations(reload);
+  const { createExercise, deleteExercise, updateExercise } = useExerciseMutations(reload);
+
+  useFocusEffect(
+    useCallback(() => {
+      void reload();
+    }, [reload]),
+  );
 
   const handleDelete = useCallback(
     (item: ExerciseLibraryItem) => {
@@ -56,8 +69,12 @@ export default function ExercisesTabScreen() {
     [deleteExercise, t],
   );
 
-  const handleEdit = useCallback((_item: ExerciseLibraryItem) => {
-    return;
+  const handleEdit = useCallback((item: ExerciseLibraryItem) => {
+    if (!item.isCustom) {
+      return;
+    }
+
+    setEditingExercise(item);
   }, []);
 
   const handleCreateExercise = useCallback(
@@ -67,20 +84,34 @@ export default function ExercisesTabScreen() {
     [createExercise],
   );
 
+  const handleUpdateExercise = useCallback(
+    async (payload: { name: string; muscleGroup: string }) => {
+      if (!editingExercise) {
+        return;
+      }
+
+      await updateExercise(editingExercise.id, payload);
+      setEditingExercise(null);
+    },
+    [editingExercise, updateExercise],
+  );
+
   const handleToggleCard = useCallback((itemId: string) => {
     setExpandedExerciseId((current) => (current === itemId ? null : itemId));
   }, []);
 
-  const ListHeader = useMemo(
+  const listHeader = useMemo(
     () => (
       <ExercisesListHeader
         count={totalCount}
         query={query}
+        sourceFilter={sourceFilter}
         onChangeQuery={setQuery}
+        onChangeSourceFilter={setSourceFilter}
         onPressCreate={() => setCreateModalVisible(true)}
       />
     ),
-    [totalCount, query],
+    [sourceFilter, totalCount, query],
   );
 
   return (
@@ -100,7 +131,7 @@ export default function ExercisesTabScreen() {
           </View>
         )}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={ListHeader}
+        ListHeaderComponent={listHeader}
         ListEmptyComponent={!loadingInitial ? <ExercisesEmptyState /> : null}
         ListFooterComponent={
           loadingMore ? (
@@ -121,6 +152,22 @@ export default function ExercisesTabScreen() {
         onClose={() => setCreateModalVisible(false)}
         muscleGroups={muscleGroups}
         onSubmit={handleCreateExercise}
+      />
+
+      <CreateExerciseModal
+        visible={editingExercise !== null}
+        onClose={() => setEditingExercise(null)}
+        muscleGroups={muscleGroups}
+        onSubmit={handleUpdateExercise}
+        mode="edit"
+        initialValues={
+          editingExercise
+            ? {
+                name: editingExercise.name,
+                muscleGroup: editingExercise.muscleGroup,
+              }
+            : undefined
+        }
       />
     </View>
   );
