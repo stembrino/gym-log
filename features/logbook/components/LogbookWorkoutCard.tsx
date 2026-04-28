@@ -4,7 +4,6 @@ import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { monoFont } from "@/constants/retroTheme";
 import type { AppLocale } from "@/constants/translations";
 import type { LogbookWorkoutItem } from "@/features/logbook/dao/queries/logbookQueries";
-import { getHighlightedSetIds } from "@/features/logbook/utils/setHighlightUtils";
 import { LogbookSetDetailsList } from "./LogbookSetDetailsList";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -22,6 +21,7 @@ type LogbookWorkoutCardProps = {
   noSetDetailsLabel: string;
   repsUnitSuffix: string;
   weightUnit: string;
+  highlightedSetIds: Set<string>;
   expanded: boolean;
   onToggleExpanded: () => void;
   onEdit: (item: LogbookWorkoutItem) => void;
@@ -70,6 +70,7 @@ export function LogbookWorkoutCard({
   noSetDetailsLabel,
   repsUnitSuffix,
   weightUnit,
+  highlightedSetIds,
   expanded,
   onToggleExpanded,
   onEdit,
@@ -84,7 +85,6 @@ export function LogbookWorkoutCard({
   const palette = useRetroPalette();
   const title = formatWorkoutDate(item.date, locale);
   const subtitle = `${routineLabel}: ${item.sourceRoutine?.name ?? noRoutineLabel}`;
-  const lastMaxSetIds = getHighlightedSetIds(item.setDetails);
 
   return (
     <ExpandedPanel
@@ -154,7 +154,7 @@ export function LogbookWorkoutCard({
           noSetDetailsLabel={noSetDetailsLabel}
           repsUnitSuffix={repsUnitSuffix}
           weightUnit={weightUnit}
-          highlightedSetIds={lastMaxSetIds}
+          highlightedSetIds={highlightedSetIds}
           dividerColor={palette.border}
           textColor={palette.textSecondary}
           highlightColor={palette.accent}

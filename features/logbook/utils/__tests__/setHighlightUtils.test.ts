@@ -1,4 +1,4 @@
-import { getHighlightedSetIds } from "../setHighlightUtils";
+import { getHighlightedSetIds, getHighlightedSetIdsForFilteredItems } from "../setHighlightUtils";
 import type { LogbookWorkoutItem } from "@/features/logbook/dao/queries/logbookQueries";
 
 describe("getHighlightedSetIds", () => {
@@ -85,6 +85,89 @@ describe("getHighlightedSetIds", () => {
     const result = getHighlightedSetIds(setDetails);
     expect(result.has("2")).toBe(true); // Legpress
     expect(result.has("5")).toBe(true); // Squats
+    expect(result.size).toBe(2);
+  });
+});
+
+describe("getHighlightedSetIdsForFilteredItems", () => {
+  it("should highlight only the top set per exercise across all filtered workouts", () => {
+    const items: LogbookWorkoutItem[] = [
+      {
+        id: "w1",
+        date: "2026-01-01T10:00:00.000Z",
+        createdAt: "2026-01-01T10:00:00.000Z",
+        duration: 45,
+        sourceRoutine: null,
+        gym: null,
+        exerciseCount: 1,
+        totalSets: 2,
+        completedSets: 2,
+        totalLoadKg: 1400,
+        setDetails: [
+          {
+            id: "s1",
+            exerciseName: "Benchpress",
+            setOrder: 1,
+            reps: 10,
+            weight: 70,
+            completed: true,
+          },
+          {
+            id: "s2",
+            exerciseName: "Benchpress",
+            setOrder: 2,
+            reps: 8,
+            weight: 75,
+            completed: true,
+          },
+        ],
+      },
+      {
+        id: "w2",
+        date: "2026-01-03T10:00:00.000Z",
+        createdAt: "2026-01-03T10:00:00.000Z",
+        duration: 50,
+        sourceRoutine: null,
+        gym: null,
+        exerciseCount: 2,
+        totalSets: 3,
+        completedSets: 3,
+        totalLoadKg: 2050,
+        setDetails: [
+          {
+            id: "s3",
+            exerciseName: "Benchpress",
+            setOrder: 1,
+            reps: 6,
+            weight: 80,
+            completed: true,
+          },
+          {
+            id: "s4",
+            exerciseName: "Squat",
+            setOrder: 1,
+            reps: 5,
+            weight: 100,
+            completed: true,
+          },
+          {
+            id: "s5",
+            exerciseName: "Squat",
+            setOrder: 2,
+            reps: 6,
+            weight: 100,
+            completed: true,
+          },
+        ],
+      },
+    ];
+
+    const result = getHighlightedSetIdsForFilteredItems(items);
+
+    expect(result.has("s3")).toBe(true); // Benchpress global max = 80kg
+    expect(result.has("s5")).toBe(true); // Squat tie on weight, higher reps wins
+    expect(result.has("s2")).toBe(false);
+    expect(result.has("s4")).toBe(false);
     expect(result.size).toBe(2);
   });
 });

@@ -8,10 +8,12 @@ import type { LogbookWorkoutItem } from "@/features/logbook/dao/queries/logbookQ
  * 2. If multiple sets have the same weight, pick the one with most reps
  * 3. If weight and reps are identical, pick the LAST occurrence (user was more fatigued)
  *
- * @param setDetails - Array of set details from a workout
+ * @param setDetails - Array of set details from one or more workouts
  * @returns Set of set IDs that should be highlighted
  */
-export function getHighlightedSetIds(setDetails: LogbookWorkoutItem["setDetails"]): Set<string> {
+function getHighlightedSetIdsFromSetDetails(
+  setDetails: LogbookWorkoutItem["setDetails"],
+): Set<string> {
   const maxSetByExercise = new Map<string, { id: string; weight: number; reps: number }>();
 
   setDetails.forEach((set) => {
@@ -30,4 +32,13 @@ export function getHighlightedSetIds(setDetails: LogbookWorkoutItem["setDetails"
   });
 
   return new Set(Array.from(maxSetByExercise.values()).map((v) => v.id));
+}
+
+export function getHighlightedSetIds(setDetails: LogbookWorkoutItem["setDetails"]): Set<string> {
+  return getHighlightedSetIdsFromSetDetails(setDetails);
+}
+
+export function getHighlightedSetIdsForFilteredItems(items: LogbookWorkoutItem[]): Set<string> {
+  const allSetDetails = items.flatMap((item) => item.setDetails);
+  return getHighlightedSetIdsFromSetDetails(allSetDetails);
 }

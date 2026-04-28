@@ -15,6 +15,7 @@ import {
   updateCompletedWorkoutFromLogbook,
   updateWorkoutSourceRoutine,
 } from "@/features/workouts/dao/mutations/workoutMutations";
+import { getHighlightedSetIdsForFilteredItems } from "@/features/logbook/utils/setHighlightUtils";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -143,6 +144,10 @@ export function LogbookTabScreen() {
 
     return Array.from(groups.values());
   }, [items, t]);
+
+  const highlightedSetIds = useMemo(() => {
+    return getHighlightedSetIdsForFilteredItems(items);
+  }, [items]);
 
   const editingWorkout = useMemo(
     () => items.find((item) => item.id === editingWorkoutId) ?? null,
@@ -376,6 +381,7 @@ export function LogbookTabScreen() {
                       noSetDetailsLabel={t("performance.logbookCardNoSetDetails")}
                       repsUnitSuffix={t("workouts.repsUnitSuffix")}
                       weightUnit={t("workouts.weightUnit")}
+                      highlightedSetIds={highlightedSetIds}
                       expanded={expandedWorkoutIds.has(item.id)}
                       onToggleExpanded={() => toggleWorkoutExpanded(item.id)}
                       onEdit={(selectedItem) => setEditingWorkoutId(selectedItem.id)}

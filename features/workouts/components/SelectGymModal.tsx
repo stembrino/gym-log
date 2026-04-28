@@ -198,7 +198,9 @@ export function SelectGymModal({
               })}
 
               {!loading && gyms.length === 0 ? (
-                <Text style={[styles.emptyText, { color: palette.textSecondary }]}>{emptyLabel}</Text>
+                <Text style={[styles.emptyText, { color: palette.textSecondary }]}>
+                  {emptyLabel}
+                </Text>
               ) : null}
             </ScrollView>
           </View>
