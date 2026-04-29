@@ -16,11 +16,11 @@ const config: ExpoConfig = {
   slug: "lyte-log",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/logo-logym-appicon.png",
+  icon: "./assets/images/app-icon.png",
   scheme: "gymlog",
   userInterfaceStyle: "automatic",
   splash: {
-    image: "./assets/images/logo-brand-name.png",
+    image: "./assets/images/app-splash-icon.png",
     resizeMode: "contain",
     backgroundColor: "#1E1E1E",
   },
