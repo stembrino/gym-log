@@ -22,7 +22,7 @@ const config: ExpoConfig = {
   splash: {
     image: "./assets/images/logo-brand-name.png",
     resizeMode: "contain",
-    backgroundColor: "#2C353F",
+    backgroundColor: "#1E1E1E",
   },
   ios: {
     supportsTablet: true,
@@ -32,7 +32,7 @@ const config: ExpoConfig = {
     package: "com.anonymous.lytelog",
     adaptiveIcon: {
       foregroundImage: "./assets/images/logo-logym-appicon.png",
-      backgroundColor: "#0e0e0e",
+      backgroundColor: "#1E1E1E",
     },
     predictiveBackGestureEnabled: false,
   },
