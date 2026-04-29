@@ -1,5 +1,6 @@
 import React from "react";
 import { render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { Snackbar } from "../Snackbar";
 
 jest.mock("@/components/hooks/useRetroPalette", () => ({
@@ -8,6 +9,15 @@ jest.mock("@/components/hooks/useRetroPalette", () => ({
     border: "#333333",
     textPrimary: "#FFFFFF",
     accent: "#E95420",
+  }),
+}));
+
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({
+    top: 28,
+    right: 0,
+    bottom: 14,
+    left: 0,
   }),
 }));
 
@@ -47,5 +57,19 @@ describe("Snackbar", () => {
 
     jest.advanceTimersByTime(1);
     expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses safe area and full width when position is top", () => {
+    const { getByTestId } = render(
+      <Snackbar visible message="Exercise added" onDismiss={() => {}} position="top" />,
+    );
+
+    const containerStyle = StyleSheet.flatten(getByTestId("snackbar-container").props.style);
+    const bodyStyle = StyleSheet.flatten(getByTestId("snackbar-body").props.style);
+
+    expect(containerStyle.top).toBe(28);
+    expect(containerStyle.left).toBe(0);
+    expect(containerStyle.right).toBe(0);
+    expect(bodyStyle.width).toBe("100%");
   });
 });
