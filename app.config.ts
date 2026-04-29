@@ -33,7 +33,7 @@ const config: ExpoConfig = {
     // Keep keyboard behavior consistent between dev and production builds.
     softwareKeyboardLayoutMode: "resize",
     adaptiveIcon: {
-      foregroundImage: "./assets/images/logo-logym-appicon.png",
+      foregroundImage: "./assets/images/app-icon.png",
       backgroundColor: "#1E1E1E",
     },
     predictiveBackGestureEnabled: false,
