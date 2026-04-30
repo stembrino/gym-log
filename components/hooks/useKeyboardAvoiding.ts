@@ -11,7 +11,7 @@ type UseKeyboardAvoidingOptions = {
 export function useKeyboardAvoiding({
   iosBehavior = "padding",
   iosOffset = 0,
-  androidBehavior,
+  androidBehavior = "height",
   androidOffset = 0,
 }: UseKeyboardAvoidingOptions = {}) {
   const insets = useSafeAreaInsets();

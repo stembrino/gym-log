@@ -1,3 +1,4 @@
+import { useKeyboardAvoiding } from "@/components/hooks/useKeyboardAvoiding";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
@@ -6,7 +7,6 @@ import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
-  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -43,6 +43,7 @@ export function PostFinishQuickActionsSheet({
   const palette = useRetroPalette();
   const { t, locale } = useI18n();
   const insets = useSafeAreaInsets();
+  const keyboardAvoiding = useKeyboardAvoiding();
   const [isNamingRoutine, setIsNamingRoutine] = useState(false);
   const [routineName, setRoutineName] = useState("");
 
@@ -76,7 +77,9 @@ export function PostFinishQuickActionsSheet({
     <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        enabled={keyboardAvoiding.enabled}
+        behavior={keyboardAvoiding.behavior}
+        keyboardVerticalOffset={keyboardAvoiding.keyboardVerticalOffset}
       >
         <View style={styles.backdrop} />
 

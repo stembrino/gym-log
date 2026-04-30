@@ -60,11 +60,11 @@ describe("useKeyboardAvoiding", () => {
     expect(value.keyboardVerticalOffset).toBe(0);
   });
 
-  it("returns Android defaults without enabling keyboard avoiding", () => {
+  it("returns Android defaults with height behavior enabled", () => {
     const value = loadHook({ os: "android", topInset: 24 });
 
-    expect(value.enabled).toBe(false);
-    expect(value.behavior).toBeUndefined();
+    expect(value.enabled).toBe(true);
+    expect(value.behavior).toBe("height");
     expect(value.keyboardVerticalOffset).toBe(0);
   });
 
