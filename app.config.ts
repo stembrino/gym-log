@@ -50,8 +50,14 @@ const config: ExpoConfig = {
   extra: {
     router: {},
     // Cleasn this to use other usernames or to switch between them quickly.
+    // eas: {
+    //   projectId: "f30b2d48-7338-413a-a54d-28c8351b0009",
+    // },
+    // eas: {
+    //   projectId: "5f588f3a-17f5-4758-96f2-84c37853845a",
+    // },
     eas: {
-      projectId: "f30b2d48-7338-413a-a54d-28c8351b0009",
+      projectId: "c2c751e0-2d98-4735-a90a-08fa4de8953f",
     },
     ownerOptions: {
       active: owner,

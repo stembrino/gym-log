@@ -57,7 +57,7 @@ export function InProgressWorkoutScreen() {
   const colorScheme = useColorScheme();
   const { t, locale } = useI18n();
   const insets = useSafeAreaInsets();
-  const keyboardAvoiding = useKeyboardAvoiding({ iosOffset: 56 });
+  const keyboardAvoiding = useKeyboardAvoiding({ iosOffset: 56, androidBehavior: "height" });
   const [loading, setLoading] = useState(true);
   const [workout, setWorkout] = useState<ActiveWorkoutRow | null>(null);
   const [repsDraftBySetId, setRepsDraftBySetId] = useState<Record<string, string>>({});
