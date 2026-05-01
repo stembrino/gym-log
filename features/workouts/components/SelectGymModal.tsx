@@ -70,7 +70,7 @@ export function SelectGymModal({
 
   return (
     <Modal visible={isOpen} transparent animationType="slide" onRequestClose={onClose}>
-      <AppKeyboardAvoidingView iosOffset={-6} androidBehavior="position">
+      <AppKeyboardAvoidingView iosOffset={-6} androidBehavior="padding">
         <View style={[styles.overlay, { backgroundColor: "rgba(0, 0, 0, 0.5)" }]}>
           <View
             style={[
