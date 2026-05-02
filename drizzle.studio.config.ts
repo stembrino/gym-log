@@ -5,6 +5,6 @@ export default defineConfig({
   out: "./db/migrations",
   dialect: "sqlite",
   dbCredentials: {
-    url: "./lyte-log.db",
+    url: "./gymlog.db",
   },
 });

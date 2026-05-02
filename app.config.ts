@@ -13,7 +13,7 @@ const owner = process.env.EXPO_OWNER?.trim() || DEFAULT_OWNER;
 const config: ExpoConfig = {
   name: "Gym Log",
   owner,
-  slug: "lyte-log",
+  slug: "gymlog",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/app-icon.png",
@@ -26,10 +26,10 @@ const config: ExpoConfig = {
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.anonymous.lyte-log",
+    bundleIdentifier: "com.anonymous.gymlog",
   },
   android: {
-    package: "com.anonymous.lytelog",
+    package: "com.anonymous.gymlog",
     // Keep keyboard behavior consistent between dev and production builds.
     softwareKeyboardLayoutMode: "resize",
     adaptiveIcon: {
@@ -50,14 +50,8 @@ const config: ExpoConfig = {
   extra: {
     router: {},
     // Cleasn this to use other usernames or to switch between them quickly.
-    // eas: {
-    //   projectId: "f30b2d48-7338-413a-a54d-28c8351b0009",
-    // },
-    // eas: {
-    //   projectId: "5f588f3a-17f5-4758-96f2-84c37853845a",
-    // },
     eas: {
-      projectId: "c2c751e0-2d98-4735-a90a-08fa4de8953f",
+      projectId: "bfb710a2-3851-416d-ae53-ef00adcd5529",
     },
     ownerOptions: {
       active: owner,

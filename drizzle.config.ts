@@ -6,6 +6,6 @@ export default defineConfig({
   dialect: "sqlite",
   driver: "expo",
   dbCredentials: {
-    url: "./lyte-log.db",
+    url: "./gymlog.db",
   },
 });

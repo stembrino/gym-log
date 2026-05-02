@@ -19,7 +19,7 @@ i18n.enableFallback = true;
 i18n.defaultLocale = "pt-BR";
 i18n.locale = "pt-BR";
 
-const LOCALE_STORAGE_KEY = "@lyte-log/settings/locale";
+const LOCALE_STORAGE_KEY = "@gymlog/settings/locale";
 
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 

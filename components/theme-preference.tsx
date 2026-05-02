@@ -12,7 +12,7 @@ type ThemePreferenceContextValue = {
 
 const ThemePreferenceContext = createContext<ThemePreferenceContextValue | undefined>(undefined);
 
-const THEME_STORAGE_KEY = "@lyte-log/settings/theme";
+const THEME_STORAGE_KEY = "@gymlog/settings/theme";
 
 export function ThemePreferenceProvider({ children }: PropsWithChildren) {
   const [theme, setTheme] = useState<AppTheme>("dark");
