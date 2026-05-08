@@ -19,7 +19,9 @@
     "db:studio": "drizzle-kit studio",
     "db:studio:local": "drizzle-kit studio --config drizzle.studio.config.ts",
     "build:android:preview": "npx eas-cli build -p android --profile preview",
-    "build:android:preview:local": "npx eas-cli build -p android --profile preview --local"
+    "build:android:preview:local": "npx eas-cli build -p android --profile preview --local",
+    "build:android:production": "npx eas-cli build -p android --profile production",
+    "build:android:production:local": "npx eas-cli build -p android --profile production --local"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
