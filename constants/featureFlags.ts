@@ -3,5 +3,7 @@ export const FEATURE_FLAGS = {
   devResetCustomExercisesOnStart: false,
   devInjectMockRoutinesOnStart: true,
   settingsRateApp: true,
+  settingsDataExport: false,
+  settingsDataImport: false,
   workoutAutoRatePrompt: false,
 } as const;

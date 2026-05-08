@@ -11,36 +11,9 @@ import {
   workoutExercises,
   workouts,
 } from "@/db/schema";
+import type { GymLogBackupFile } from "@/features/data-transfer/types/backup";
 
-export type DataExportSnapshot = {
-  format: "gym-log-backup";
-  version: 1;
-  exportedAt: string;
-  data: {
-    gyms: (typeof gyms.$inferSelect)[];
-    exercises: (typeof exercises.$inferSelect)[];
-    routines: (typeof routines.$inferSelect)[];
-    routineExercises: (typeof routineExercises.$inferSelect)[];
-    routineTags: (typeof routineTags.$inferSelect)[];
-    routineTagLinks: (typeof routineTagLinks.$inferSelect)[];
-    entityTranslations: (typeof entityTranslations.$inferSelect)[];
-    workouts: (typeof workouts.$inferSelect)[];
-    workoutExercises: (typeof workoutExercises.$inferSelect)[];
-    sets: (typeof sets.$inferSelect)[];
-  };
-  counts: {
-    gyms: number;
-    exercises: number;
-    routines: number;
-    routineExercises: number;
-    routineTags: number;
-    routineTagLinks: number;
-    entityTranslations: number;
-    workouts: number;
-    workoutExercises: number;
-    sets: number;
-  };
-};
+export type DataExportSnapshot = GymLogBackupFile;
 
 export async function getDataExportSnapshot(): Promise<DataExportSnapshot> {
   const [

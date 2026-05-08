@@ -549,7 +549,7 @@ type ImportBackupResult =
 async function importBackupFromFile(
   fileUri: string,
   mode: RestoreMode = "replace",
-): Promise<ImportBackupResult>
+): Promise<ImportBackupResult>;
 ```
 
 Possible lower-level API split:

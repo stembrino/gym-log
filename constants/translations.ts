@@ -60,6 +60,16 @@ export const translations = {
         "Não foi possível abrir o compartilhamento de arquivo neste dispositivo.",
       dataExportErrorTitle: "Não foi possível exportar",
       dataExportErrorMessage: "O backup não pôde ser gerado agora. Tente novamente.",
+      dataImport: "Importar backup",
+      dataImportAction: "Importar",
+      dataImportLoading: "Importando",
+      dataImportNotReadyMessage:
+        "Pipeline inicial de import já está implementado (parse, contrato, compatibilidade e validação). A seleção de arquivo e o restore transacional entram na próxima fase.",
+      dataImportInvalidTitle: "Backup inválido",
+      dataImportInvalidMessage: "Este arquivo não é compatível com o formato esperado do Gym Log.",
+      dataImportPreflightOkTitle: "Backup validado",
+      dataImportPreflightOkMessage:
+        "Pré-validação concluída com sucesso. Exercícios: %{exercises}. Treinos: %{workouts}.",
       sendFeedbackButton: "Enviar feedback",
     },
     exercises: {
@@ -462,6 +472,17 @@ export const translations = {
       dataExportUnavailableMessage: "We couldn't open file sharing on this device.",
       dataExportErrorTitle: "Couldn't export",
       dataExportErrorMessage: "The backup couldn't be generated right now. Please try again.",
+      dataImport: "Import backup",
+      dataImportAction: "Import",
+      dataImportLoading: "Importing",
+      dataImportNotReadyMessage:
+        "The initial import pipeline is in place (parse, contract, compatibility, and semantic validation). File picker and transactional restore land in the next phase.",
+      dataImportInvalidTitle: "Invalid backup",
+      dataImportInvalidMessage:
+        "This file is not compatible with the expected Gym Log backup format.",
+      dataImportPreflightOkTitle: "Backup validated",
+      dataImportPreflightOkMessage:
+        "Preflight validation completed. Exercises: %{exercises}. Workouts: %{workouts}.",
       sendFeedbackButton: "Send Feedback",
     },
     exercises: {
