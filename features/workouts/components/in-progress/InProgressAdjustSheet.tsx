@@ -27,6 +27,7 @@ type InProgressAdjustSheetProps = {
   manageGymLabel: string;
   manageGymAccessibilityLabel: string;
   doneLabel: string;
+  cancelLabel: string;
   onManageGym: () => void;
   onReorder: (nextItemIds: string[]) => void;
 };
@@ -40,6 +41,7 @@ export function InProgressAdjustSheet({
   manageGymLabel,
   manageGymAccessibilityLabel,
   doneLabel,
+  cancelLabel,
   onManageGym,
   onReorder,
 }: InProgressAdjustSheetProps) {
@@ -124,7 +126,7 @@ export function InProgressAdjustSheet({
                 variant="close"
                 size="md"
                 onPress={onClose}
-                accessibilityLabel={doneLabel}
+                accessibilityLabel={cancelLabel}
                 borderColor={palette.border}
                 backgroundColor={palette.page}
                 iconColor={palette.textPrimary}

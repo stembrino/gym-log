@@ -1,6 +1,7 @@
 import {
   Linking,
   Modal,
+  Share,
   ScrollView,
   StyleSheet,
   Text,
@@ -82,13 +83,23 @@ export function FeedbackModal({ isOpen, onClose }: Props) {
       ].filter(Boolean);
       const emailBody = `Feedback${ratingText}\n\n${sections.join("\n\n")}`;
       const subject = "GymLog App Feedback";
+      const supportEmail = "fabio.dev.contact@gmail.com";
       const mailtoUrl = `mailto:fabio.dev.contact@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
 
-      const canOpenUrl = await Linking.canOpenURL(mailtoUrl);
-      if (canOpenUrl) {
+      try {
         await Linking.openURL(mailtoUrl);
         handleClose();
-      } else {
+        return;
+      } catch {
+        // Fall back to native share when no email app is available.
+      }
+
+      try {
+        await Share.share({
+          message: `To: ${supportEmail}\nSubject: ${subject}\n\n${emailBody}`,
+        });
+        handleClose();
+      } catch {
         showAlert({
           title: t("settings.feedbackErrorTitle"),
           message: t("settings.feedbackErrorMessage"),
@@ -109,7 +120,7 @@ export function FeedbackModal({ isOpen, onClose }: Props) {
   return (
     <>
       <Modal visible={isOpen} animationType="slide" onRequestClose={handleClose}>
-        <AppKeyboardAvoidingView androidBehavior="padding">
+        <AppKeyboardAvoidingView>
           <View style={[styles.container, { backgroundColor: palette.page }]}>
             <View
               style={[

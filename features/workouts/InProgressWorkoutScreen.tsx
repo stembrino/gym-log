@@ -1286,6 +1286,7 @@ export function InProgressWorkoutScreen() {
           }
           manageGymAccessibilityLabel={t("workouts.adjustWorkoutManageGymCta")}
           doneLabel={t("workouts.adjustWorkoutDoneCta")}
+          cancelLabel={t("exercises.cancel")}
           onManageGym={() => setIsAdjustGymModalOpen(true)}
           onReorder={(nextItemIds) => {
             void handleReorderExercises(nextItemIds);

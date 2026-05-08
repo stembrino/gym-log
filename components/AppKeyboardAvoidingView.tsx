@@ -14,9 +14,9 @@ type Props = {
 export function AppKeyboardAvoidingView({
   children,
   style,
-  iosBehavior,
+  iosBehavior = "padding",
   iosOffset,
-  androidBehavior,
+  androidBehavior = "padding",
   androidOffset,
 }: Props) {
   const keyboardAvoiding = useKeyboardAvoiding({

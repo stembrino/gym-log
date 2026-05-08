@@ -9,6 +9,7 @@ import { SettingsSection } from "@/features/settings/components/SettingsSection"
 import { ThemeSettingRow } from "@/features/settings/components/ThemeSettingRow";
 import { RateAppSettingRow } from "@/features/settings/components/RateAppSettingRow";
 import { FeedbackSettingRow } from "@/features/settings/components/FeedbackSettingRow";
+import { DataExportSettingRow } from "@/features/data-export/components/DataExportSettingRow";
 import Colors from "@/constants/Colors";
 import { FEATURE_FLAGS } from "@/constants/featureFlags";
 
@@ -54,6 +55,16 @@ export function SettingsScreen() {
             borderColor={palette.border}
           >
             <RateAppSettingRow />
+          </SettingsSection>
+        ) : null}
+
+        {FEATURE_FLAGS.settingsDataExport ? (
+          <SettingsSection
+            title={t("settings.data") || "Data"}
+            textColor={textColor}
+            borderColor={palette.border}
+          >
+            <DataExportSettingRow />
           </SettingsSection>
         ) : null}
 
