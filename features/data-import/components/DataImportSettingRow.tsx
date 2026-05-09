@@ -12,12 +12,12 @@ export function DataImportSettingRow() {
   const colorScheme = useColorScheme();
   const palette = useRetroPalette();
   const { t } = useI18n();
-  const { alertElement, isImporting, showNotReadyMessage } = useDataImport();
+  const { alertElement, isImporting, importFromDevice } = useDataImport();
   const textColor = Colors[colorScheme ?? "light"].text;
 
   return (
     <>
-      <Pressable style={styles.settingRow} onPress={showNotReadyMessage}>
+      <Pressable style={styles.settingRow} onPress={importFromDevice}>
         <View style={styles.settingContent}>
           <FontAwesome name="upload" size={18} color={palette.accent} style={{ marginRight: 12 }} />
           <Text style={[styles.settingLabel, { color: textColor }]}>

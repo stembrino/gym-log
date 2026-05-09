@@ -2,7 +2,7 @@ import {
   BACKUP_COLLECTION_KEYS,
   BACKUP_FORMAT,
   type BackupCollectionKey,
-  type GymLogBackupFile,
+  GymLogBackupFile,
 } from "@/features/data-transfer/types/backup";
 
 export type BackupContractValidationResult =
@@ -61,26 +61,16 @@ export function validateBackupContract(input: unknown): BackupContractValidation
     issues.push("Campo data ausente ou inválido.");
   }
 
-  if (!isObject(input.counts) || !isNumberRecord(input.counts)) {
+  if (!isNumberRecord(input.counts)) {
     issues.push("Campo counts ausente ou inválido.");
   }
 
-  const maybeData = isObject(input.data) ? input.data : null;
-
-  if (maybeData && !hasAllRequiredCollections(maybeData)) {
-    const missing = collectMissingCollections(maybeData).join(", ");
-    issues.push(`Coleções ausentes ou inválidas em data: ${missing}.`);
+  if (isObject(input.data) && !hasAllRequiredCollections(input.data)) {
+    const missingCollections = collectMissingCollections(input.data);
+    issues.push(`Coleções ausentes ou inválidas: ${missingCollections.join(", ")}.`);
   }
 
-  if (issues.length > 0) {
-    return {
-      status: "invalid_contract",
-      issues,
-    };
-  }
-
-  return {
-    status: "valid_contract",
-    backup: input as GymLogBackupFile,
-  };
+  return issues.length === 0
+    ? { status: "valid_contract", backup: input as GymLogBackupFile }
+    : { status: "invalid_contract", issues };
 }

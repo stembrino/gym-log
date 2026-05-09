@@ -51,20 +51,26 @@ export function checkBackupCompatibility(backup: GymLogBackupFile): BackupCompat
     });
   }
 
-  if (issues.length > 0) {
-    return {
-      status: "incompatible",
-      issues,
-      warnings,
-      backupVersion: backup.version,
-      expectedVersion: BACKUP_VERSION,
-      backupSchemaVersion,
-      appSchemaVersion: APP_SCHEMA_VERSION,
-    };
+  if (
+    backupSchemaVersion !== null &&
+    APP_SCHEMA_VERSION !== null &&
+    backupSchemaVersion < APP_SCHEMA_VERSION
+  ) {
+    warnings.push({
+      code: "older_schema_version",
+      message: "Backup com schemaVersion mais antigo. Alguns campos podem estar ausentes.",
+      path: "schemaVersion",
+      severity: "warning",
+    });
   }
 
   return {
-    status: warnings.length > 0 ? "compatible-with-warnings" : "compatible",
+    status:
+      issues.length === 0
+        ? warnings.length === 0
+          ? "compatible"
+          : "compatible-with-warnings"
+        : "incompatible",
     issues,
     warnings,
     backupVersion: backup.version,

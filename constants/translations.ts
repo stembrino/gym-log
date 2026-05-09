@@ -70,6 +70,12 @@ export const translations = {
       dataImportPreflightOkTitle: "Backup validado",
       dataImportPreflightOkMessage:
         "Pré-validação concluída com sucesso. Exercícios: %{exercises}. Treinos: %{workouts}.",
+      dataImportSuccessTitle: "Importação concluída",
+      dataImportSuccessMessage:
+        "Backup restaurado com sucesso. Exercícios: %{exercises}. Treinos: %{workouts}.",
+      dataImportErrorTitle: "Não foi possível importar",
+      dataImportErrorMessage:
+        "O backup não pôde ser importado agora. Verifique o arquivo e tente novamente.",
       sendFeedbackButton: "Enviar feedback",
     },
     exercises: {
@@ -488,6 +494,12 @@ export const translations = {
       dataImportPreflightOkTitle: "Backup validated",
       dataImportPreflightOkMessage:
         "Preflight validation completed. Exercises: %{exercises}. Workouts: %{workouts}.",
+      dataImportSuccessTitle: "Import completed",
+      dataImportSuccessMessage:
+        "Backup restored successfully. Exercises: %{exercises}. Workouts: %{workouts}.",
+      dataImportErrorTitle: "Couldn't import",
+      dataImportErrorMessage:
+        "The backup couldn't be imported right now. Check the file and try again.",
       sendFeedbackButton: "Send Feedback",
     },
     exercises: {
