@@ -206,12 +206,7 @@ export function CreateExerciseModal({
             </View>
           </View>
 
-          <View
-            style={[
-              styles.footer,
-              { borderTopColor: palette.border, paddingBottom: Math.max(16, insets.bottom + 8) },
-            ]}
-          >
+          <View style={[styles.footer, { borderTopColor: palette.border }]}>
             <TouchableOpacity
               style={[styles.button, styles.cancelButton, { borderColor: palette.border }]}
               onPress={resetAndClose}

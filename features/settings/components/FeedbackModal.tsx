@@ -120,154 +120,152 @@ export function FeedbackModal({ isOpen, onClose }: Props) {
   return (
     <>
       <Modal visible={isOpen} animationType="slide" onRequestClose={handleClose}>
-        <AppKeyboardAvoidingView>
-          <View style={[styles.container, { backgroundColor: palette.page }]}>
-            <View
-              style={[
-                styles.header,
-                { borderBottomColor: palette.border, paddingTop: Math.max(12, insets.top + 8) },
-              ]}
-            >
-              <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
-                {t("settings.sendFeedback")}
-              </Text>
+        <View style={[styles.container, { backgroundColor: palette.page }]}>
+          <View
+            style={[
+              styles.header,
+              { borderBottomColor: palette.border, paddingTop: Math.max(12, insets.top + 8) },
+            ]}
+          >
+            <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
+              {t("settings.sendFeedback")}
+            </Text>
 
-              <WindowControlButton
-                variant="close"
-                size="md"
-                onPress={handleClose}
-                accessibilityLabel={t("exercises.cancel")}
-                borderColor={palette.border}
-                backgroundColor={palette.card}
-                iconColor={palette.textPrimary}
-              />
+            <WindowControlButton
+              variant="close"
+              size="md"
+              onPress={handleClose}
+              accessibilityLabel={t("exercises.cancel")}
+              borderColor={palette.border}
+              backgroundColor={palette.card}
+              iconColor={palette.textPrimary}
+            />
+          </View>
+
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <Text style={[styles.description, { color: palette.textSecondary }]}>
+              {t("settings.feedbackDescription")}
+            </Text>
+
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: palette.textPrimary }]}>
+                {t("settings.feedbackRating")}
+              </Text>
+              <View style={styles.ratingContainer}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() => setRating(rating === star ? null : star)}
+                    style={styles.starButton}
+                  >
+                    <FontAwesome
+                      name={star <= (rating ?? 0) ? "star" : "star-o"}
+                      size={28}
+                      color={star <= (rating ?? 0) ? palette.accent : palette.textSecondary}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-              <Text style={[styles.description, { color: palette.textSecondary }]}>
-                {t("settings.feedbackDescription")}
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: palette.textPrimary }]}>
+                {t("settings.feedbackComment")}
               </Text>
-
-              <View style={styles.field}>
-                <Text style={[styles.label, { color: palette.textPrimary }]}>
-                  {t("settings.feedbackRating")}
-                </Text>
-                <View style={styles.ratingContainer}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <TouchableOpacity
-                      key={star}
-                      onPress={() => setRating(rating === star ? null : star)}
-                      style={styles.starButton}
-                    >
-                      <FontAwesome
-                        name={star <= (rating ?? 0) ? "star" : "star-o"}
-                        size={28}
-                        color={star <= (rating ?? 0) ? palette.accent : palette.textSecondary}
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.field}>
-                <Text style={[styles.label, { color: palette.textPrimary }]}>
-                  {t("settings.feedbackComment")}
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: palette.border,
-                      color: palette.textPrimary,
-                      backgroundColor: palette.card,
-                    },
-                  ]}
-                  placeholder={t("settings.feedbackCommentPlaceholder")}
-                  placeholderTextColor={palette.textSecondary}
-                  value={comment}
-                  onChangeText={setComment}
-                  multiline
-                  numberOfLines={6}
-                  maxLength={500}
-                  editable={!submitting}
-                />
-                <Text style={[styles.characterCount, { color: palette.textSecondary }]}>
-                  {comment.length}/500
-                </Text>
-              </View>
-
-              <View style={styles.field}>
-                <Text style={[styles.label, { color: palette.textPrimary }]}>
-                  {t("settings.feedbackBug")}
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: palette.border,
-                      color: palette.textPrimary,
-                      backgroundColor: palette.card,
-                    },
-                  ]}
-                  placeholder={t("settings.feedbackBugPlaceholder")}
-                  placeholderTextColor={palette.textSecondary}
-                  value={bugReport}
-                  onChangeText={setBugReport}
-                  multiline
-                  numberOfLines={5}
-                  maxLength={500}
-                  editable={!submitting}
-                />
-                <Text style={[styles.characterCount, { color: palette.textSecondary }]}>
-                  {bugReport.length}/500
-                </Text>
-              </View>
-
-              <View style={styles.field}>
-                <Text style={[styles.label, { color: palette.textPrimary }]}>
-                  {t("settings.feedbackFeature")}
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: palette.border,
-                      color: palette.textPrimary,
-                      backgroundColor: palette.card,
-                    },
-                  ]}
-                  placeholder={t("settings.feedbackFeaturePlaceholder")}
-                  placeholderTextColor={palette.textSecondary}
-                  value={featureRequest}
-                  onChangeText={setFeatureRequest}
-                  multiline
-                  numberOfLines={5}
-                  maxLength={500}
-                  editable={!submitting}
-                />
-                <Text style={[styles.characterCount, { color: palette.textSecondary }]}>
-                  {featureRequest.length}/500
-                </Text>
-              </View>
-
-              <TouchableOpacity
+              <TextInput
                 style={[
-                  styles.submitButton,
+                  styles.input,
                   {
-                    backgroundColor: palette.accent,
-                    opacity: submitting ? 0.6 : 1,
+                    borderColor: palette.border,
+                    color: palette.textPrimary,
+                    backgroundColor: palette.card,
                   },
                 ]}
-                onPress={handleSubmit}
-                disabled={submitting}
-              >
-                <Text style={[styles.submitButtonText, { color: palette.textPrimary }]}>
-                  {submitting ? t("routines.loading") : t("settings.sendFeedbackButton")}
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </AppKeyboardAvoidingView>
+                placeholder={t("settings.feedbackCommentPlaceholder")}
+                placeholderTextColor={palette.textSecondary}
+                value={comment}
+                onChangeText={setComment}
+                multiline
+                numberOfLines={6}
+                maxLength={500}
+                editable={!submitting}
+              />
+              <Text style={[styles.characterCount, { color: palette.textSecondary }]}>
+                {comment.length}/500
+              </Text>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: palette.textPrimary }]}>
+                {t("settings.feedbackBug")}
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    borderColor: palette.border,
+                    color: palette.textPrimary,
+                    backgroundColor: palette.card,
+                  },
+                ]}
+                placeholder={t("settings.feedbackBugPlaceholder")}
+                placeholderTextColor={palette.textSecondary}
+                value={bugReport}
+                onChangeText={setBugReport}
+                multiline
+                numberOfLines={5}
+                maxLength={500}
+                editable={!submitting}
+              />
+              <Text style={[styles.characterCount, { color: palette.textSecondary }]}>
+                {bugReport.length}/500
+              </Text>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={[styles.label, { color: palette.textPrimary }]}>
+                {t("settings.feedbackFeature")}
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    borderColor: palette.border,
+                    color: palette.textPrimary,
+                    backgroundColor: palette.card,
+                  },
+                ]}
+                placeholder={t("settings.feedbackFeaturePlaceholder")}
+                placeholderTextColor={palette.textSecondary}
+                value={featureRequest}
+                onChangeText={setFeatureRequest}
+                multiline
+                numberOfLines={5}
+                maxLength={500}
+                editable={!submitting}
+              />
+              <Text style={[styles.characterCount, { color: palette.textSecondary }]}>
+                {featureRequest.length}/500
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                {
+                  backgroundColor: palette.accent,
+                  opacity: submitting ? 0.6 : 1,
+                },
+              ]}
+              onPress={handleSubmit}
+              disabled={submitting}
+            >
+              <Text style={[styles.submitButtonText, { color: palette.textPrimary }]}>
+                {submitting ? t("routines.loading") : t("settings.sendFeedbackButton")}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
       </Modal>
 
       {alertElement}
