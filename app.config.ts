@@ -43,7 +43,7 @@ const config: ExpoConfig = {
     output: "static",
     favicon: "./assets/images/favicon.png",
   },
-  plugins: ["expo-router", "expo-sqlite", "expo-localization"],
+  plugins: ["expo-router", "expo-sqlite", "expo-localization", "expo-notifications"],
   experiments: {
     typedRoutes: true,
   },

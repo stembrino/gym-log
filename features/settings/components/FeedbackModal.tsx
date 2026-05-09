@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { useEffect, useState } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { AppKeyboardAvoidingView } from "@/components/AppKeyboardAvoidingView";
 import { WindowControlButton } from "@/components/WindowControlButton";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";

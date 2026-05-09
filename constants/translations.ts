@@ -292,6 +292,11 @@ export const translations = {
       addSetErrorBody: "Nao foi possivel adicionar este item agora.",
       updateSetErrorTitle: "Erro ao salvar serie",
       updateSetErrorBody: "Nao foi possivel atualizar os dados da serie.",
+      notificationActionComplete: "Concluir",
+      notificationActionBack: "Voltar",
+      notificationActionNext: "Próxima",
+      notificationActionOpen: "Abrir treino",
+      notificationBodyPattern: "Série %{setIndex}/%{totalSets} — %{weight} kg x %{reps} rep",
     },
     routines: {
       title: "",
@@ -699,6 +704,11 @@ export const translations = {
       addSetErrorBody: "This item could not be added right now.",
       updateSetErrorTitle: "Could not save set",
       updateSetErrorBody: "The set data could not be updated.",
+      notificationActionComplete: "Complete",
+      notificationActionBack: "Back",
+      notificationActionNext: "Next",
+      notificationActionOpen: "Open workout",
+      notificationBodyPattern: "Set %{setIndex}/%{totalSets} — %{weight} kg x %{reps} reps",
     },
     routines: {
       title: "",

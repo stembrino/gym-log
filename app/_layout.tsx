@@ -10,6 +10,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { DatabaseProvider } from "@/components/providers/DatabaseProvider";
 import { I18nProvider, useI18n } from "@/components/providers/i18n-provider";
 import { ThemePreferenceProvider, useThemePreference } from "@/components/theme-preference";
+import { AndroidWorkoutNotificationBridge } from "@/features/workouts/components/AndroidWorkoutNotificationBridge";
+import { AndroidNotificationPreferenceProvider } from "@/features/workouts/providers/AndroidNotificationPreferenceProvider";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -48,7 +50,9 @@ function RootLayoutNav() {
     <DatabaseProvider>
       <I18nProvider>
         <ThemePreferenceProvider>
-          <ThemedNavigation />
+          <AndroidNotificationPreferenceProvider>
+            <ThemedNavigation />
+          </AndroidNotificationPreferenceProvider>
         </ThemePreferenceProvider>
       </I18nProvider>
     </DatabaseProvider>
@@ -62,6 +66,7 @@ function ThemedNavigation() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={theme === "dark" ? DarkTheme : DefaultTheme}>
+        <AndroidWorkoutNotificationBridge />
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
@@ -78,6 +83,18 @@ function ThemedNavigation() {
           />
           <Stack.Screen name="workout-prepare" options={{ headerShown: false }} />
           <Stack.Screen name="workout-in-progress" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="dev-lab"
+            options={{
+              title: "Dev Lab",
+            }}
+          />
+          <Stack.Screen
+            name="notification-lab"
+            options={{
+              title: "Notification Lab",
+            }}
+          />
           <Stack.Screen name="modal" options={{ presentation: "modal" }} />
         </Stack>
       </ThemeProvider>
