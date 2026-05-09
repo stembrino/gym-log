@@ -30,8 +30,6 @@ const config: ExpoConfig = {
   },
   android: {
     package: "com.fabio.gymlog",
-    // Keep keyboard behavior consistent between dev and production builds.
-    softwareKeyboardLayoutMode: "resize",
     adaptiveIcon: {
       foregroundImage: "./assets/images/app-icon.png",
       backgroundColor: "#1E1E1E",
@@ -51,7 +49,7 @@ const config: ExpoConfig = {
     router: {},
     // Cleasn this to use other usernames or to switch between them quickly.
     eas: {
-      projectId: "bfb710a2-3851-416d-ae53-ef00adcd5529",
+      projectId: "3bf2b14d-fb88-4bd3-9e3b-e9533dd0805f",
     },
     ownerOptions: {
       active: owner,
