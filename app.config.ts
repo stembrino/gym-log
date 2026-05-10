@@ -35,6 +35,10 @@ const config: ExpoConfig = {
       backgroundColor: "#1E1E1E",
     },
     predictiveBackGestureEnabled: false,
+    permissions: [
+      "android.permission.WRITE_EXTERNAL_STORAGE",
+      "android.permission.READ_EXTERNAL_STORAGE",
+    ],
   },
   web: {
     bundler: "metro",

@@ -111,126 +111,131 @@ export function CreateExerciseModal({
       presentationStyle="formSheet"
       onRequestClose={resetAndClose}
     >
-      <AppKeyboardAvoidingView
+      {/* <AppKeyboardAvoidingView
         style={{ backgroundColor: palette.page }}
         iosBehavior="position"
         iosOffset={-6}
         androidBehavior="padding"
-      >
-        <View style={[styles.container, { backgroundColor: palette.page }]}>
-          <View
-            style={[
-              styles.header,
-              { borderBottomColor: palette.border, paddingTop: Math.max(12, insets.top + 8) },
-            ]}
-          >
-            <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
-              {isEditMode ? t("exercises.editExercise") : t("exercises.createExercise")}
+      > */}
+      <View style={[styles.container, { backgroundColor: palette.page }]}>
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: palette.border, paddingTop: Math.max(12, insets.top + 8) },
+          ]}
+        >
+          <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
+            {isEditMode ? t("exercises.editExercise") : t("exercises.createExercise")}
+          </Text>
+
+          <WindowControlButton
+            variant="close"
+            size="md"
+            onPress={resetAndClose}
+            accessibilityLabel={t("exercises.cancel")}
+            borderColor={palette.border}
+            backgroundColor={palette.card}
+            iconColor={palette.textPrimary}
+          />
+        </View>
+
+        <View style={styles.content}>
+          <Text style={[styles.description, { color: palette.textSecondary }]}>
+            {isEditMode ? t("exercises.editExerciseHint") : t("exercises.subtitle")}
+          </Text>
+
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: palette.textPrimary }]}>
+              {t("exercises.exerciseName")}
+              <Text style={{ color: palette.accent }}> *</Text>
             </Text>
-
-            <WindowControlButton
-              variant="close"
-              size="md"
-              onPress={resetAndClose}
-              accessibilityLabel={t("exercises.cancel")}
-              borderColor={palette.border}
-              backgroundColor={palette.card}
-              iconColor={palette.textPrimary}
-            />
-          </View>
-
-          <View style={styles.content}>
-            <Text style={[styles.description, { color: palette.textSecondary }]}>
-              {isEditMode ? t("exercises.editExerciseHint") : t("exercises.subtitle")}
-            </Text>
-
-            <View style={styles.field}>
-              <Text style={[styles.label, { color: palette.textPrimary }]}>
-                {t("exercises.exerciseName")}
-                <Text style={{ color: palette.accent }}> *</Text>
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    borderColor: nameError ? palette.accent : palette.border,
-                    borderWidth: focusedField === "name" ? 2 : 1,
-                    color: palette.textPrimary,
-                    backgroundColor: palette.card,
-                  },
-                ]}
-                placeholder={t("exercises.exerciseName")}
-                placeholderTextColor={palette.textSecondary}
-                value={name}
-                onChangeText={(value) => {
-                  const uppercasedValue = value.toUpperCase();
-                  setName(uppercasedValue);
-                  if (uppercasedValue.trim()) {
-                    setNameError(false);
-                  }
-                  setSubmitError(null);
-                }}
-                onFocus={() => setFocusedField("name")}
-                onBlur={() => setFocusedField(null)}
-                autoCapitalize="characters"
-                maxLength={60}
-              />
-              {nameError ? (
-                <Text style={[styles.errorText, { color: palette.accent }]}>
-                  {submitError ?? t("exercises.fieldRequired")}
-                </Text>
-              ) : null}
-            </View>
-
-            <View style={styles.field}>
-              <Text style={[styles.label, { color: palette.textPrimary }]}>
-                {t("exercises.muscleGroup")}
-                <Text style={{ color: palette.accent }}> *</Text>
-              </Text>
-              <SingleSelectChipGroup
-                options={muscleGroups}
-                selectedOption={muscleGroup}
-                onSelect={(groupName) => {
-                  setMuscleGroup(groupName);
-                  setMuscleGroupError(false);
-                }}
-                error={muscleGroupError}
-                emptyMessage={t("exercises.noMuscleGroups")}
-              />
-
-              {muscleGroupError ? (
-                <Text style={[styles.errorText, { color: palette.accent }]}>
-                  {t("exercises.fieldRequired")}
-                </Text>
-              ) : null}
-            </View>
-          </View>
-
-          <View style={[styles.footer, { borderTopColor: palette.border }]}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton, { borderColor: palette.border }]}
-              onPress={resetAndClose}
-              disabled={submitting}
-            >
-              <Text style={[styles.buttonText, { color: palette.textPrimary }]}>
-                {t("exercises.cancel")}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, styles.primaryButton, { backgroundColor: palette.accent }]}
-              onPress={() => {
-                void handleSubmit();
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  borderColor: nameError ? palette.accent : palette.border,
+                  borderWidth: focusedField === "name" ? 2 : 1,
+                  color: palette.textPrimary,
+                  backgroundColor: palette.card,
+                },
+              ]}
+              placeholder={t("exercises.exerciseName")}
+              placeholderTextColor={palette.textSecondary}
+              value={name}
+              onChangeText={(value) => {
+                const uppercasedValue = value.toUpperCase();
+                setName(uppercasedValue);
+                if (uppercasedValue.trim()) {
+                  setNameError(false);
+                }
+                setSubmitError(null);
               }}
-              disabled={submitting}
-            >
-              <Text style={[styles.buttonText, { color: palette.onAccent }]}>
-                {isEditMode ? t("exercises.saveExercise") : t("exercises.addExercise")}
+              onFocus={() => setFocusedField("name")}
+              onBlur={() => setFocusedField(null)}
+              autoCapitalize="characters"
+              maxLength={60}
+            />
+            {nameError ? (
+              <Text style={[styles.errorText, { color: palette.accent }]}>
+                {submitError ?? t("exercises.fieldRequired")}
               </Text>
-            </TouchableOpacity>
+            ) : null}
+          </View>
+
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: palette.textPrimary }]}>
+              {t("exercises.muscleGroup")}
+              <Text style={{ color: palette.accent }}> *</Text>
+            </Text>
+            <SingleSelectChipGroup
+              options={muscleGroups}
+              selectedOption={muscleGroup}
+              onSelect={(groupName) => {
+                setMuscleGroup(groupName);
+                setMuscleGroupError(false);
+              }}
+              error={muscleGroupError}
+              emptyMessage={t("exercises.noMuscleGroups")}
+            />
+
+            {muscleGroupError ? (
+              <Text style={[styles.errorText, { color: palette.accent }]}>
+                {t("exercises.fieldRequired")}
+              </Text>
+            ) : null}
           </View>
         </View>
-      </AppKeyboardAvoidingView>
+
+        <View
+          style={[
+            styles.footer,
+            { borderTopColor: palette.border, paddingBottom: Math.max(12, insets.bottom + 8) },
+          ]}
+        >
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton, { borderColor: palette.border }]}
+            onPress={resetAndClose}
+            disabled={submitting}
+          >
+            <Text style={[styles.buttonText, { color: palette.textPrimary }]}>
+              {t("exercises.cancel")}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.primaryButton, { backgroundColor: palette.accent }]}
+            onPress={() => {
+              void handleSubmit();
+            }}
+            disabled={submitting}
+          >
+            <Text style={[styles.buttonText, { color: palette.onAccent }]}>
+              {isEditMode ? t("exercises.saveExercise") : t("exercises.addExercise")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      {/* </AppKeyboardAvoidingView> */}
     </Modal>
   );
 }

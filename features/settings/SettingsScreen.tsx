@@ -13,7 +13,6 @@ import { RateAppSettingRow } from "@/features/settings/components/RateAppSetting
 import { FeedbackSettingRow } from "@/features/settings/components/FeedbackSettingRow";
 import { DataExportSettingRow } from "@/features/data-export/components/DataExportSettingRow";
 import { DataImportSettingRow } from "@/features/data-import/components/DataImportSettingRow";
-import { AndroidNotificationSettingRow } from "@/features/settings/components/AndroidNotificationSettingRow";
 import Colors from "@/constants/Colors";
 import { FEATURE_FLAGS } from "@/constants/featureFlags";
 import { monoFont } from "@/constants/retroTheme";
@@ -58,7 +57,6 @@ export function SettingsScreen() {
           borderColor={palette.border}
         >
           <DefaultGymSettingRow />
-          <AndroidNotificationSettingRow />
         </SettingsSection>
 
         {FEATURE_FLAGS.settingsRateApp ? (

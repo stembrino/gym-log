@@ -6,6 +6,7 @@ import {
   writeAsStringAsync,
 } from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
+import { Platform } from "react-native";
 
 import { useGlobalAlert } from "@/components/hooks/useGlobalAlert";
 import { useI18n } from "@/components/providers/i18n-provider";
@@ -45,21 +46,39 @@ export function useDataExport() {
           throw new Error("No writable directory available for export.");
         }
 
-        const fileUri = `${baseDirectory}${buildDataExportFileName(snapshot.exportedAt)}`;
+        const normalizedBaseDirectory = baseDirectory.endsWith("/")
+          ? baseDirectory
+          : `${baseDirectory}/`;
+        const fileUri = `${normalizedBaseDirectory}${buildDataExportFileName(snapshot.exportedAt)}`;
 
         await writeAsStringAsync(fileUri, fileContents, {
           encoding: EncodingType.UTF8,
         });
 
-        await Sharing.shareAsync(fileUri, {
-          dialogTitle: t("settings.dataExportShareDialogTitle"),
-          mimeType: "application/json",
-          UTI: "public.json",
+        if (Platform.OS === "android") {
+          // Let Android infer type from the extension to maximize chooser compatibility in release builds.
+          await Sharing.shareAsync(fileUri, {
+            dialogTitle: t("settings.dataExportShareDialogTitle"),
+          });
+        } else {
+          await Sharing.shareAsync(fileUri, {
+            dialogTitle: t("settings.dataExportShareDialogTitle"),
+            mimeType: "application/json",
+            UTI: "public.json",
+          });
+        }
+
+        showAlert({
+          title: t("settings.dataExportSuccessTitle"),
+          message: t("settings.dataExportSuccessMessage"),
+          buttonLabel: t("workouts.postFinishCloseCta"),
         });
-      } catch {
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("Export error:", error);
         showAlert({
           title: t("settings.dataExportErrorTitle"),
-          message: t("settings.dataExportErrorMessage"),
+          message: `${t("settings.dataExportErrorMessage")}\n\n${errorMessage}`,
           buttonLabel: t("workouts.postFinishCloseCta"),
         });
       } finally {
