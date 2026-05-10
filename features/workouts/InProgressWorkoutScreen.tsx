@@ -37,14 +37,9 @@ import { useExerciseTopSet } from "@/features/workouts/hooks/useExerciseTopSet";
 import { useCopySetsFromTopSetSession } from "@/features/workouts/hooks/useCopySetsFromTopSetSession";
 import { useKeyboardInputAutoScroll } from "@/features/workouts/hooks/useKeyboardInputAutoScroll";
 import { useWorkoutRatingPrompt } from "@/features/workouts/hooks/useWorkoutRatingPrompt";
-import {
-  dismissActiveWorkoutNotification,
-  syncActiveWorkoutNotification,
-  type NotificationActionLabels,
-} from "@/features/workouts/services/androidWorkoutNotification";
 import { PostFinishQuickActionsSheet } from "./components/PostFinishQuickActionsSheet";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Keyboard,
   Share,
@@ -103,18 +98,6 @@ export function InProgressWorkoutScreen() {
   const { maybePromptForCompletedWorkout } = useWorkoutRatingPrompt();
   const { showAlert, showConfirm, alertElement } = useGlobalAlert();
 
-  const notificationLabels = useMemo<NotificationActionLabels>(
-    () => ({
-      complete: t("workouts.notificationActionComplete"),
-      back: t("workouts.notificationActionBack"),
-      next: t("workouts.notificationActionNext"),
-      open: t("workouts.notificationActionOpen"),
-      bodyPattern: (setIndex, totalSets, weight, reps) =>
-        t("workouts.notificationBodyPattern", { setIndex, totalSets, weight, reps }),
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [locale],
-  );
   const {
     gyms,
     selectedGym,
@@ -174,10 +157,6 @@ export function InProgressWorkoutScreen() {
       clearTimeout(promptTimeout);
     };
   }, [isPostFinishPanelOpen, maybePromptForCompletedWorkout]);
-
-  useEffect(() => {
-    void syncActiveWorkoutNotification(workout, notificationLabels);
-  }, [workout, notificationLabels]);
 
   useFocusEffect(
     useCallback(() => {
@@ -986,7 +965,6 @@ export function InProgressWorkoutScreen() {
 
           try {
             await cancelWorkout(workout.id);
-            await dismissActiveWorkoutNotification();
             handleMinimizeWorkout();
           } finally {
             setCanceling(false);
@@ -1016,7 +994,6 @@ export function InProgressWorkoutScreen() {
 
           try {
             await finishWorkout(workout.id);
-            await dismissActiveWorkoutNotification();
             Keyboard.dismiss();
             setIsPostFinishPanelOpen(true);
           } finally {

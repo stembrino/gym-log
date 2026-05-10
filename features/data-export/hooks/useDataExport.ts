@@ -12,10 +12,12 @@ import { useGlobalAlert } from "@/components/hooks/useGlobalAlert";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { buildDataExportFileName, serializeDataExportSnapshot } from "../lib/buildDataExportFile";
 import { getDataExportSnapshot } from "../queries/getDataExportSnapshot";
+import { useExportFileNamePrompt } from "./useExportFileNamePrompt";
 
 export function useDataExport() {
   const { t } = useI18n();
   const { showAlert, alertElement } = useGlobalAlert();
+  const { promptForFileName, modalElement } = useExportFileNamePrompt();
   const [isExporting, setIsExporting] = useState(false);
 
   const exportData = useCallback(() => {
@@ -39,6 +41,19 @@ export function useDataExport() {
         }
 
         const snapshot = await getDataExportSnapshot();
+
+        // Generate default name and ask user for custom name
+        const defaultFileName = buildDataExportFileName(snapshot.exportedAt).replace(
+          /\.json$/i,
+          "",
+        );
+        const customFileName = await promptForFileName(defaultFileName);
+
+        if (customFileName === null) {
+          // User cancelled the prompt
+          return;
+        }
+
         const fileContents = serializeDataExportSnapshot(snapshot);
         const baseDirectory = cacheDirectory ?? documentDirectory;
 
@@ -49,7 +64,10 @@ export function useDataExport() {
         const normalizedBaseDirectory = baseDirectory.endsWith("/")
           ? baseDirectory
           : `${baseDirectory}/`;
-        const fileUri = `${normalizedBaseDirectory}${buildDataExportFileName(snapshot.exportedAt)}`;
+        const finalFileName = customFileName.endsWith(".json")
+          ? customFileName
+          : `${customFileName}.json`;
+        const fileUri = `${normalizedBaseDirectory}${finalFileName}`;
 
         await writeAsStringAsync(fileUri, fileContents, {
           encoding: EncodingType.UTF8,
@@ -85,11 +103,12 @@ export function useDataExport() {
         setIsExporting(false);
       }
     })();
-  }, [isExporting, showAlert, t]);
+  }, [isExporting, showAlert, t, promptForFileName]);
 
   return {
     alertElement,
     exportData,
     isExporting,
+    fileNameModal: modalElement,
   };
 }

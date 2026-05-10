@@ -10,7 +10,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { DatabaseProvider } from "@/components/providers/DatabaseProvider";
 import { I18nProvider, useI18n } from "@/components/providers/i18n-provider";
 import { ThemePreferenceProvider, useThemePreference } from "@/components/theme-preference";
-// import { AndroidNotificationPreferenceProvider } from "@/features/workouts/providers/AndroidNotificationPreferenceProvider";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -49,9 +48,7 @@ function RootLayoutNav() {
     <DatabaseProvider>
       <I18nProvider>
         <ThemePreferenceProvider>
-          {/* <AndroidNotificationPreferenceProvider> */}
           <ThemedNavigation />
-          {/* </AndroidNotificationPreferenceProvider> */}
         </ThemePreferenceProvider>
       </I18nProvider>
     </DatabaseProvider>

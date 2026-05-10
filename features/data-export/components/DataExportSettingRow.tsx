@@ -12,7 +12,7 @@ export function DataExportSettingRow() {
   const colorScheme = useColorScheme();
   const palette = useRetroPalette();
   const { t } = useI18n();
-  const { alertElement, exportData, isExporting } = useDataExport();
+  const { alertElement, exportData, isExporting, fileNameModal } = useDataExport();
   const textColor = Colors[colorScheme ?? "light"].text;
 
   return (
@@ -34,6 +34,7 @@ export function DataExportSettingRow() {
         </Text>
       </Pressable>
 
+      {fileNameModal}
       {alertElement}
     </>
   );

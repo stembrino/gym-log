@@ -70,4 +70,39 @@ describe("ControlledSearchInput", () => {
       flattenStyle(getByTestId("controlled-search-input-container").props.style).borderWidth,
     ).toBe(1);
   });
+
+  it("hides leading icon only when showLeadingIcon is false", () => {
+    const { queryByTestId, rerender } = render(
+      <ControlledSearchInput value="" onChangeText={() => {}} placeholder="Search exercises" />,
+    );
+
+    expect(queryByTestId("controlled-search-input-leading-icon")).not.toBeNull();
+
+    rerender(
+      <ControlledSearchInput
+        value=""
+        onChangeText={() => {}}
+        placeholder="Search exercises"
+        showLeadingIcon={false}
+      />,
+    );
+
+    expect(queryByTestId("controlled-search-input-leading-icon")).toBeNull();
+  });
+
+  it("shows clear button and clears input", () => {
+    const onChangeText = jest.fn();
+
+    const { getByTestId } = render(
+      <ControlledSearchInput
+        value="bench"
+        onChangeText={onChangeText}
+        placeholder="Search exercises"
+        showClearButton
+      />,
+    );
+
+    fireEvent.press(getByTestId("controlled-search-input-clear-button"));
+    expect(onChangeText).toHaveBeenCalledWith("");
+  });
 });
