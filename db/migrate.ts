@@ -58,6 +58,8 @@ export function runMigrations(database: SQLiteDatabase): void {
     CREATE TABLE IF NOT EXISTS routine_tags (
       id          TEXT PRIMARY KEY NOT NULL,
       slug        TEXT NOT NULL UNIQUE,
+      label_pt    TEXT,
+      label_en    TEXT,
       search_pt   TEXT,
       search_en   TEXT
     );
@@ -118,6 +120,7 @@ export function runMigrations(database: SQLiteDatabase): void {
   ensureWorkoutsStatusColumn(database);
   removeLegacyI18nColumns(database);
   dropLegacyRoutineGroupTables(database);
+  ensureRoutineTagsLabelColumns(database);
   ensureExercisesImageUrlColumn(database);
   ensureWorkoutsDeletedAtColumn(database);
   ensureWorkoutsSourceRoutineIdColumn(database);
@@ -271,13 +274,17 @@ function removeLegacyI18nColumns(database: SQLiteDatabase): void {
       createSql: `CREATE TABLE routine_tags__new (
         id TEXT PRIMARY KEY NOT NULL,
         slug TEXT NOT NULL UNIQUE,
+        label_pt TEXT,
+        label_en TEXT,
         search_pt TEXT,
         search_en TEXT
       );`,
-      targetColumns: ["id", "slug", "search_pt", "search_en"],
+      targetColumns: ["id", "slug", "label_pt", "label_en", "search_pt", "search_en"],
       sourceByColumn: {
         id: "id",
         slug: "slug",
+        label_pt: "label_pt",
+        label_en: "label_en",
         search_pt: "search_pt",
         search_en: "search_en",
       },
@@ -318,6 +325,25 @@ function ensureExercisesImageUrlColumn(database: SQLiteDatabase): void {
     }
   } catch {
     // Ignore backfill failures; app can still run without images.
+  }
+}
+
+function ensureRoutineTagsLabelColumns(database: SQLiteDatabase): void {
+  try {
+    const rows = (database as any).getAllSync("PRAGMA table_info(routine_tags);") as {
+      name: string;
+    }[];
+    const columnNames = new Set(rows.map((row) => row.name));
+
+    if (!columnNames.has("label_pt")) {
+      database.execSync("ALTER TABLE routine_tags ADD COLUMN label_pt TEXT;");
+    }
+
+    if (!columnNames.has("label_en")) {
+      database.execSync("ALTER TABLE routine_tags ADD COLUMN label_en TEXT;");
+    }
+  } catch {
+    // Ignore backfill failures; app can still run with slug fallback.
   }
 }
 

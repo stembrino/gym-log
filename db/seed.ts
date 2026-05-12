@@ -4,7 +4,7 @@ import { runDevOnlyInjectMockRoutines } from "@/db/devOnly/injectMockRoutines.de
 import { DEFAULT_EXERCISES } from "@/db/patches/data/exercises";
 import { DEFAULT_MUSCLE_GROUPS } from "@/db/patches/data/muscleGroups";
 import { DEFAULT_ROUTINE_TAGS } from "@/db/patches/data/routineTags";
-import { count, eq, isNull, or } from "drizzle-orm";
+import { count, eq, isNull, or, sql } from "drizzle-orm";
 import { db, expoDb } from "./client";
 import { entityTranslations, exercises, muscleGroups, routines, routineTags } from "./schema";
 import { DEFAULT_ENTITY_TRANSLATIONS } from "./seed-data/entityTranslations";
@@ -190,10 +190,21 @@ export async function seedDatabase(options: SeedDatabaseOptions = {}): Promise<v
       DEFAULT_ROUTINE_TAGS.map((tag) => ({
         id: tag.id,
         slug: tag.slug,
+        labelPt: tag.labelPt,
+        labelEn: tag.labelEn,
         ...buildRoutineTagSearchIndex(tag),
       })),
     )
-    .onConflictDoNothing({ target: routineTags.id });
+    .onConflictDoUpdate({
+      target: routineTags.id,
+      set: {
+        slug: sql`excluded.slug`,
+        labelPt: sql`excluded.label_pt`,
+        labelEn: sql`excluded.label_en`,
+        searchPt: sql`excluded.search_pt`,
+        searchEn: sql`excluded.search_en`,
+      },
+    });
 
   const [exerciseRow] = await database.select({ total: count() }).from(exercises);
   if (exerciseRow.total === 0) {

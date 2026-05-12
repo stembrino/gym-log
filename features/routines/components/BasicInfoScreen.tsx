@@ -1,8 +1,8 @@
 import { CharacterCounter } from "@/components/CharacterCounter";
 import { MultiSelectChipGroup } from "@/components/MultiSelectChipGroup";
+import { useRoutineTags } from "../hooks/useRoutineTags";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { FALLBACK_ROUTINE_TAGS } from "@/constants/fallback/routineTags";
 import { monoFont } from "@/constants/retroTheme";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -39,6 +39,7 @@ export function BasicInfoScreen({
   t,
   nameError = false,
 }: BasicInfoScreenProps) {
+  const { tags } = useRoutineTags(locale);
   return (
     <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
       <View style={styles.screen}>
@@ -137,14 +138,7 @@ export function BasicInfoScreen({
           <Text style={[styles.label, { color: palette.textPrimary }]}>
             {t("routines.formTagsLabel")}
           </Text>
-          <MultiSelectChipGroup
-            options={FALLBACK_ROUTINE_TAGS.map((tag) => ({
-              id: tag.id,
-              label: locale === "pt-BR" ? tag.labelPt : tag.labelEn,
-            }))}
-            selectedIds={selectedTags}
-            onToggle={onToggleTag}
-          />
+          <MultiSelectChipGroup options={tags} selectedIds={selectedTags} onToggle={onToggleTag} />
         </View>
       </View>
     </ScrollView>

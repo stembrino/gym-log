@@ -52,6 +52,8 @@ export const routines = sqliteTable("routines", {
 export const routineTags = sqliteTable("routine_tags", {
   id: text("id").primaryKey(),
   slug: text("slug").notNull().unique(),
+  labelPt: text("label_pt"),
+  labelEn: text("label_en"),
   searchPt: text("search_pt"),
   searchEn: text("search_en"),
 });
