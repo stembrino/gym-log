@@ -110,7 +110,6 @@ export function SelectRoutineModal({
               emptyLabel={t("routines.emptyGroupFilterRoutines")}
               selectLabel={t("workouts.startWorkoutShortCta")}
               exercisesLabel={t("routines.exercisesTitle")}
-              setLabel={t("workouts.setLabel")}
               repsSuffix={t("workouts.repsUnitSuffix")}
               onSelect={handleSelectRoutine}
               onLoadMore={loadMore}

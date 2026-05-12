@@ -11,7 +11,6 @@ type RoutinePickerListItemProps = {
   onPress: (routine: WorkoutRoutinePickerItem) => void;
   selectLabel: string;
   exercisesLabel: string;
-  setLabel: string;
   repsSuffix: string;
 };
 
@@ -20,7 +19,6 @@ export function RoutinePickerListItem({
   onPress,
   selectLabel,
   exercisesLabel,
-  setLabel,
   repsSuffix,
 }: RoutinePickerListItemProps) {
   const palette = useRetroPalette();
@@ -57,7 +55,7 @@ export function RoutinePickerListItem({
                         key={`${exercise.id}-set-${index + 1}`}
                         style={[styles.exerciseMeta, { color: palette.textSecondary }]}
                       >
-                        {setLabel} {index + 1}: {setRepsTarget || "-"} {repsSuffix}
+                        {index + 1}: {setRepsTarget || "-"} {repsSuffix}
                       </Text>
                     ))}
                   </View>

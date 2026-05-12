@@ -12,7 +12,6 @@ type RoutinePickerListProps = {
   loadingLabel: string;
   selectLabel: string;
   exercisesLabel: string;
-  setLabel: string;
   repsSuffix: string;
   onSelect: (routine: WorkoutRoutinePickerItem) => void;
   onLoadMore: () => void;
@@ -30,7 +29,6 @@ export function RoutinePickerList({
   loadingLabel,
   selectLabel,
   exercisesLabel,
-  setLabel,
   repsSuffix,
   onSelect,
   onLoadMore,
@@ -62,7 +60,6 @@ export function RoutinePickerList({
           onPress={onSelect}
           selectLabel={selectLabel}
           exercisesLabel={exercisesLabel}
-          setLabel={setLabel}
           repsSuffix={repsSuffix}
         />
       )}
