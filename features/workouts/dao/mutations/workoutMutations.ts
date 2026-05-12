@@ -10,8 +10,9 @@ type StartWorkoutArgs = {
   exercises: {
     exerciseId: string;
     exerciseOrder: number;
-    setsTarget: number | null;
-    repsTarget: number | null;
+    setRepsTargets: number[];
+    setsTarget?: number | null;
+    repsTarget?: number | null;
   }[];
 };
 
@@ -94,11 +95,8 @@ function mapRoutineExerciseRows(
       const setsTarget = exercise.sets.length > 0 ? exercise.sets.length : null;
       const repsValues = exercise.sets
         .map((set) => set.reps)
-        .filter((reps) => Number.isFinite(reps) && reps > 0);
-      const avgReps =
-        repsValues.length > 0
-          ? Math.round(repsValues.reduce((sum, reps) => sum + reps, 0) / repsValues.length)
-          : null;
+        .filter((reps) => Number.isFinite(reps) && reps > 0)
+        .map((reps) => Math.round(reps));
 
       return {
         id: `rte-${routineId}-${index + 1}`,
@@ -106,7 +104,7 @@ function mapRoutineExerciseRows(
         exerciseId: exercise.exerciseId,
         exerciseOrder: exercise.exerciseOrder,
         setsTarget,
-        repsTarget: avgReps !== null ? String(avgReps) : null,
+        repsTarget: repsValues.length > 0 ? JSON.stringify(repsValues) : null,
       };
     });
 }
@@ -146,6 +144,7 @@ export async function startWorkout(args: StartWorkoutArgs): Promise<StartWorkout
         workoutId,
         exerciseId: exercise.exerciseId,
         exerciseOrder: exercise.exerciseOrder,
+        setRepsTargets: exercise.setRepsTargets,
         setsTarget: exercise.setsTarget,
         repsTarget: exercise.repsTarget,
       }));
@@ -155,12 +154,16 @@ export async function startWorkout(args: StartWorkoutArgs): Promise<StartWorkout
         .values(exerciseRows.map(({ setsTarget, repsTarget, ...row }) => row));
 
       const setRows = exerciseRows.flatMap((exerciseRow) => {
-        const targetSets = Math.max(0, exerciseRow.setsTarget ?? 0);
+        const fallbackSetCount = Math.max(0, exerciseRow.setsTarget ?? 0);
+        const repsBySet =
+          exerciseRow.setRepsTargets.length > 0
+            ? exerciseRow.setRepsTargets
+            : Array.from({ length: fallbackSetCount }, () => exerciseRow.repsTarget ?? 0);
 
-        return Array.from({ length: targetSets }, (_, setIndex) => ({
+        return repsBySet.map((repsTarget, setIndex) => ({
           id: `set-${exerciseRow.id}-${setIndex + 1}`,
           workoutExerciseId: exerciseRow.id,
-          reps: exerciseRow.repsTarget ?? 0,
+          reps: repsTarget,
           weight: 0,
           completed: false,
           timestamp: now,

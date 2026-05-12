@@ -36,8 +36,7 @@ export type RoutineSubmitPayload = {
   exercises: {
     exerciseId: string;
     exerciseOrder: number;
-    setsTarget?: number;
-    repsTarget?: number;
+    setRepsTargets: number[];
   }[];
 };
 
@@ -136,8 +135,10 @@ export function CreateRoutineModal({
         !initialExercise ||
         currentExercise.exerciseId !== initialExercise.exerciseId ||
         currentExercise.exerciseOrder !== initialExercise.exerciseOrder ||
-        currentExercise.setsTarget !== initialExercise.setsTarget ||
-        currentExercise.repsTarget !== initialExercise.repsTarget
+        currentExercise.setRepsTargets.length !== initialExercise.setRepsTargets.length ||
+        currentExercise.setRepsTargets.some(
+          (setRepsTarget, setIndex) => setRepsTarget !== initialExercise.setRepsTargets[setIndex],
+        )
       ) {
         return true;
       }
@@ -180,13 +181,13 @@ export function CreateRoutineModal({
       description: description.trim() || undefined,
       tagIds: Array.from(selectedTags),
       exercises: selectedExercises.map((exercise) => {
-        const parsedSets = parseInt(exercise.setsTarget, 10);
-        const parsedReps = parseInt(exercise.repsTarget, 10);
         return {
           exerciseId: exercise.exerciseId,
           exerciseOrder: exercise.exerciseOrder,
-          setsTarget: Number.isFinite(parsedSets) ? parsedSets : undefined,
-          repsTarget: Number.isFinite(parsedReps) ? parsedReps : undefined,
+          setRepsTargets: exercise.setRepsTargets.map((setRepsTarget) => {
+            const parsedReps = Number.parseInt(setRepsTarget, 10);
+            return Number.isFinite(parsedReps) && parsedReps > 0 ? parsedReps : 0;
+          }),
         };
       }),
     });
@@ -207,8 +208,7 @@ export function CreateRoutineModal({
         exerciseId: exercise.id,
         name: exercise.name,
         exerciseOrder: prev.length + 1,
-        setsTarget: "1",
-        repsTarget: "",
+        setRepsTargets: [""],
       },
     ]);
   };
@@ -221,15 +221,48 @@ export function CreateRoutineModal({
     );
   };
 
-  const handleUpdateExerciseField = (
-    exerciseId: string,
-    field: "setsTarget" | "repsTarget",
-    value: string,
-  ) => {
+  const handleUpdateExerciseSetReps = (exerciseId: string, setIndex: number, value: string) => {
+    const normalizedValue = value.replace(/\D+/g, "");
+
     setSelectedExercises((prev) =>
       prev.map((exercise) =>
-        exercise.exerciseId === exerciseId ? { ...exercise, [field]: value } : exercise,
+        exercise.exerciseId === exerciseId
+          ? {
+              ...exercise,
+              setRepsTargets: exercise.setRepsTargets.map((setRepsTarget, index) =>
+                index === setIndex ? normalizedValue : setRepsTarget,
+              ),
+            }
+          : exercise,
       ),
+    );
+  };
+
+  const handleAddExerciseSet = (exerciseId: string) => {
+    setSelectedExercises((prev) =>
+      prev.map((exercise) =>
+        exercise.exerciseId === exerciseId
+          ? {
+              ...exercise,
+              setRepsTargets: [...exercise.setRepsTargets, ""],
+            }
+          : exercise,
+      ),
+    );
+  };
+
+  const handleRemoveExerciseSet = (exerciseId: string, setIndex: number) => {
+    setSelectedExercises((prev) =>
+      prev.map((exercise) => {
+        if (exercise.exerciseId !== exerciseId || exercise.setRepsTargets.length <= 1) {
+          return exercise;
+        }
+
+        return {
+          ...exercise,
+          setRepsTargets: exercise.setRepsTargets.filter((_, index) => index !== setIndex),
+        };
+      }),
     );
   };
 
@@ -330,7 +363,9 @@ export function CreateRoutineModal({
               onChangeSearchQuery={setSearchQuery}
               selectedExercises={selectedExercises}
               onRemoveExercise={handleRemoveExercise}
-              onUpdateExerciseField={handleUpdateExerciseField}
+              onUpdateExerciseSetReps={handleUpdateExerciseSetReps}
+              onAddExerciseSet={handleAddExerciseSet}
+              onRemoveExerciseSet={handleRemoveExerciseSet}
               getExerciseLabel={getExerciseLabel}
               pagedExercises={pagedExercises}
               hasMoreExercises={hasMoreExercises}

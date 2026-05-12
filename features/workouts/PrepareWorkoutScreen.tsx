@@ -59,8 +59,10 @@ export function PrepareWorkoutScreen() {
         exerciseId: exercise.exerciseId,
         name: exercise.name,
         exerciseOrder: exercise.exerciseOrder ?? index + 1,
-        setsTarget: exercise.setsTarget?.toString() || "1",
-        repsTarget: exercise.repsTarget || "",
+        setRepsTargets:
+          exercise.setRepsTargets.length > 0
+            ? exercise.setRepsTargets
+            : Array.from({ length: Math.max(1, exercise.setsTarget ?? 1) }, () => ""),
       })),
     );
   }, [routine]);
@@ -79,8 +81,7 @@ export function PrepareWorkoutScreen() {
         exerciseId: exercise.id,
         name: exercise.name,
         exerciseOrder: prev.length + 1,
-        setsTarget: "1",
-        repsTarget: "",
+        setRepsTargets: [""],
       },
     ]);
   };
@@ -93,21 +94,48 @@ export function PrepareWorkoutScreen() {
     );
   };
 
-  const handleUpdateExerciseField = (
-    exerciseId: string,
-    field: "setsTarget" | "repsTarget",
-    value: string,
-  ) => {
-    const numericValue = value.replace(/\D+/g, "");
-    const normalizedValue =
-      field === "setsTarget" && numericValue.length > 0
-        ? String(Math.min(99, Number.parseInt(numericValue, 10) || 0))
-        : numericValue;
+  const handleUpdateExerciseSetReps = (exerciseId: string, setIndex: number, value: string) => {
+    const normalizedValue = value.replace(/\D+/g, "");
 
     setEditableExercises((prev) =>
       prev.map((exercise) =>
-        exercise.id === exerciseId ? { ...exercise, [field]: normalizedValue } : exercise,
+        exercise.id === exerciseId
+          ? {
+              ...exercise,
+              setRepsTargets: exercise.setRepsTargets.map((setRepsTarget, index) =>
+                index === setIndex ? normalizedValue : setRepsTarget,
+              ),
+            }
+          : exercise,
       ),
+    );
+  };
+
+  const handleAddExerciseSet = (exerciseId: string) => {
+    setEditableExercises((prev) =>
+      prev.map((exercise) =>
+        exercise.id === exerciseId
+          ? {
+              ...exercise,
+              setRepsTargets: [...exercise.setRepsTargets, ""],
+            }
+          : exercise,
+      ),
+    );
+  };
+
+  const handleRemoveExerciseSet = (exerciseId: string, setIndex: number) => {
+    setEditableExercises((prev) =>
+      prev.map((exercise) => {
+        if (exercise.id !== exerciseId || exercise.setRepsTargets.length <= 1) {
+          return exercise;
+        }
+
+        return {
+          ...exercise,
+          setRepsTargets: exercise.setRepsTargets.filter((_, index) => index !== setIndex),
+        };
+      }),
     );
   };
 
@@ -132,18 +160,15 @@ export function PrepareWorkoutScreen() {
             return null;
           }
 
-          const parsedSets = Number.parseInt(exercise.setsTarget, 10);
-          const normalizedSets = Number.isFinite(parsedSets) && parsedSets > 0 ? parsedSets : 0;
-
-          const repsMatch = exercise.repsTarget.match(/\d+/);
-          const parsedReps = repsMatch ? Number.parseInt(repsMatch[0], 10) : Number.NaN;
-          const normalizedReps = Number.isFinite(parsedReps) && parsedReps > 0 ? parsedReps : 0;
+          const setRepsTargets = exercise.setRepsTargets.map((setRepsTarget) => {
+            const parsedReps = Number.parseInt(setRepsTarget, 10);
+            return Number.isFinite(parsedReps) && parsedReps > 0 ? parsedReps : 0;
+          });
 
           return {
             exerciseId,
             exerciseOrder: exercise.exerciseOrder,
-            setsTarget: normalizedSets,
-            repsTarget: normalizedReps,
+            setRepsTargets,
           };
         })
         .filter(
@@ -152,8 +177,7 @@ export function PrepareWorkoutScreen() {
           ): exercise is {
             exerciseId: string;
             exerciseOrder: number;
-            setsTarget: number;
-            repsTarget: number;
+            setRepsTargets: number[];
           } => Boolean(exercise),
         );
 
@@ -309,12 +333,17 @@ export function PrepareWorkoutScreen() {
           <PrepareWorkoutExercisesForm
             items={editableExercises}
             addButtonAccessibilityLabel={t("workouts.addExerciseAccessibilityLabel")}
-            removeButtonLabel={t("routines.removeExerciseButton")}
-            setsPlaceholder={t("routines.setsPlaceholder")}
+            removeExerciseButtonLabel={t("routines.removeExerciseButton")}
+            addSetButtonLabel={t("workouts.addSetAccessibilityLabel")}
+            removeSetButtonAccessibilityLabel={t("workouts.removeSetAccessibilityLabel")}
+            setLabel={t("workouts.setLabel")}
             repsPlaceholder={t("routines.repsPlaceholder")}
+            repsSuffix={t("workouts.repsUnitSuffix")}
             onReorder={handleReorderExercises}
             onRemoveExercise={handleRemoveExercise}
-            onUpdateExerciseField={handleUpdateExerciseField}
+            onAddExerciseSet={handleAddExerciseSet}
+            onRemoveExerciseSet={handleRemoveExerciseSet}
+            onUpdateExerciseSetReps={handleUpdateExerciseSetReps}
             onPressAddExercise={() => setIsExercisePickerOpen(true)}
             palette={palette}
           />

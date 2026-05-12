@@ -12,6 +12,7 @@ import {
 import { useEffect, useState } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { WindowControlButton } from "@/components/WindowControlButton";
+import { AppKeyboardAvoidingView } from "@/components/AppKeyboardAvoidingView";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useGlobalAlert } from "@/components/hooks/useGlobalAlert";
@@ -119,7 +120,10 @@ export function FeedbackModal({ isOpen, onClose }: Props) {
   return (
     <>
       <Modal visible={isOpen} animationType="slide" onRequestClose={handleClose}>
-        <View style={[styles.container, { backgroundColor: palette.page }]}>
+        <AppKeyboardAvoidingView
+          style={[styles.container, { backgroundColor: palette.page }]}
+          androidBehavior="padding"
+        >
           <View
             style={[
               styles.header,
@@ -141,7 +145,16 @@ export function FeedbackModal({ isOpen, onClose }: Props) {
             />
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={[
+              styles.contentContainer,
+              { paddingBottom: Math.max(40, insets.bottom + 16) },
+            ]}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            showsVerticalScrollIndicator={false}
+          >
             <Text style={[styles.description, { color: palette.textSecondary }]}>
               {t("settings.feedbackDescription")}
             </Text>
@@ -264,7 +277,7 @@ export function FeedbackModal({ isOpen, onClose }: Props) {
               </Text>
             </TouchableOpacity>
           </ScrollView>
-        </View>
+        </AppKeyboardAvoidingView>
       </Modal>
 
       {alertElement}
@@ -292,6 +305,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  contentContainer: {
     padding: 16,
   },
   description: {

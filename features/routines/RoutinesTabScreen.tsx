@@ -7,6 +7,7 @@ import { useRetroPalette } from "@/components/hooks/useRetroPalette";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { monoFont } from "@/constants/retroTheme";
 import { db } from "@/db/client";
+import { parseRoutineSetRepsTargets } from "@/features/routines/lib/setRepsTargets";
 import { usePaginatedRoutines } from "@/features/routines/hooks/usePaginatedRoutines";
 import {
   useRoutineMutations,
@@ -96,8 +97,10 @@ export function RoutinesTabScreen() {
         exerciseId: entry.exerciseId,
         name: entry.exercise?.name ?? entry.exerciseId,
         exerciseOrder: entry.exerciseOrder ?? index + 1,
-        setsTarget: entry.setsTarget?.toString() ?? "1",
-        repsTarget: entry.repsTarget ?? "",
+        setRepsTargets: parseRoutineSetRepsTargets({
+          setsTarget: entry.setsTarget,
+          repsTarget: entry.repsTarget,
+        }),
       })),
     });
     setShowRoutineModal(true);
@@ -231,9 +234,17 @@ export function RoutinesTabScreen() {
                       <Text style={[styles.exerciseName, { color: palette.textPrimary }]}>
                         {exercise.name}
                       </Text>
-                      <Text style={[styles.exerciseMeta, { color: palette.textSecondary }]}>
-                        {exercise.setsTarget ?? "-"} x {exercise.repsTarget ?? "-"}
-                      </Text>
+                      <View style={styles.exerciseMetaList}>
+                        {exercise.setRepsTargets.map((setRepsTarget, setIndex) => (
+                          <Text
+                            key={`${exercise.id}-set-${setIndex + 1}`}
+                            style={[styles.exerciseMeta, { color: palette.textSecondary }]}
+                          >
+                            {t("workouts.setLabel")} {setIndex + 1}: {setRepsTarget || "-"}{" "}
+                            {t("workouts.repsUnitSuffix")}
+                          </Text>
+                        ))}
+                      </View>
                     </View>
                   </View>
                 ))}
@@ -365,8 +376,12 @@ const styles = StyleSheet.create({
   },
   exerciseMeta: {
     fontFamily: monoFont,
-    fontSize: 12,
+    fontSize: 11,
     letterSpacing: 0.2,
+    textTransform: "uppercase",
+  },
+  exerciseMetaList: {
+    gap: 2,
   },
   descriptionText: {
     fontFamily: monoFont,

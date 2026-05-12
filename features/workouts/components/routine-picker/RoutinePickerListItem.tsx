@@ -11,6 +11,8 @@ type RoutinePickerListItemProps = {
   onPress: (routine: WorkoutRoutinePickerItem) => void;
   selectLabel: string;
   exercisesLabel: string;
+  setLabel: string;
+  repsSuffix: string;
 };
 
 export function RoutinePickerListItem({
@@ -18,6 +20,8 @@ export function RoutinePickerListItem({
   onPress,
   selectLabel,
   exercisesLabel,
+  setLabel,
+  repsSuffix,
 }: RoutinePickerListItemProps) {
   const palette = useRetroPalette();
   const [expanded, setExpanded] = useState(false);
@@ -46,12 +50,17 @@ export function RoutinePickerListItem({
                 <Text style={[styles.exerciseName, { color: palette.textPrimary }]}>
                   {exercise.name}
                 </Text>
-                {exercise.setsTarget || exercise.repsTarget ? (
-                  <Text style={[styles.exerciseMeta, { color: palette.textSecondary }]}>
-                    {[exercise.setsTarget ? `${exercise.setsTarget}x` : null, exercise.repsTarget]
-                      .filter(Boolean)
-                      .join(" ")}
-                  </Text>
+                {exercise.setRepsTargets.length > 0 ? (
+                  <View style={styles.exerciseMetaList}>
+                    {exercise.setRepsTargets.map((setRepsTarget, index) => (
+                      <Text
+                        key={`${exercise.id}-set-${index + 1}`}
+                        style={[styles.exerciseMeta, { color: palette.textSecondary }]}
+                      >
+                        {setLabel} {index + 1}: {setRepsTarget || "-"} {repsSuffix}
+                      </Text>
+                    ))}
+                  </View>
                 ) : null}
               </View>
             </View>
@@ -101,5 +110,8 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.2,
     textTransform: "uppercase",
+  },
+  exerciseMetaList: {
+    gap: 2,
   },
 });

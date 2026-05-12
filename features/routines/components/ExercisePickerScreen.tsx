@@ -7,6 +7,7 @@ import type { ExerciseLibraryItem } from "@/features/exercises/hooks/usePaginate
 import { resolveExerciseImageSource } from "@/features/exercises/utils/exerciseImageSource";
 import { useMemo } from "react";
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import type { SelectedRoutineExercise } from "./types";
 
 type Palette = ReturnType<typeof useRetroPalette>;
@@ -17,7 +18,9 @@ export type ExercisePickerScreenProps = {
   onChangeSearchQuery: (v: string) => void;
   selectedExercises: SelectedRoutineExercise[];
   onRemoveExercise: (id: string) => void;
-  onUpdateExerciseField: (id: string, field: "setsTarget" | "repsTarget", value: string) => void;
+  onUpdateExerciseSetReps: (id: string, setIndex: number, value: string) => void;
+  onAddExerciseSet: (id: string) => void;
+  onRemoveExerciseSet: (id: string, setIndex: number) => void;
   getExerciseLabel: (e: { name: string }) => string;
   pagedExercises: ExerciseLibraryItem[];
   hasMoreExercises: boolean;
@@ -36,7 +39,9 @@ export function ExercisePickerScreen({
   onChangeSearchQuery,
   selectedExercises,
   onRemoveExercise,
-  onUpdateExerciseField,
+  onUpdateExerciseSetReps,
+  onAddExerciseSet,
+  onRemoveExerciseSet,
   getExerciseLabel,
   pagedExercises,
   hasMoreExercises,
@@ -68,10 +73,6 @@ export function ExercisePickerScreen({
       onEndReachedThreshold={0.4}
       ListHeaderComponent={
         <View style={styles.headerContent}>
-          <Text style={[styles.screenHint, { color: palette.textSecondary }]}>
-            {t("routines.addExercisesHint")}
-          </Text>
-
           <Text style={[styles.sectionTitle, { color: palette.textPrimary }]}>
             {t("routines.selectedExercisesTitle")}
           </Text>
@@ -104,55 +105,76 @@ export function ExercisePickerScreen({
                     </TouchableOpacity>
                   </View>
 
-                  <View style={styles.selectedFieldsRow}>
-                    <View
-                      style={[
-                        styles.smallInputWrapper,
-                        {
-                          borderColor: palette.border,
-                          backgroundColor: palette.page,
-                        },
-                      ]}
+                  <View style={styles.setsList}>
+                    {exercise.setRepsTargets.map((setRepsTarget, setIndex) => (
+                      <View
+                        key={`${exercise.exerciseId}-set-${setIndex + 1}`}
+                        style={styles.setRow}
+                      >
+                        <View
+                          style={[
+                            styles.setBadge,
+                            {
+                              borderColor: palette.border,
+                              backgroundColor: palette.page,
+                            },
+                          ]}
+                        >
+                          <Text style={[styles.setBadgeText, { color: palette.textSecondary }]}>
+                            {setIndex + 1}
+                          </Text>
+                        </View>
+                        <TextInput
+                          style={[
+                            styles.repsInput,
+                            {
+                              borderColor: palette.border,
+                              color: palette.textPrimary,
+                              backgroundColor: palette.page,
+                            },
+                          ]}
+                          placeholder={t("routines.repsPlaceholder")}
+                          placeholderTextColor={palette.textSecondary}
+                          value={setRepsTarget}
+                          onChangeText={(value) =>
+                            onUpdateExerciseSetReps(exercise.exerciseId, setIndex, value)
+                          }
+                          keyboardType="number-pad"
+                          maxLength={3}
+                        />
+                        <Text style={[styles.repsUnit, { color: palette.textSecondary }]}>
+                          {t("workouts.repsUnitSuffix")}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.removeSetButton}
+                          onPress={() => onRemoveExerciseSet(exercise.exerciseId, setIndex)}
+                          disabled={exercise.setRepsTargets.length <= 1}
+                          accessibilityRole="button"
+                          accessibilityLabel={t("workouts.removeSetAccessibilityLabel")}
+                        >
+                          <FontAwesome
+                            name="trash-o"
+                            size={14}
+                            color={
+                              exercise.setRepsTargets.length <= 1
+                                ? `${palette.textSecondary}66`
+                                : palette.textSecondary
+                            }
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+
+                  <View style={styles.cardActionsRow}>
+                    <TouchableOpacity
+                      style={[styles.addSetButton, { borderColor: palette.border }]}
+                      onPress={() => onAddExerciseSet(exercise.exerciseId)}
                     >
-                      <Text style={[styles.inputPrefix, { color: palette.textSecondary }]}>
-                        {t("routines.setsInputPrefix")}
+                      <Text style={[styles.addSetButtonText, { color: palette.textPrimary }]}>
+                        + {t("workouts.addSetAccessibilityLabel")}
                       </Text>
-                      <TextInput
-                        style={[styles.smallInput, { color: palette.textPrimary }]}
-                        placeholder={t("routines.setsPlaceholder")}
-                        placeholderTextColor={palette.textSecondary}
-                        value={exercise.setsTarget}
-                        onChangeText={(value) =>
-                          onUpdateExerciseField(exercise.exerciseId, "setsTarget", value)
-                        }
-                        keyboardType="number-pad"
-                        maxLength={2}
-                      />
-                    </View>
-                    <View
-                      style={[
-                        styles.smallInputWrapper,
-                        {
-                          borderColor: palette.border,
-                          backgroundColor: palette.page,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.inputPrefix, { color: palette.textSecondary }]}>
-                        {t("routines.repsInputPrefix")}
-                      </Text>
-                      <TextInput
-                        style={[styles.smallInput, { color: palette.textPrimary }]}
-                        placeholder={t("routines.repsPlaceholder")}
-                        placeholderTextColor={palette.textSecondary}
-                        value={exercise.repsTarget}
-                        onChangeText={(value) =>
-                          onUpdateExerciseField(exercise.exerciseId, "repsTarget", value)
-                        }
-                        keyboardType="number-pad"
-                        maxLength={3}
-                      />
-                    </View>
+                    </TouchableOpacity>
                   </View>
                 </View>
               ))}
@@ -240,11 +262,6 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 8,
   },
-  screenHint: {
-    fontFamily: monoFont,
-    fontSize: 12,
-    letterSpacing: 0.2,
-  },
   sectionTitle: {
     marginTop: 4,
     fontFamily: monoFont,
@@ -283,31 +300,68 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.2,
   },
-  selectedFieldsRow: {
-    flexDirection: "row",
-    gap: 8,
+  setsList: {
+    gap: 6,
   },
-  smallInputWrapper: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 4,
+  setRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 10,
-    paddingRight: 6,
+    gap: 8,
   },
-  inputPrefix: {
+  setBadge: {
+    width: 24,
+    height: 24,
+    borderWidth: 1,
+    borderRadius: 99,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  setBadgeText: {
+    fontFamily: monoFont,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+    lineHeight: 12,
+  },
+  repsInput: {
+    width: 68,
+    height: 34,
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 8,
     fontFamily: monoFont,
     fontSize: 12,
-    textTransform: "lowercase",
-    marginRight: 6,
+    textAlign: "center",
   },
-  smallInput: {
-    flex: 1,
-    paddingHorizontal: 0,
-    paddingVertical: 8,
+  repsUnit: {
     fontFamily: monoFont,
-    fontSize: 13,
+    fontSize: 10,
+    textTransform: "uppercase",
+    letterSpacing: 0.2,
+  },
+  removeSetButton: {
+    width: 26,
+    height: 26,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardActionsRow: {
+    marginTop: 2,
+    alignItems: "flex-start",
+  },
+  addSetButton: {
+    minHeight: 30,
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    justifyContent: "center",
+  },
+  addSetButtonText: {
+    fontFamily: monoFont,
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
   removeButton: {
     borderWidth: 1,

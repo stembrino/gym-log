@@ -1,6 +1,7 @@
 import type { AppLocale } from "@/constants/translations";
 import { db } from "@/db/client";
 import { routines as routinesTable } from "@/db/schema";
+import { parseRoutineSetRepsTargets } from "@/features/routines/lib/setRepsTargets";
 import {
   buildTranslationKey,
   getTranslationsMap,
@@ -31,6 +32,7 @@ export type RoutineExercise = {
   exerciseOrder: number;
   setsTarget: number | null;
   repsTarget: string | null;
+  setRepsTargets: string[];
 };
 
 export type RoutineItem = {
@@ -102,6 +104,11 @@ function mapRoutine(
 ): RoutineItem {
   const exercises = routineRow.routineExercises.map((routineExercise) => {
     const exercise = routineExercise.exercise;
+    const setRepsTargets = parseRoutineSetRepsTargets({
+      setsTarget: routineExercise.setsTarget,
+      repsTarget: routineExercise.repsTarget,
+    });
+
     return {
       id: routineExercise.id,
       exerciseId: routineExercise.exerciseId,
@@ -116,6 +123,7 @@ function mapRoutine(
       exerciseOrder: routineExercise.exerciseOrder,
       setsTarget: routineExercise.setsTarget,
       repsTarget: routineExercise.repsTarget,
+      setRepsTargets,
     };
   });
 

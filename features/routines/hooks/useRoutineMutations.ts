@@ -1,6 +1,7 @@
 import type { AppLocale } from "@/constants/translations";
 import { db } from "@/db/client";
 import { routineExercises, routines, routineTagLinks } from "@/db/schema";
+import { serializeRoutineSetRepsTargets } from "@/features/routines/lib/setRepsTargets";
 import {
   deleteEntityTranslationsByEntity,
   syncOptionalEntityTranslation,
@@ -17,8 +18,7 @@ export type RoutineSubmitPayload = {
   exercises: {
     exerciseId: string;
     exerciseOrder: number;
-    setsTarget?: number;
-    repsTarget?: number;
+    setRepsTargets: number[];
   }[];
 };
 
@@ -65,14 +65,18 @@ export function useRoutineMutations(locale: AppLocale, reload: () => Promise<voi
 
         if (routineData.exercises.length > 0) {
           await tx.insert(routineExercises).values(
-            routineData.exercises.map((exercise, index) => ({
-              id: `rte-${routineId}-${index + 1}`,
-              routineId,
-              exerciseId: exercise.exerciseId,
-              exerciseOrder: exercise.exerciseOrder,
-              setsTarget: exercise.setsTarget ?? null,
-              repsTarget: exercise.repsTarget?.toString() ?? null,
-            })),
+            routineData.exercises.map((exercise, index) => {
+              const serialized = serializeRoutineSetRepsTargets(exercise.setRepsTargets);
+
+              return {
+                id: `rte-${routineId}-${index + 1}`,
+                routineId,
+                exerciseId: exercise.exerciseId,
+                exerciseOrder: exercise.exerciseOrder,
+                setsTarget: serialized.setsTarget,
+                repsTarget: serialized.repsTarget,
+              };
+            }),
           );
         }
 
@@ -143,14 +147,18 @@ export function useRoutineMutations(locale: AppLocale, reload: () => Promise<voi
         await tx.delete(routineExercises).where(eq(routineExercises.routineId, routineId));
         if (routineData.exercises.length > 0) {
           await tx.insert(routineExercises).values(
-            routineData.exercises.map((exercise, index) => ({
-              id: `rte-${routineId}-${index + 1}`,
-              routineId,
-              exerciseId: exercise.exerciseId,
-              exerciseOrder: exercise.exerciseOrder,
-              setsTarget: exercise.setsTarget ?? null,
-              repsTarget: exercise.repsTarget?.toString() ?? null,
-            })),
+            routineData.exercises.map((exercise, index) => {
+              const serialized = serializeRoutineSetRepsTargets(exercise.setRepsTargets);
+
+              return {
+                id: `rte-${routineId}-${index + 1}`,
+                routineId,
+                exerciseId: exercise.exerciseId,
+                exerciseOrder: exercise.exerciseOrder,
+                setsTarget: serialized.setsTarget,
+                repsTarget: serialized.repsTarget,
+              };
+            }),
           );
         }
 
