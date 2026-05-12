@@ -1,4 +1,3 @@
-import { AppKeyboardAvoidingView } from "@/components/AppKeyboardAvoidingView";
 import { SingleSelectChipGroup } from "@/components/SingleSelectChipGroup";
 import { WindowControlButton } from "@/components/WindowControlButton";
 import { useRetroPalette } from "@/components/hooks/useRetroPalette";
