@@ -12,8 +12,21 @@ function normalizeRepsValue(value: string | number | null | undefined): string {
     return "";
   }
 
-  const digitsOnly = value.trim().replace(/\D+/g, "");
-  return digitsOnly;
+  const firstNumber = value.trim().match(/\d+/)?.[0] ?? "";
+  return firstNumber;
+}
+
+function parseDelimitedRepsTargets(trimmed: string): string[] {
+  if (!/[;,|/\n]/.test(trimmed)) {
+    return [];
+  }
+
+  const normalized = trimmed
+    .split(/[;,|/\n]/)
+    .map((entry) => normalizeRepsValue(entry))
+    .filter((entry) => entry.length > 0);
+
+  return normalized;
 }
 
 export function parseRoutineSetRepsTargets({
@@ -41,6 +54,16 @@ export function parseRoutineSetRepsTargets({
     } catch {
       // Fall through to legacy parsing.
     }
+  }
+
+  const delimited = parseDelimitedRepsTargets(trimmed);
+  if (delimited.length > 0) {
+    return delimited;
+  }
+
+  const numericTokens = trimmed.match(/\d+/g) ?? [];
+  if (numericTokens.length > 1 && (/\s/.test(trimmed) || numericTokens.length === safeSets)) {
+    return numericTokens;
   }
 
   if (trimmed.includes(",")) {

@@ -240,8 +240,7 @@ export function RoutinesTabScreen() {
                             key={`${exercise.id}-set-${setIndex + 1}`}
                             style={[styles.exerciseMeta, { color: palette.textSecondary }]}
                           >
-                            {setIndex + 1}: {setRepsTarget || "-"}{" "}
-                            {t("workouts.repsUnitSuffix")}
+                            {setIndex + 1}: {setRepsTarget || "-"} {t("workouts.repsUnitSuffix")}
                           </Text>
                         ))}
                       </View>
